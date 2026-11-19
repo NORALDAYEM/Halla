@@ -1,4 +1,4 @@
-name: Android APK (development)
+name: Android APK (private phone testing)
 on:
   workflow_dispatch:
   push:
@@ -18,15 +18,25 @@ jobs:
         with:
           channel: stable
       - name: Generate Android project
-        run: flutter create --platforms=android .
+        run: flutter create --platforms=android --project-name halaa .
       - name: Install dependencies
         run: flutter pub get
-      - name: Analyze
+      - name: Check Dart syntax and diagnostics
         run: flutter analyze --no-fatal-infos
-      - name: Build Android debug APK
+      - name: Build user APK
         run: flutter build apk --debug -t lib/main.dart
-      - uses: actions/upload-artifact@v4
+      - name: Save user APK
+        run: cp build/app/outputs/flutter-apk/app-debug.apk Halaa-User-debug.apk
+      - name: Build admin APK
+        run: flutter build apk --debug -t lib/admin_main.dart
+      - name: Save admin APK
+        run: cp build/app/outputs/flutter-apk/app-debug.apk Halaa-Admin-debug.apk
+      - name: Upload both APKs
+        uses: actions/upload-artifact@v4
         with:
-          name: Halaa-Android-debug-APK
-          path: build/app/outputs/flutter-apk/app-debug.apk
+          name: Halaa-Private-Phone-APKs
+          path: |
+            Halaa-User-debug.apk
+            Halaa-Admin-debug.apk
+          if-no-files-found: error
           retention-days: 14
