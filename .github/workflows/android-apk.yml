@@ -19,6 +19,8 @@ jobs:
           channel: stable
       - name: Generate Android project
         run: flutter create --platforms=android --project-name halaa .
+      - name: Remove generated sample test referencing a different app
+        run: rm -f test/widget_test.dart
       - name: Install dependencies
         run: flutter pub get
       - name: Check Dart syntax and diagnostics
