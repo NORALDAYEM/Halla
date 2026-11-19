@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: halaa-dev-api
+    runtime: docker
+    dockerfilePath: ./server/Dockerfile
+    dockerContext: ./server
+    plan: free
+    healthCheckPath: /health
+    autoDeployTrigger: commit
