@@ -35,6 +35,12 @@ class _HalaaHomeState extends State<HalaaHome> {
   int page = 0;
   String country = 'الكل';
   String search = '';
+  Future<List<dynamic>> fetchRooms() async {
+    if (apiBaseUrl.isEmpty) return [];
+    final response = await http.get(Uri.parse('$apiBaseUrl/v1/rooms')).timeout(const Duration(seconds: 8));
+    if (response.statusCode != 200) throw Exception('API unavailable');
+    return jsonDecode(utf8.decode(response.bodyBytes)) as List<dynamic>;
+  }
   final rooms = const [
     ('المجلس الملكي', '🇸🇦', 'السعودية', 256),
     ('لمة الأصدقاء', '🇸🇩', 'السودان', 189),
@@ -74,6 +80,7 @@ class _HalaaHomeState extends State<HalaaHome> {
     SizedBox(height: 52, child: ListView(scrollDirection: Axis.horizontal, children: ['الكل', 'السعودية', 'السودان', 'العراق', 'مصر'].map((c) => Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4), child: ChoiceChip(label: Text(c), selected: country == c, onSelected: (_) => setState(() => country = c)),
     )).toList())),
+    if (apiBaseUrl.isNotEmpty) Padding(padding: const EdgeInsets.symmetric(horizontal: 14), child: FutureBuilder<List<dynamic>>(future: fetchRooms(), builder: (context, snapshot) => Text(snapshot.hasError ? 'تعذر الاتصال بالخادم التجريبي' : snapshot.hasData ? 'الغرف من الخادم: ${snapshot.data!.length}' : 'جاري الاتصال بالخادم...', style: const TextStyle(color: gold)))),
     Expanded(child: ListView(children: rooms.where((r) => (country == 'الكل' || r.$3 == country) && r.$1.contains(search)).map((r) => Card(
       margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
       child: ListTile(
