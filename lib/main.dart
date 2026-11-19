@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+
+const apiBaseUrl = String.fromEnvironment('HALAA_API_URL', defaultValue: '');
 
 void main() => runApp(const HalaaApp());
 
