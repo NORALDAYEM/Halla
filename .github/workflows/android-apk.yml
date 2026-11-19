@@ -1,0 +1,32 @@
+name: Android APK (development)
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'lib/**'
+      - 'pubspec.yaml'
+      - '.github/workflows/android-apk.yml'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - name: Generate Android project
+        run: flutter create --platforms=android .
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Analyze
+        run: flutter analyze --no-fatal-infos
+      - name: Build Android debug APK
+        run: flutter build apk --debug -t lib/main.dart
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Halaa-Android-debug-APK
+          path: build/app/outputs/flutter-apk/app-debug.apk
+          retention-days: 14
