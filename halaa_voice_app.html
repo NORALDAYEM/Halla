@@ -190,6 +190,7 @@ input.control{display:block;width:100%}.control:disabled{opacity:.55}.voice-tool
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important}.room-marquee-text{transform:none!important}}
 .lounge-grid,.gift-samples,.medal-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(5px,1.4vw,14px)}.lounge-tile,.medal,.gift-samples button{min-width:0;position:relative;border-radius:14px;border:1px solid var(--border-subtle);background:var(--bg-card);overflow:hidden}.lounge-open{display:block;text-align:start;width:100%;height:100%;color:var(--text-main)}.lounge-art{display:block;position:relative;aspect-ratio:1.32;overflow:hidden}.lounge-art img{width:100%;height:100%;object-fit:cover;transition:transform .4s}.lounge-open:hover img{transform:scale(1.035)}.lounge-count,.lounge-fav{position:absolute;top:5px;background:#12131dd9;color:#fff;display:flex;align-items:center;gap:3px;border-radius:20px;padding:3px 6px}.lounge-count{inset-inline-start:5px;font-size:11px}.lounge-fav{inset-inline-end:5px;padding:5px}.lounge-fav[aria-pressed=true]{color:#ff92ab}.lounge-fav[aria-pressed=true] svg{fill:currentColor}.lounge-count svg,.lounge-fav svg{width:13px;height:13px}.lounge-name{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.4;height:2.8em;margin:7px 7px 3px;font-size:clamp(11px,2.7vw,15px)}.lounge-info{display:flex;align-items:center;justify-content:space-between;padding:0 6px 8px;gap:2px}.insignia{display:inline-flex;align-items:center;gap:.25em;font-size:clamp(9px,2vw,12px);font-weight:700}.insignia svg{width:1.15em;height:1.15em;color:var(--accent)}.room-wave{display:inline-flex;align-items:center;gap:2px;height:14px;color:var(--accent)}.room-wave i{width:2px;height:3px;background:currentColor;border-radius:3px}.room-wave.on i{animation:equalize .9s ease-in-out infinite alternate}.room-wave.on i:nth-child(2){animation-delay:-.64s}.room-wave.on i:nth-child(3){animation-delay:-.25s}.room-wave.on i:nth-child(4){animation-delay:-.73s}@keyframes equalize{to{height:12px}}.gallery-head,.gallery-foot{display:flex;align-items:center;justify-content:space-between;gap:8px}.gallery-head h3,#giftHero h3{font-size:1.2rem;font-weight:850}.gallery-foot{margin-block-start:12px;flex-wrap:wrap}.gallery-foot .control{min-height:40px}.gallery-foot .control:last-child{border-color:var(--accent);margin-inline-start:auto}.gift-samples,.medal-grid{margin-top:12px}.gift-samples button,.medal{font-size:.78rem;font-weight:750}.gift-samples img{width:100%;height:clamp(42px,8vh,80px);object-fit:cover}.gift-samples span{display:block;padding:4px}.gift-samples button[aria-pressed=true],.medal[aria-pressed=true]{outline:2px solid var(--accent);outline-offset:-2px}#giftHero,.gift-stage{position:relative;isolation:isolate;overflow:hidden;display:flex;align-items:center;gap:1rem;border:1px solid var(--glow);border-radius:18px;background:radial-gradient(ellipse at 88% 0%,color-mix(in srgb,var(--glow) 35%,#101021),transparent 70%),#141420;color:white;padding:12px}#giftHero{margin-top:12px}.gift-portrait{position:relative;width:clamp(80px,22vw,150px);aspect-ratio:1.6;overflow:hidden;border-radius:12px;box-shadow:0 4px 18px #0006}.gift-portrait img{width:100%;height:100%;object-fit:cover}.perform img{animation:gift-reveal 1.4s ease-out both}.perform.drive img{animation-name:gift-drive}.perform.flight img{animation-name:gift-flight}.perform.tide img{animation-name:gift-tide}.perform:after{content:'';position:absolute;inset:0;background:linear-gradient(115deg,transparent 30%,#fff6,transparent 65%);animation:gift-sweep 1.6s ease-out both}.gift-stage{pointer-events:auto;max-width:480px;width:94%;margin:auto;box-shadow:0 8px 35px #05031277}.stage-copy{display:grid;flex:1}.stage-copy strong{font-size:1.05rem}.stage-copy span,#giftHero small{color:var(--glow)}.stage-copy small{font-size:.72rem}.medal{display:grid;justify-items:center;align-content:center;gap:5px;padding:12px 5px}.medal svg{width:25px;height:25px;color:var(--accent)}.medal small{font-weight:500;color:var(--text-muted)}.medal:disabled{opacity:.76}@keyframes gift-reveal{from{transform:scale(1.35);filter:brightness(1.6)}}@keyframes gift-drive{from{transform:translateX(-32%) scale(1.55)}}@keyframes gift-flight{from{transform:translate(-15%,18%) rotate(-7deg) scale(1.6)}}@keyframes gift-tide{from{transform:scale(1.25) rotate(5deg)}50%{transform:scale(1.12) rotate(-2deg)}}@keyframes gift-sweep{from{transform:translateX(-110%)}to{transform:translateX(110%)}}@media(prefers-reduced-motion:reduce){.room-wave.on i{animation:none;height:7px}.perform img,.perform:after{animation:none}.perform:after{display:none}}
 
+ .games-grid .lounge-info small{font-size:clamp(9px,2vw,12px);white-space:nowrap}.personal-form{display:grid;gap:.9rem}.personal-form>label{display:grid;gap:4px;font-weight:700}.personal-form textarea{width:100%;resize:vertical}.avatar-editor,.identity-meta,.gift-tabs,.xp-row,.level-stop{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}.avatar-editor img{width:64px;height:64px;border-radius:50%;object-fit:cover}.avatar-editor input{display:block;max-width:10rem;font-size:10px}.identity-meta{margin-top:.35rem}.identity-bio{margin-top:.35rem;white-space:pre-line;overflow-wrap:anywhere}.rank-chip{border:1px solid var(--accent);border-radius:99px;padding:.16rem .6rem;font-size:.78rem;font-weight:750}.edit-identity,.gift-tabs{margin-top:.6rem}.level-hero{padding:1rem;margin-block:1rem;background:var(--bg-card);border-radius:16px;border:1px solid var(--border-subtle)}.level-hero strong{font-size:2rem;color:var(--accent)}.level-hero progress{width:100%;accent-color:var(--accent)}.level-stops{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:6px;margin-block:.5rem 1rem}.level-stop,.xp-row{padding:.5rem;border:1px solid var(--border-subtle);border-radius:10px;justify-content:space-between}.level-stop b{color:var(--accent)}.gift-tabs [aria-pressed=true]{border-color:var(--accent)}.gift-samples [hidden]{display:none!important}
 </style>
 </head>
 <body class="min-h-screen flex justify-center items-start md:py-4">
@@ -609,7 +610,9 @@ input.control{display:block;width:100%}.control:disabled{opacity:.55}.voice-tool
       return 'luxury-gold-gradient shadow-[0_0_24px_rgba(245,196,81,0.55)]';
     }
 
-    function addXP(pts) {
+    function addXP(pts,label) {
+      if(!Number.isSafeInteger(pts)||pts<=0)return;
+      xpLedger.unshift({label:label||"نشاط في هلاا",pts,at:Date.now()});xpLedger=xpLedger.slice(0,6);
       state.user.xp += pts;
       while (state.user.xp >= 100) {
         state.user.xp -= 100;
@@ -618,6 +621,7 @@ input.control{display:block;width:100%}.control:disabled{opacity:.55}.voice-tool
       }
       const lc = document.getElementById('headerLevelCircle');
       if (lc) lc.textContent = state.user.level;
+      storeProgress();
     }
 
     function showToast(msg) {
@@ -629,6 +633,7 @@ input.control{display:block;width:100%}.control:disabled{opacity:.55}.voice-tool
     }
 
     function updateWalletUI() {
+      storeProgress();
       document.getElementById('headerGold').textContent = state.user.gold.toLocaleString('en-US');
       document.getElementById('headerCrystals').textContent = state.user.crystals.toLocaleString('en-US');
       const dot = document.getElementById('chatUnreadDot');
@@ -691,7 +696,8 @@ input.control{display:block;width:100%}.control:disabled{opacity:.55}.voice-tool
       return filtered.map(cardForRoom).join('');
     }
 
-    function claimLevelReward(lv, gold) {
+    function claimLevelReward(lv) {
+      const gold=checkpoints.find(row=>row.lv===lv)?.reward;if(!gold)return;
       if (state.user.level < lv) { showToast('تصل لهذه المكافأة عند المستوى Lv.' + lv); return; }
       if (state.claimedLevelRewards.includes(lv)) return;
       state.claimedLevelRewards.push(lv);
@@ -706,7 +712,7 @@ input.control{display:block;width:100%}.control:disabled{opacity:.55}.voice-tool
       state.festivalClaimed = true;
       state.user.gold += 300;
       state.user.crystals += 20;
-      addXP(30);
+      addXP(30,'مكافأة المهرجان');
       updateWalletUI();
       renderMain();
       showToast('مبروك! حصلت على 300 🪙 و 20 💎 من مهرجان هلاا!');
@@ -714,12 +720,7 @@ input.control{display:block;width:100%}.control:disabled{opacity:.55}.voice-tool
 
     function renderEventsTab(container) {
       const u = state.user;
-      const levelMilestones = [
-        { lv: 10, reward: 200 },
-        { lv: 20, reward: 500 },
-        { lv: 24, reward: 800 },
-        { lv: 30, reward: 1500 }
-      ];
+      const levelMilestones = checkpoints;
       container.innerHTML = `
         <div class="p-4 space-y-4">
           <!-- Festival Hero Banner -->
@@ -807,7 +808,7 @@ input.control{display:block;width:100%}.control:disabled{opacity:.55}.voice-tool
 
     function renderHomeTab(container) {
       const topRooms = state.rooms.slice(0, 6);
-const topGames = state.gamesCatalog.slice(0, 3).map(g => ({ id: g.id, name: g.name, img: g.img, tag: g.players }));
+const topGames = state.gamesCatalog.slice(0,6);
       const topStore = [state.gamesStoreItems[0], state.gamesStoreItems[3], state.gamesStoreItems[6]];
 
       container.innerHTML = `
@@ -850,18 +851,7 @@ const topGames = state.gamesCatalog.slice(0, 3).map(g => ({ id: g.id, name: g.na
               <h3 class="text-sm font-extrabold flex items-center gap-1.5"><span class="theme-gold-text">✦</span><span>ألعاب النخبة</span></h3>
               <button onclick="switchTab('games')" class="text-xs font-bold theme-accent-text">عرض الكل ◀</button>
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-              ${topGames.map(gm => `
-                <button onclick="openGameModal('${gm.id}')" class="relative h-32 rounded-2xl overflow-hidden border text-right shadow-lg" style="border-color: var(--border-subtle);">
-                  <img src="${gm.img}" alt="${gm.name}" class="absolute inset-0 w-full h-full object-cover" />
-                  <div class="absolute inset-0 bg-gradient-to-t from-black/95 via-black/35 to-transparent"></div>
-                  <div class="relative z-10 h-full p-3 flex flex-col justify-between">
-                    <span class="self-start px-2 py-0.5 rounded-full bg-black/65 text-[10px] font-bold text-amber-300">● ${gm.tag}</span>
-                    <div class="font-extrabold text-xs text-white">${gm.name}</div>
-                  </div>
-                </button>
-              `).join('')}
-            </div>
+            <div class="lounge-grid games-grid">${topGames.map(gameTile).join('')}</div>
           </section>
 
           <!-- 3. Stores Row (3 per row) -->
@@ -971,30 +961,8 @@ const games = state.gamesCatalog;
               <h3 class="text-sm font-extrabold flex items-center gap-1.5"><span class="theme-gold-text">✦</span><span>صالة الألعاب الملكية</span></h3>
               <span class="text-[11px] theme-accent-text font-bold">مطابقة فورية</span>
             </div>
-            <div class="grid grid-cols-3 gap-3">
-              ${games.map(g => `
-                <div onclick="openGameModal('${g.id}')" class="group rounded-2xl overflow-hidden border theme-card cursor-pointer shadow-lg flex flex-col">
-                  <div class="relative h-24 overflow-hidden">
-                    <img src="${g.img}" alt="${g.name}" class="w-full h-full object-cover " />
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent"></div>
-                    <span class="absolute top-2 right-2 text-[9px] px-2 py-0.5 rounded-full luxury-gold-gradient font-extrabold">${g.badge}</span>
-                    <span class="absolute bottom-1.5 left-2 text-[10px] font-bold text-emerald-300">● ${g.players}</span>
-                  </div>
-                  <div class="p-2.5 flex-1 flex flex-col justify-between gap-2">
-                    <div>
-                      <h4 class="font-extrabold text-xs truncate">${g.name}</h4>
-                      <p class="text-[10px] theme-muted truncate">${g.desc}</p>
-                    </div>
-                    <div class="flex items-center justify-between pt-1 border-t" style="border-color: var(--border-subtle);">
-                      <span class="text-[10px] font-bold theme-gold-text">${g.entry}</span>
-                      <span class="text-[10px] font-extrabold theme-accent-text">العب ◀</span>
-                    </div>
-                  </div>
-                </div>
-              `).join('')}
-            </div>
+            <div class="lounge-grid games-grid">${games.map(gameTile).join('')}</div>
           </div>
-
           <!-- Games Store Strip -->
           <div class="p-4 rounded-2xl border theme-card flex items-center justify-between shadow-md">
             <div class="flex items-center gap-3">
@@ -1159,11 +1127,13 @@ const games = state.gamesCatalog;
                   </div>
                   <div class="flex-1 min-w-0">
                     <div class="flex flex-wrap items-center gap-2">
-                      <h2 class="font-extrabold text-base">${u.name}</h2>
-                      ${userBadgesHTML(u.flag, u.gender)}
+                      <h2 class="font-extrabold text-base">${htmlText(u.name)}</h2>
+                      ${userBadgesHTML(u.flag, u.gender)} ${ownBadge()}
                       <span class="px-2 py-0.5 rounded-full text-[10px] font-bold luxury-gold-gradient">${u.vip}</span>
                     </div>
-                    <p class="text-xs theme-muted mt-1">المستوى ${u.level} • ${u.frame}</p>
+                    <div class="identity-meta"><button class="rank-chip" onclick="openLevelDetailsModal()">Lv.${u.level} · ${rankName(u.level)}</button>${personal.family?'<span>عائلة '+htmlText(personal.family)+'</span>':''}</div>
+                    ${personal.bio?'<p class="identity-bio">'+htmlText(personal.bio)+'</p>':''}
+                    <button class="control edit-identity" onclick="editPersonal()">تعديل ملفي</button>
                     <div class="w-full h-2 rounded-full bg-white/10 mt-2.5 overflow-hidden">
                       <div class="h-full luxury-gold-gradient" style="width: ${u.xp}%"></div>
                     </div>
@@ -1236,19 +1206,6 @@ const games = state.gamesCatalog;
               <span class="px-2 py-0.5 rounded-full luxury-gold-gradient text-[10px] font-extrabold">أساسي</span>
             </div>
             ${owned.map(o => `<div class="p-3 rounded-2xl border theme-card flex items-center justify-between"><div><div class="font-bold text-xs">${o.name}</div><div class="text-[10px] theme-muted">${o.type}</div></div><span class="text-xs theme-accent-text font-bold">مملوك</span></div>`).join('')}
-          </div>
-        </div>
-      `);
-    }
-
-    function openLevelDetailsModal() {
-      openModal(`
-        <div class="space-y-4 text-center">
-          <div class="flex justify-between items-center"><h3 class="font-extrabold text-sm">تفاصيل المستوى والخبرة</h3><button onclick="closeModal()"><i data-lucide="x" class="w-4 h-4"></i></button></div>
-          <div class="p-5 rounded-2xl border theme-card space-y-2">
-            <div class="text-3xl font-extrabold theme-gold-text">المستوى ${state.user.level}</div>
-            <p class="text-xs theme-muted">يتبقى ${100 - state.user.xp}% للوصول إلى المستوى ${state.user.level + 1}</p>
-            <div class="w-full h-2.5 rounded-full bg-white/10 overflow-hidden"><div class="h-full luxury-gold-gradient" style="width: ${state.user.xp}%"></div></div>
           </div>
         </div>
       `);
@@ -1479,7 +1436,8 @@ const games = state.gamesCatalog;
       stopLive();$room('liveLog').replaceChildren();$room('liveStatus').textContent='معاينة المقاعد';
       state.activeRoom = room;syncRoomPolicy();$room('seatRoomBadge').innerHTML=badgeChip(...roomBadge(room));if(!collection.visits.includes(room.id)){collection.visits.push(room.id);saveCollection();}
       state.eventTasks.roomJoined = true;
-      addXP(10);
+      const visitKey=localDay()+'/'+room.id;
+      if(!visitedToday.includes(visitKey)){visitedToday=visitedToday.filter(k=>k.startsWith(localDay()+'/'));visitedToday.push(visitKey);addXP(10,'زيارة غرفة');}
       state.isRoomMinimized = false;
       document.getElementById('floatingRoomBubble').classList.add('hidden');
       document.getElementById('voiceRoomOverlay').classList.remove('hidden');
@@ -1897,9 +1855,9 @@ const games = state.gamesCatalog;
         if (ht) ht.textContent = t;
       }
       if (u) {
-        state.user.name = u;
+        state.user.name = u.slice(0,32);personal.name=state.user.name;try{localStorage.setItem(profileKey,JSON.stringify(personal));}catch{}
         const hu = document.getElementById('headerUserNameText');
-        if (hu) hu.textContent = u;
+        if (hu) hu.textContent = state.user.name;
       }
       if (bg) {
         const ab = document.getElementById('appBgLayerImg');
@@ -2127,7 +2085,7 @@ const games = state.gamesCatalog;
               </div>
               <div>
                 <label class="font-bold block mb-1 theme-muted">اسم المستخدم</label>
-                <input id="admUserNameInp" type="text" value="${state.user.name}" class="w-full px-3 py-2 rounded-xl border theme-card focus:outline-none" />
+                <input id="admUserNameInp" type="text" value="${htmlText(state.user.name)}" class="w-full px-3 py-2 rounded-xl border theme-card focus:outline-none" />
               </div>
               <div>
                 <label class="font-bold block mb-1 theme-muted">صورة خلفية التطبيق</label>
@@ -2271,7 +2229,7 @@ const games = state.gamesCatalog;
               <div class="p-4 rounded-2xl border theme-card flex flex-col items-center text-center gap-2 shadow-md">
                 <span class="px-2.5 py-0.5 rounded-full luxury-gold-gradient text-[10px] font-extrabold">المركز #${idx + 1}</span>
                 <div class="text-3xl">${u.avatar}</div>
-                <div class="font-extrabold text-sm flex items-center gap-1.5 justify-center">${u.name} ${userBadgesHTML(u.flag || '🇸🇦', u.gender || 'M')}</div>
+                <div class="font-extrabold text-sm flex items-center gap-1.5 justify-center">${htmlText(u.name)} ${userBadgesHTML(u.flag || '🇸🇦', u.gender || 'M')}</div>
                 <div class="text-xs font-bold theme-accent-text">${u.val}</div>
                 <div class="text-[10px] theme-muted">${u.sub}</div>
               </div>
@@ -2615,7 +2573,7 @@ const games = state.gamesCatalog;
 
     function rollQuickDice(stake = 100) {
       state.eventTasks.gamePlayed = true;
-      addXP(15);
+      addXP(15,'بدء مباراة');
       const val = Math.floor(Math.random() * 6) + 1;
       const icons = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣'];
       document.getElementById('diceDisplay').textContent = icons[val - 1];
@@ -2975,8 +2933,19 @@ let giftChoice, giftTarget, giftPending=false, giftContext=null;
 const giftHistory=new Map();
 function openGiftDrawer(targetName='الغرفة'){
   giftTarget=targetName;giftChoice=state.gifts[0].id;
-  openModal('<div class="gallery-head"><div><small class="theme-muted">إلى '+htmlText(targetName)+'</small><h3>هدايا المجلس</h3></div><button class="control" onclick="closeModal()">إغلاق</button></div><div id="giftHero"></div><div class="gift-samples">'+state.gifts.map(g=>'<button data-gift="'+g.id+'" aria-label="'+htmlText(g.name)+'"><img src="'+g.img+'" alt=""><span>'+htmlText(g.name)+'</span></button>').join('')+'</div><div class="gallery-foot"><button class="control" id="giftSound"></button><button class="control" id="giftPreview">معاينة المؤثر</button><button class="control theme-accent-bg" id="giftConfirm"></button></div>');
+  openModal('<div class="gallery-head"><div><small class="theme-muted">إلى '+htmlText(targetName)+'</small><h3>هدايا المجلس</h3></div><button class="control" onclick="closeModal()">إغلاق</button></div><div id="giftHero"></div><div class="gift-tabs"><button class="control" data-set="classic" aria-pressed="true">هدايا المجلس</button><button class="control" data-set="jewel" aria-pressed="false">جواهر فاخرة</button></div><div class="gift-samples">'+state.gifts.map(g=>'<button data-gift="'+g.id+'" aria-label="'+htmlText(g.name)+'"><img src="'+g.img+'" alt=""><span>'+htmlText(g.name)+'</span></button>').join('')+'</div><div class="gallery-foot"><button class="control" id="giftSound"></button><button class="control" id="giftPreview">معاينة المؤثر</button><button class="control theme-accent-bg" id="giftConfirm"></button></div>');
   for(const b of $room('modalContent').querySelectorAll('[data-gift]'))b.onclick=()=>{giftChoice=b.dataset.gift;paintGift();};
+  const drawer=$room('modalContent');
+  function chooseSet(set){
+    let first=null;
+    for(const b of drawer.querySelectorAll('[data-gift]')){
+      const jewel=Number(b.dataset.gift.slice(1))>=7;
+      b.hidden=jewel!==(set==='jewel');if(!b.hidden&&!first)first=b.dataset.gift;
+    }
+    drawer.querySelectorAll('[data-set]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.set===set)));
+    giftChoice=first;paintGift();
+  }
+  drawer.querySelectorAll('[data-set]').forEach(b=>b.onclick=()=>chooseSet(b.dataset.set));chooseSet('classic');
   $room('giftSound').onclick=()=>{collection.sound=!collection.sound;saveCollection();paintGift();};
   $room('giftPreview').onclick=()=>{const g=state.gifts.find(x=>x.id===giftChoice);paintGift(true);chime(g);};
   $room('giftConfirm').onclick=()=>sendGift(giftChoice,giftTarget);paintGift();
@@ -3021,7 +2990,7 @@ async function sendGift(giftId,targetName){
   const id=crypto.randomUUID();giftPending=true;const btn=$room('giftConfirm');if(btn)btn.disabled=true;
   try{
     if(session)await session.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({giftId,id,target:targetName})),{reliable:true,topic:'room-gift'});
-    state.user.gold-=g.price;state.eventTasks.giftSent=true;collection.sent++;saveCollection();addXP(25);updateWalletUI();
+    state.user.gold-=g.price;state.eventTasks.giftSent=true;collection.sent++;saveCollection();addXP(25,'إرسال هدية');updateWalletUI();
     const me=state.leaderboard.find(x=>x.name==='أنت');if(me)me.amount+=g.price;else state.leaderboard.push({name:'أنت',avatar:state.user.avatar,amount:g.price});state.leaderboard.sort((a,b)=>b.amount-a.amount);
     if(room!==state.activeRoom||session!==liveRoom)return;
     closeModal();const line='أهدى '+g.name+' إلى '+targetName;
@@ -3042,11 +3011,135 @@ function receiveGift(topic,bytes,p){
   }catch{}
 }
 
-// Init
+const checkpoints=[
+  {lv:10,reward:200},{lv:20,reward:500},{lv:24,reward:800},{lv:30,reward:1500},
+  {lv:40,reward:2200},{lv:50,reward:3500},{lv:75,reward:5000},{lv:100,reward:8000}
+];
+const ranks=[[1,'وافد'],[10,'رفيق المجلس'],[20,'نجم المجلس'],[30,'سفير هلاا'],[50,'نخبة هلاا'],[75,'أسطورة المجلس'],[100,'الرتبة الملكية']];
+function rankName(lv){return ranks.filter(([n])=>n<=lv).at(-1)?.[1]||ranks[0][1];}
+const profileKey='halaa.personal.v1', progressKey='halaa.progress.v1';
+const originalAvatar=state.user.avatarImg;
+let personal={name:state.user.name,bio:'',family:'',avatar:''};
+let xpLedger=[],visitedToday=[];
+const localDay=()=>new Date().toLocaleDateString('en-CA');
+function storeProgress(){
+  const u=state.user;
+  try{localStorage.setItem(progressKey,JSON.stringify({level:u.level,xp:u.xp,gold:u.gold,crystals:u.crystals,claims:state.claimedLevelRewards,
+    ledger:xpLedger,visits:visitedToday,day:localDay(),daily:state.dailyTaskClaimed,festival:state.festivalClaimed}));}catch{}
+}
+function restorePersonal(){
+  try{
+    const p=JSON.parse(localStorage.getItem(profileKey)||'null');
+    if(p&&typeof p.name==='string'&&p.name.trim()){
+      for(const [k,max] of [['name',32],['family',36],['bio',160]])personal[k]=typeof p[k]==='string'?p[k].slice(0,max):'';
+      if(typeof p.avatar==='string'&&/^data:image\/(?:png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(p.avatar)&&p.avatar.length<350000)personal.avatar=p.avatar;
+    }
+    const d=JSON.parse(localStorage.getItem(progressKey)||'null');
+    if(d&&Number.isSafeInteger(d.level)&&d.level>=1&&Number.isInteger(d.xp)&&d.xp>=0&&d.xp<100){
+      Object.assign(state.user,{level:d.level,xp:d.xp});
+      for(const k of ['gold','crystals'])if(Number.isSafeInteger(d[k])&&d[k]>=0)state.user[k]=d[k];
+      if(Array.isArray(d.claims))state.claimedLevelRewards=d.claims.filter(l=>checkpoints.some(c=>c.lv===l));
+      xpLedger=Array.isArray(d.ledger)?d.ledger.filter(e=>typeof e.label==='string'&&Number.isFinite(e.pts)&&Number.isFinite(e.at)).slice(0,6):[];
+      if(d.day===localDay()){visitedToday=Array.isArray(d.visits)?d.visits.slice(-300):[];state.dailyTaskClaimed=!!d.daily;}
+      state.festivalClaimed=!!d.festival;
+    }
+  }catch{}
+  applyIdentity();
+}
+function applyIdentity(){
+  state.user.name=personal.name;state.user.avatarImg=personal.avatar||originalAvatar;
+  $room('headerUserNameText').textContent=personal.name;
+  $room('headerUserAvatarImg').src=state.user.avatarImg;
+  $room('headerLevelCircle').textContent=state.user.level;
+}
+function gameTile(g){
+  return '<article class="lounge-tile"><button class="lounge-open" onclick="openGameModal(\''+g.id+'\')" aria-label="فتح '+htmlText(g.name)+'"><span class="lounge-art"><img src="'+g.img+'" alt="" loading="lazy"><span class="lounge-count" title="لاعبون في المعاينة"><i data-lucide="users"></i>'+htmlText(g.players)+'</span></span><b class="lounge-name">'+htmlText(g.name)+'</b><span class="lounge-info"><span class="insignia"><i data-lucide="gamepad-2"></i>'+htmlText(g.badge)+'</span><small>'+htmlText(g.entry)+'</small></span></button></article>';
+}
+function editPersonal(){
+  openModal('<form id="personalForm" class="personal-form"><div class="gallery-head"><h3>تعديل الملف الشخصي</h3><button type="button" class="control" onclick="closeModal()">إغلاق</button></div><div class="avatar-editor"><img id="portraitPreview" alt="معاينة الصورة"><label class="control">تغيير الصورة<input name="portrait" type="file" accept="image/jpeg,image/png,image/webp"></label><button type="button" class="control" id="resetPortrait">الصورة الأصلية</button></div><label>اسم العرض<input class="control" name="nickname" maxlength="32" required></label><label>نبذة عني<textarea class="control" name="bio" maxlength="160" rows="2"></textarea></label><label>اسم العائلة في هلاا (اختياري)<input class="control" name="family" maxlength="36"></label><p role="status"></p><button class="control theme-accent-bg" type="submit">حفظ الملف</button></form>');
+  const form=$room('personalForm'),f=form.elements,img=$room('portraitPreview'),status=form.querySelector('[role=status]');
+  let portrait=personal.avatar,revision=0;
+  f.nickname.value=personal.name;f.bio.value=personal.bio;f.family.value=personal.family;img.src=portrait||originalAvatar;
+  const submit=form.querySelector('[type=submit]');
+  $room('resetPortrait').onclick=()=>{revision++;portrait='';img.src=originalAvatar;f.portrait.value='';submit.disabled=false;status.textContent='';};
+  f.portrait.onchange=async()=>{
+    const file=f.portrait.files[0];if(!file)return;
+    const version=++revision;submit.disabled=true;let url;
+    try{
+      if(file.size>8*1024*1024||!['image/png','image/jpeg','image/webp'].includes(file.type))throw Error();
+      url=URL.createObjectURL(file);const source=new Image();source.src=url;await source.decode();
+      const cv=document.createElement('canvas');cv.width=cv.height=280;
+      const side=Math.min(source.naturalWidth,source.naturalHeight);
+      cv.getContext('2d').drawImage(source,(source.naturalWidth-side)/2,(source.naturalHeight-side)/2,side,side,0,0,280,280);
+      if(version===revision){portrait=cv.toDataURL('image/jpeg',.88);img.src=portrait;status.textContent='';}
+    }catch{if(version===revision)status.textContent='اختر صورة JPG أو PNG أو WebP بحجم أقل من 8 ميغابايت.';}
+    finally{if(url)URL.revokeObjectURL(url);if(version===revision)submit.disabled=false;}
+  };
+  form.onsubmit=e=>{
+    e.preventDefault();const name=f.nickname.value.trim();if(!name){status.textContent='أدخل اسم العرض';return;}
+    const next={name,bio:f.bio.value.trim(),family:f.family.value.trim(),avatar:portrait};
+    try{localStorage.setItem(profileKey,JSON.stringify(next));}catch{status.textContent='تعذر حفظ الملف في هذا المتصفح.';return;}
+    personal=next;applyIdentity();closeModal();renderMain();if(state.activeRoom)renderMics();showToast('تم حفظ الملف الشخصي');
+  };
+}
+function openLevelDetailsModal(){
+  const u=state.user,next=ranks.find(([n])=>n>u.level);
+  const levels=checkpoints.map(c=>{
+    const claimed=state.claimedLevelRewards.includes(c.lv),ready=u.level>=c.lv;
+    return '<div class="level-stop"><b>Lv.'+c.lv+'</b><span>'+c.reward.toLocaleString('ar')+' 🪙</span><button class="control" '+(claimed||!ready?'disabled':'')+' onclick="claimLevelReward('+c.lv+');openLevelDetailsModal()">'+(claimed?'مُستلمة':ready?'استلام':'مقفلة')+'</button></div>';
+  }).join('');
+  openModal('<div class="gallery-head"><h3>مسار المستوى</h3><button class="control" onclick="closeModal()">إغلاق</button></div><section class="level-hero"><strong>Lv.'+u.level+'</strong><h3>'+rankName(u.level)+'</h3><progress max="100" value="'+u.xp+'"></progress><p>'+u.xp+' / 100 XP · متبقٍ '+(100-u.xp)+' نقطة للمستوى '+(u.level+1)+'</p>'+(next?'<small>الرتبة التالية «'+next[1]+'» عند Lv.'+next[0]+'</small>':'')+'</section><h4>مكافآت المستويات</h4><div class="level-stops">'+levels+'</div>'+(xpLedger.length?'<h4>آخر نقاط الخبرة</h4>'+xpLedger.map(e=>'<div class="xp-row"><span>'+htmlText(e.label)+'</span><b>+'+e.pts+' XP</b></div>').join(''):''));
+}
+
+
+function jewelImage(style,hue){
+  const c=document.createElement('canvas');c.width=480;c.height=300;
+  const ctx=c.getContext('2d'),gold='#efcf8a';
+  const glow=ctx.createRadialGradient(240,124,4,240,150,260);
+  glow.addColorStop(0,'hsl('+hue+' 45% 29%)');glow.addColorStop(1,'#080b17');
+  ctx.fillStyle=glow;ctx.fillRect(0,0,480,300);
+  ctx.strokeStyle='#eac78180';ctx.lineWidth=1;ctx.strokeRect(12.5,12.5,455,275);
+  for(let i=0;i<32;i++){const x=25+(i*97)%431,y=24+(i*67)%246;ctx.fillStyle='rgba(255,229,186,'+(.2+(i%5)*.09)+')';ctx.beginPath();ctx.arc(x,y,1+i%2,0,Math.PI*2);ctx.fill();}
+  ctx.translate(240,145);
+  ctx.strokeStyle=gold;ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(0,62,100,19,0,0,Math.PI*2);ctx.stroke();
+  if(style==='pearl'){
+    for(let i=0;i<23;i++){const a=Math.PI*i/22,x=Math.cos(a)*106,y=Math.sin(a)*58-25;
+      const g=ctx.createRadialGradient(x-3,y-4,1,x,y,10);g.addColorStop(0,'#fff');g.addColorStop(.5,'#f4e1cf');g.addColorStop(1,'#866d99');
+      ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,8,0,Math.PI*2);ctx.fill();}
+  }
+  const sides=style==='emerald'?8:style==='star'?10:style==='sapphire'?6:12,outer=[],inner=[];
+  for(let i=0;i<sides;i++){const a=2*Math.PI*i/sides-Math.PI/2;
+    const r=style==='star'&&i%2?.52:1;
+    outer.push([Math.cos(a)*r*(style==='emerald'?56:73),Math.sin(a)*r*75]);
+    inner.push([Math.cos(a+.12)*r*34-5,Math.sin(a+.12)*r*32-8]);}
+  function facet(points,light,edge){ctx.beginPath();points.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.closePath();ctx.fillStyle='hsl('+hue+' 70% '+light+'%)';ctx.fill();ctx.strokeStyle=edge||'rgba(255,255,255,.32)';ctx.lineWidth=1;ctx.stroke();}
+  if(style==='pearl'){
+    const p=ctx.createRadialGradient(-14,-21,2,2,0,39);p.addColorStop(0,'#fff');p.addColorStop(.35,'#fff0dd');p.addColorStop(.67,'#cdbed9');p.addColorStop(1,'#77658a');
+    ctx.fillStyle=p;ctx.beginPath();ctx.arc(0,0,39,0,Math.PI*2);ctx.fill();
+  }else{for(let i=0;i<sides;i++){const k=(i+1)%sides;facet([outer[i],outer[k],inner[k]],24+(i*13)%47);facet([outer[i],inner[k],inner[i]],34+(i*17)%48);}
+    facet(inner,60);ctx.beginPath();outer.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.closePath();ctx.lineWidth=3;ctx.strokeStyle=gold;ctx.stroke();}
+  ctx.fillStyle='#fff7d7';ctx.beginPath();ctx.moveTo(-29,-41);ctx.lineTo(-25,-52);ctx.lineTo(-22,-41);ctx.lineTo(-12,-38);ctx.lineTo(-22,-36);ctx.lineTo(-25,-24);ctx.lineTo(-28,-35);ctx.lineTo(-38,-38);ctx.closePath();ctx.fill();return c.toDataURL('image/png');
+}
+function addJewelCollection(){
+  const pieces=[
+    ['g7','زمردة القصر','emerald',153,850,'زمردي',[330,494,659]],
+    ['g8','عقد اللؤلؤ','pearl',290,1200,'لؤلؤي',[392,494,740]],
+    ['g9','ياقوتة الشفق','ruby',348,2400,'ياقوتي',[311,466,622]],
+    ['g10','جوهرة المحيط','sapphire',220,4200,'ملكي',[294,440,659]],
+    ['g11','نجمة السلطان','star',43,8000,'سلطاني',[440,554,659,880]]
+  ];
+  for(const [id,name,shape,hue,price,tier,notes] of pieces){
+    state.gifts.push({id,name,price,tier,icon:'💎',img:jewelImage(shape,hue)});
+    giftThemes[id]={ink:'hsl('+hue+' 78% 72%)',scene:shape==='pearl'?'tide':shape==='star'?'flight':'crown',notes};
+  }
+}
+
+    // Init
     setInterval(() => { state.serverEpochMs += 1000; }, 1000);
     window.addEventListener('DOMContentLoaded', () => {
       try { applyAd(JSON.parse(localStorage.getItem(previewKey))); } catch {}
       scheduleAd();setupServices();
+      addJewelCollection();restorePersonal();
       updateWalletUI();
       switchTab('home');
     });
