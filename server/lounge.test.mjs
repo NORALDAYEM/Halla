@@ -1,0 +1,32 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {createServer} from 'node:http';
+import {once} from 'node:events';
+
+test('two browsers exchange messages and gifts; retries preserve the balance',async t=>{
+  process.env.HALAA_DB=':memory:';
+  const {handleRequest}=await import('./app.mjs');
+  const server=createServer(handleRequest).listen(0,'127.0.0.1');await once(server,'listening');
+  t.after(()=>server.close());const base='http://127.0.0.1:'+server.address().port;
+  const request=async(path,body,cookie='')=>fetch(base+'/api/lounge/'+path,{method:'POST',headers:{'X-Halaa-Room':'1','Content-Type':'application/json',cookie},body:JSON.stringify(body)});
+  const guest=async name=>{const response=await request('join',{room:'r1',name});assert.equal(response.status,200);return {cookie:response.headers.get('set-cookie').split(';')[0],...await response.json()};};
+  const a=await guest('ليان'),b=await guest('أحمد');assert.notEqual(a.me,b.me);
+  const room='r1',id='gift-retry-0001',gift={room,kind:'gift',giftId:'g2',id,to:b.me};
+  const results=await Promise.all([request('send',gift,a.cookie),request('send',gift,a.cookie)]);const copies=await Promise.all(results.map(r=>r.json()));
+  assert.equal(copies[0].event.seq,copies[1].event.seq);assert.equal(copies[1].balance,24900);assert.equal(copies[0].event.target,'أحمد');
+  const poll=async(who,room)=>await(await request('poll',{room,after:0},who.cookie)).json();
+  const received=await poll(b,room);assert.equal(received.balance,25400);assert.equal(received.events.filter(e=>e.kind==='gift').length,1);
+  const chat={room,kind:'chat',id:'a-message-0001',text:'مرحبا',reply:'رسالة سابقة'};assert.equal((await request('send',chat,a.cookie)).status,200);
+  assert.equal((await poll(b,room)).events.at(-1).reply,'رسالة سابقة');assert.deepEqual((await poll(b,'r2')).events,[]);
+  const clap={room,kind:'clap',id:'a-clap-0001',gift:id};assert.equal((await request('send',clap,b.cookie)).status,200);assert.equal((await request('send',{...clap,id:'a-clap-0002'},b.cookie)).status,409);
+  assert.equal((await request('send',{...gift,id:'missing-target',to:'unknown'},a.cookie)).status,409);
+  assert.equal((await request('send',{...gift,id:'unknown-item',giftId:'no-such-item'},a.cookie)).status,400);
+  assert.equal((await request('send',{...chat,room:'unknown'},a.cookie)).status,404);
+  assert.equal((await request('send',chat)).status,401);
+  const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jBkYAAAAASUVORK5CYII=','base64');
+  const upload=async(bytes,id)=>fetch(base+'/api/lounge/media?room=r1&id='+id,{method:'POST',headers:{'X-Halaa-Room':'1','Content-Type':'image/png',cookie:a.cookie},body:bytes});
+  assert.equal((await upload(png,'image-00001')).status,201);assert.equal((await upload(Buffer.from('wrong'),'image-00002')).status,415);
+  const photo=await fetch(base+'/api/lounge/file/image-00001',{headers:{cookie:b.cookie}});assert.equal(photo.status,200);assert.deepEqual(Buffer.from(await photo.arrayBuffer()),png);
+  assert.equal((await poll(b,room)).events.at(-1).type,'image');
+  assert.equal((await poll(a,room)).balance,24900);
+});

@@ -1,7 +1,8 @@
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { DatabaseSync } from 'node:sqlite';
-import { AccessToken, RoomServiceClient, TrackSource } from 'livekit-server-sdk';
+import { pathToFileURL } from 'node:url';
+import { loungeService } from './lounge.mjs';
 
 const env = process.env;
 const db = new DatabaseSync(env.HALAA_DB || 'halaa.sqlite');
@@ -10,6 +11,7 @@ const read = key => JSON.parse(db.prepare('SELECT value FROM settings WHERE key=
 const write = (key, value) => db.prepare('INSERT OR REPLACE INTO settings VALUES (?,?)').run(key, JSON.stringify(value));
 const authReady = Boolean(env.SUPABASE_URL && env.SUPABASE_PUBLISHABLE_KEY);
 const voiceReady = Boolean(authReady && env.LIVEKIT_URL && env.LIVEKIT_API_KEY && env.LIVEKIT_API_SECRET);
+const {AccessToken,RoomServiceClient,TrackSource}=voiceReady?await import('livekit-server-sdk'):{};
 const live = voiceReady && new RoomServiceClient(env.LIVEKIT_URL.replace(/^wss:/,'https:'),env.LIVEKIT_API_KEY,env.LIVEKIT_API_SECRET);
 let snapshot, expiresAt=0, pendingPresence;
 async function presence(){
@@ -54,16 +56,23 @@ export function validAd(a) {
     && Number.isInteger(a.imageIndex) && a.imageIndex>=0 && a.imageIndex<4
     && ['start','end'].every(k=>a[k]===null || Number.isFinite(a[k])) && (a.start===null || a.end===null || a.start<a.end);
 }
-createServer(async(req,res)=>{
+const extraGifts={v4_rose_warda:100,v4_heart_qalb:180,v4_crown_taj:750,v4_ring_khatim:1200,v4_car_sayyara:2500,v4_rocket_sarookh:3500};
+const lounge=loungeService(db,extraGifts,id=>typeof id==='string'&&id.length<=80&&(roomIds.has(id)||!!read('room:'+id)),body,json);
+export async function handleRequest(req,res){
   try {
     const path=new URL(req.url,'http://localhost').pathname;
+    if(path.startsWith('/api/lounge/')){await lounge(req,res,new URL(req.url,'http://localhost'));return;}
+    if(req.method==='GET'&&path==='/health')return json(res,200,{status:'ok',textRooms:true,voiceReady});
     if(req.method==='GET' && ['/','/halaa_voice_app.html','/halaa_mobile_screens_showcase.html'].includes(path)){
       const file=path.includes('showcase')?'halaa_mobile_screens_showcase.html':'halaa_voice_app.html';
       const content=await readFile(new URL('../'+file,import.meta.url));
       res.writeHead(200,{'content-type':'text/html; charset=utf-8','referrer-policy':'no-referrer'});return res.end(content);
     }
     if(req.method==='GET' && path==='/api/presence')return json(res,200,await presence());
-    if(req.method==='GET' && path==='/api/config') return json(res,200,{authUrl:env.SUPABASE_URL||'',publicKey:env.SUPABASE_PUBLISHABLE_KEY||'',voiceReady,ad:read('homeAd'),rooms:db.prepare("SELECT value FROM settings WHERE key LIKE 'room:%' ORDER BY rowid DESC LIMIT 200").all().map(row=>{const {id,title,category}=JSON.parse(row.value);return {id,title,category};})});
+    if(req.method==='GET' && path==='/api/config') {
+      const rooms=db.prepare("SELECT value FROM settings WHERE key LIKE 'room:%' ORDER BY rowid DESC LIMIT 200").all().map(row=>{const {id,title,category}=JSON.parse(row.value);return {id,title,category};});
+      return json(res,200,{authUrl:env.SUPABASE_URL||'',publicKey:env.SUPABASE_PUBLISHABLE_KEY||'',voiceReady,textRooms:true,publicRooms:[...roomIds,...rooms.map(r=>r.id)],ad:read('homeAd'),rooms});
+    }
     if(req.method!=='POST' || !['/api/ad','/api/voice','/api/moderate','/api/rooms'].includes(path)) return json(res,404,{});
     const user=await identity(req), data=await body(req);
     if(path==='/api/rooms'){
@@ -100,4 +109,6 @@ createServer(async(req,res)=>{
     token.addGrant({roomJoin:true,room,...grant(role),canUpdateOwnMetadata:false});
     return json(res,200,{url:env.LIVEKIT_URL,token:await token.toJwt(),role});
   } catch(e){return json(res,e.status||503,{error:e.status?e.message:'تعذر إتمام الاتصال بالخدمة'});}
-}).listen(Number(env.PORT||3000));
+}
+if(process.argv[1]&&pathToFileURL(process.argv[1]).href===import.meta.url)createServer(handleRequest).listen(Number(env.PORT||3000));
+

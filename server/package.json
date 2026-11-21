@@ -7,9 +7,10 @@
   },
   "scripts": {
     "start": "node app.mjs",
-    "test": "node --test app.test.mjs"
+    "test": "node --test app.test.mjs lounge.test.mjs"
   },
   "dependencies": {
     "livekit-server-sdk": "2.15.0"
   }
 }
+
