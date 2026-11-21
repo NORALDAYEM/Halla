@@ -188,6 +188,8 @@ input.control{display:block;width:100%}.control:disabled{opacity:.55}.voice-tool
 .voice-person{border-radius:1rem;padding:.75rem;border:1px solid var(--border-subtle);background:var(--bg-card);display:grid;gap:.25rem;text-align:center}.voice-person.speaking{outline:2px solid var(--accent)}.voice-person small{color:var(--text-muted)}#liveLog{flex:1;overflow:auto;padding:1rem}#liveLog p{overflow-wrap:anywhere}.voice-toolbar input{flex:1;min-width:0}
 @media(max-width:540px){#voiceRoomOverlay .relative.z-10>.border-b:first-child{flex-wrap:wrap}#micGrid .w-14{width:2.65rem;height:2.65rem}#voiceRoomOverlay .preview-room{overflow:auto}#roomChatStream{min-height:4rem}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important}.room-marquee-text{transform:none!important}}
+.lounge-grid,.gift-samples,.medal-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(5px,1.4vw,14px)}.lounge-tile,.medal,.gift-samples button{min-width:0;position:relative;border-radius:14px;border:1px solid var(--border-subtle);background:var(--bg-card);overflow:hidden}.lounge-open{display:block;text-align:start;width:100%;height:100%;color:var(--text-main)}.lounge-art{display:block;position:relative;aspect-ratio:1.32;overflow:hidden}.lounge-art img{width:100%;height:100%;object-fit:cover;transition:transform .4s}.lounge-open:hover img{transform:scale(1.035)}.lounge-count,.lounge-fav{position:absolute;top:5px;background:#12131dd9;color:#fff;display:flex;align-items:center;gap:3px;border-radius:20px;padding:3px 6px}.lounge-count{inset-inline-start:5px;font-size:11px}.lounge-fav{inset-inline-end:5px;padding:5px}.lounge-fav[aria-pressed=true]{color:#ff92ab}.lounge-fav[aria-pressed=true] svg{fill:currentColor}.lounge-count svg,.lounge-fav svg{width:13px;height:13px}.lounge-name{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.4;height:2.8em;margin:7px 7px 3px;font-size:clamp(11px,2.7vw,15px)}.lounge-info{display:flex;align-items:center;justify-content:space-between;padding:0 6px 8px;gap:2px}.insignia{display:inline-flex;align-items:center;gap:.25em;font-size:clamp(9px,2vw,12px);font-weight:700}.insignia svg{width:1.15em;height:1.15em;color:var(--accent)}.room-wave{display:inline-flex;align-items:center;gap:2px;height:14px;color:var(--accent)}.room-wave i{width:2px;height:3px;background:currentColor;border-radius:3px}.room-wave.on i{animation:equalize .9s ease-in-out infinite alternate}.room-wave.on i:nth-child(2){animation-delay:-.64s}.room-wave.on i:nth-child(3){animation-delay:-.25s}.room-wave.on i:nth-child(4){animation-delay:-.73s}@keyframes equalize{to{height:12px}}.gallery-head,.gallery-foot{display:flex;align-items:center;justify-content:space-between;gap:8px}.gallery-head h3,#giftHero h3{font-size:1.2rem;font-weight:850}.gallery-foot{margin-block-start:12px;flex-wrap:wrap}.gallery-foot .control{min-height:40px}.gallery-foot .control:last-child{border-color:var(--accent);margin-inline-start:auto}.gift-samples,.medal-grid{margin-top:12px}.gift-samples button,.medal{font-size:.78rem;font-weight:750}.gift-samples img{width:100%;height:clamp(42px,8vh,80px);object-fit:cover}.gift-samples span{display:block;padding:4px}.gift-samples button[aria-pressed=true],.medal[aria-pressed=true]{outline:2px solid var(--accent);outline-offset:-2px}#giftHero,.gift-stage{position:relative;isolation:isolate;overflow:hidden;display:flex;align-items:center;gap:1rem;border:1px solid var(--glow);border-radius:18px;background:radial-gradient(ellipse at 88% 0%,color-mix(in srgb,var(--glow) 35%,#101021),transparent 70%),#141420;color:white;padding:12px}#giftHero{margin-top:12px}.gift-portrait{position:relative;width:clamp(80px,22vw,150px);aspect-ratio:1.6;overflow:hidden;border-radius:12px;box-shadow:0 4px 18px #0006}.gift-portrait img{width:100%;height:100%;object-fit:cover}.perform img{animation:gift-reveal 1.4s ease-out both}.perform.drive img{animation-name:gift-drive}.perform.flight img{animation-name:gift-flight}.perform.tide img{animation-name:gift-tide}.perform:after{content:'';position:absolute;inset:0;background:linear-gradient(115deg,transparent 30%,#fff6,transparent 65%);animation:gift-sweep 1.6s ease-out both}.gift-stage{pointer-events:auto;max-width:480px;width:94%;margin:auto;box-shadow:0 8px 35px #05031277}.stage-copy{display:grid;flex:1}.stage-copy strong{font-size:1.05rem}.stage-copy span,#giftHero small{color:var(--glow)}.stage-copy small{font-size:.72rem}.medal{display:grid;justify-items:center;align-content:center;gap:5px;padding:12px 5px}.medal svg{width:25px;height:25px;color:var(--accent)}.medal small{font-weight:500;color:var(--text-muted)}.medal:disabled{opacity:.76}@keyframes gift-reveal{from{transform:scale(1.35);filter:brightness(1.6)}}@keyframes gift-drive{from{transform:translateX(-32%) scale(1.55)}}@keyframes gift-flight{from{transform:translate(-15%,18%) rotate(-7deg) scale(1.6)}}@keyframes gift-tide{from{transform:scale(1.25) rotate(5deg)}50%{transform:scale(1.12) rotate(-2deg)}}@keyframes gift-sweep{from{transform:translateX(-110%)}to{transform:translateX(110%)}}@media(prefers-reduced-motion:reduce){.room-wave.on i{animation:none;height:7px}.perform img,.perform:after{animation:none}.perform:after{display:none}}
+
 </style>
 </head>
 <body class="min-h-screen flex justify-center items-start md:py-4">
@@ -342,7 +344,7 @@ input.control{display:block;width:100%}.control:disabled{opacity:.55}.voice-tool
       </div>
 
       <div class="voice-toolbar"><span id="liveStatus" role="status">معاينة المقاعد</span><button class="control" onclick="openRoomPolicy()">صلاحيات الغرفة</button><button class="control" onclick="connectLive()">دخول الصوت المباشر</button></div>
-<section id="livePanel" hidden><div id="livePeople"></div><div class="voice-toolbar"><button class="control" id="liveMic" onclick="liveMicToggle()">فتح الميكروفون</button><button class="control" onclick="liveRoom?.startAudio().catch(()=>showToast('تحقق من إعدادات الصوت'))">تشغيل السماعة</button><button class="control" onclick="stopLive();$room('liveStatus').textContent='معاينة المقاعد'">إنهاء الاتصال</button></div>
+<section id="livePanel" hidden><div id="livePeople"></div><div class="voice-toolbar"><button class="control" onclick="openGiftDrawer()">🎁 هدية</button><select class="control" id="voicePreset" aria-label="مؤثر الميكروفون" onchange="applyLiveVoice(this)"><option value="natural">صوت طبيعي</option><option value="studio">وضوح الاستوديو</option><option value="echo">صدى خفيف</option></select><button class="control" id="liveMic" onclick="liveMicToggle()">فتح الميكروفون</button><button class="control" onclick="liveRoom?.startAudio().catch(()=>showToast('تحقق من إعدادات الصوت'))">تشغيل السماعة</button><button class="control" onclick="stopLive();$room('liveStatus').textContent='معاينة المقاعد'">إنهاء الاتصال</button></div>
 <div id="liveLog" role="log"></div><form class="voice-toolbar" onsubmit="event.preventDefault();liveSend(this)"><input class="control" name="message" maxlength="350" required placeholder="رسالة للمشاركين"><button class="control">إرسال</button></form></section><div id="liveAudio"></div>
 <!-- Gift Banner Animation Container -->
       <div id="giftBannerArea" class="pointer-events-none absolute top-16 inset-x-4 z-50 flex flex-col items-center gap-2"></div>
@@ -350,7 +352,7 @@ input.control{display:block;width:100%}.control:disabled{opacity:.55}.voice-tool
       <div class="preview-room flex-1 flex flex-col md:flex-row overflow-hidden">
       <!-- Mic Seats Grid -->
       <div class="px-4 py-3 md:w-1/2 md:border-l flex flex-col justify-center shrink-0" style="border-color: var(--border-subtle);">
-        <div class="seat-title">مقاعد الغرفة</div><div id="micGrid" class="grid grid-cols-4 gap-3">
+        <div class="seat-title">مقاعد الغرفة <span id="seatRoomBadge"></span></div><div id="micGrid" class="grid grid-cols-4 gap-3">
           <!-- Rendered dynamically -->
         </div>
       </div>
@@ -684,34 +686,9 @@ input.control{display:block;width:100%}.control:disabled{opacity:.55}.voice-tool
     function renderRoomCardsHTML() {
       const filtered = getFilteredRooms();
       if (filtered.length === 0) {
-        return `<div class="text-center py-10 theme-muted text-sm">لا توجد غرف مطابقة لبحثك حالياً.</div>`;
+        return `<div class="col-span-3 text-center py-10 theme-muted text-sm">لا توجد غرف مطابقة لبحثك حالياً.</div>`;
       }
-      return filtered.map(r => `
-        <div onclick="enterRoom('${r.id}')" class="relative h-36 rounded-2xl overflow-hidden border cursor-pointer shadow-lg group" style="border-color: var(--border-subtle);">
-          <img src="${r.cover}" alt="${htmlText(r.title)}" class="absolute inset-0 w-full h-full object-cover" />
-          <div class="absolute inset-0 bg-gradient-to-t from-black/95 via-black/45 to-black/25"></div>
-          <div class="relative z-10 h-full p-3 flex flex-col justify-between">
-            <div class="flex items-center justify-between gap-2">
-              <div class="flex items-center gap-1.5">
-                <span class="px-2 py-0.5 rounded-full bg-black/65 text-[10px] font-bold text-white border border-white/10">${r.flag} ${r.category}</span>
-                <span class="px-2 py-0.5 rounded-full bg-black/65 text-[10px] font-bold theme-accent-text flex items-center gap-1">
-                  <i data-lucide="headphones" class="w-3 h-3"></i>${r.listeners}
-                </span>
-              </div>
-              <button onclick="event.stopPropagation(); toggleRoomFav('${r.id}')" class="p-1.5 rounded-full bg-black/50 hover:bg-black/75">
-                <i data-lucide="heart" class="w-3.5 h-3.5 ${r.isFav ? 'fill-rose-500 text-rose-500' : 'text-slate-300'}"></i>
-              </button>
-            </div>
-            <div>
-              <h3 class="font-extrabold text-sm text-white truncate">${htmlText(r.title)}</h3>
-              <div class="flex items-center justify-between text-[11px] text-slate-300 mt-0.5">
-                <span>المضيف: ${r.host} • ID: ${r.numId}</span>
-                <span class="px-2 py-0.5 rounded-lg luxury-gold-gradient text-[10px] font-extrabold">دخول</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      `).join('');
+      return filtered.map(cardForRoom).join('');
     }
 
     function claimLevelReward(lv, gold) {
@@ -829,7 +806,7 @@ input.control{display:block;width:100%}.control:disabled{opacity:.55}.voice-tool
     }
 
     function renderHomeTab(container) {
-      const topRooms = state.rooms.slice(0, 3);
+      const topRooms = state.rooms.slice(0, 6);
 const topGames = state.gamesCatalog.slice(0, 3).map(g => ({ id: g.id, name: g.name, img: g.img, tag: g.players }));
       const topStore = [state.gamesStoreItems[0], state.gamesStoreItems[3], state.gamesStoreItems[6]];
 
@@ -864,21 +841,7 @@ const topGames = state.gamesCatalog.slice(0, 3).map(g => ({ id: g.id, name: g.na
               <h3 class="text-sm font-extrabold flex items-center gap-1.5"><span class="theme-gold-text">✦</span><span>الغرف الصوتية المباشرة</span></h3>
               <button onclick="switchTab('rooms')" class="text-xs font-bold theme-accent-text">عرض الكل ◀</button>
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-              ${topRooms.map(r => `
-                <div onclick="enterRoom('${r.id}')" class="relative h-32 rounded-2xl overflow-hidden border cursor-pointer shadow-lg" style="border-color: var(--border-subtle);">
-                  <img src="${r.cover}" alt="${htmlText(r.title)}" class="absolute inset-0 w-full h-full object-cover" />
-                  <div class="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-black/20"></div>
-                  <div class="relative z-10 h-full p-3 flex flex-col justify-between">
-                    <div class="flex items-center justify-between">
-                      <span class="px-2 py-0.5 rounded-full bg-black/65 text-[10px] font-bold text-white">${r.flag} ${r.category}</span>
-                      <span class="px-2 py-0.5 rounded-full bg-black/65 text-[10px] font-bold theme-accent-text">🎧 ${r.listeners}</span>
-                    </div>
-                    <h4 class="font-extrabold text-xs text-white truncate">${htmlText(r.title)}</h4>
-                  </div>
-                </div>
-              `).join('')}
-            </div>
+            <div class="lounge-grid">${topRooms.map(cardForRoom).join('')}</div>
           </section>
 
           <!-- 2. Games Row (3 per row) -->
@@ -976,7 +939,7 @@ const topGames = state.gamesCatalog.slice(0, 3).map(g => ({ id: g.id, name: g.na
             </div>
           </div>
 
-          <div id="roomListContainer" class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+          <div id="roomListContainer" class="lounge-grid">
             ${renderRoomCardsHTML()}
           </div>
 
@@ -1158,6 +1121,7 @@ const games = state.gamesCatalog;
     function renderMeTab(container) {
       const u = state.user;
       const profileCards = [
+        {title:'مجموعة شاراتي',sub:decorations.find(x=>x.id===collection.selected).name,icon:'medal',fn:'badgeShelf()'},
         { title: 'المحفظة', sub: `${u.gold.toLocaleString('en-US')} 🪙 • ${u.crystals} 💎`, icon: 'wallet', fn: 'openWalletModal()' },
         { title: 'المهام', sub: state.dailyTaskClaimed ? 'مكتمل اليوم ✓' : 'اجمع +150 🪙 الآن', icon: 'check-circle-2', fn: 'claimDailyTask()' },
         { title: 'المتجر', sub: 'إطارات، مركبات، وVIP', icon: 'shopping-bag', fn: 'openStoreModal()' },
@@ -1368,7 +1332,7 @@ const games = state.gamesCatalog;
             </div>
             <button onclick="closeModal()" class="p-1.5 rounded-full hover:bg-black/10"><i data-lucide="x" class="w-4 h-4"></i></button>
           </div>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <button class="control" onclick="badgeShelf()">مجموعة شاراتي</button><div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             ${state.badgeSubscriptions.map(b => {
               const active = b.expiresAtMs && b.expiresAtMs > state.serverEpochMs;
               return `
@@ -1513,7 +1477,7 @@ const games = state.gamesCatalog;
       if (!room) return;
       if(state.activeRoom) rememberRoom();
       stopLive();$room('liveLog').replaceChildren();$room('liveStatus').textContent='معاينة المقاعد';
-      state.activeRoom = room;syncRoomPolicy();
+      state.activeRoom = room;syncRoomPolicy();$room('seatRoomBadge').innerHTML=badgeChip(...roomBadge(room));if(!collection.visits.includes(room.id)){collection.visits.push(room.id);saveCollection();}
       state.eventTasks.roomJoined = true;
       addXP(10);
       state.isRoomMinimized = false;
@@ -1610,7 +1574,7 @@ const games = state.gamesCatalog;
               ${m.isMe ? `<img src="${state.user.avatarImg}" class="w-full h-full rounded-full object-cover" />` : `<span>${m.avatar}</span>`}
               ${m.muted ? '<span class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-rose-500 flex items-center justify-center"><i data-lucide="mic-off" class="w-3 h-3 text-white"></i></span>' : ''}
             </div>
-            <span class="text-[11px] font-bold truncate max-w-[74px] ${m.isMe ? 'theme-accent-text' : ''}">${m.flag || '🇸🇦'} ${m.gender === 'F' ? '♀' : '♂'} ${m.name}</span>
+            <span class="text-[11px] font-bold truncate max-w-[74px] ${m.isMe ? 'theme-accent-text' : ''}">${m.flag || '🇸🇦'} ${m.gender === 'F' ? '♀' : '♂'} ${m.name}</span>${m.isMe?ownBadge():""}
           </button>
         `;
       }).join('');
@@ -1789,52 +1753,6 @@ const games = state.gamesCatalog;
       `);
     }
 
-    function openGiftDrawer(targetName = 'الجميع على المايك') {
-      openModal(`
-        <div class="space-y-4">
-          <div class="flex justify-between items-center">
-            <h3 class="font-extrabold text-sm">إرسال هدية إلى: <span class="theme-accent-text">${targetName}</span></h3>
-            <button onclick="closeModal()" class="p-1 rounded-full hover:bg-white/10"><i data-lucide="x" class="w-4 h-4"></i></button>
-          </div>
-          <div class="grid grid-cols-3 gap-2.5">
-            ${state.gifts.map(g => `
-              <button onclick="sendGift('${g.id}', '${targetName}')" class="p-3 rounded-2xl border theme-card flex flex-col items-center gap-1 hover:border-amber-400 transition">
-                <span class="text-[9px] px-2 py-0.5 rounded-full luxury-gold-gradient font-extrabold">${g.tier}</span>
-                <div class="w-16 h-16 rounded-2xl overflow-hidden border border-amber-400/40 shadow-md my-1">
-                  <img src="${g.img}" alt="${g.name}" class="w-full h-full object-cover" />
-                </div>
-                <span class="text-xs font-bold">${g.name}</span>
-                <span class="text-[11px] theme-gold-text font-bold">🪙 ${g.price.toLocaleString('en-US')}</span>
-              </button>
-            `).join('')}
-          </div>
-        </div>
-      `);
-    }
-
-    function playLuxuryGiftSound() {
-      if (!state.roomSoundEnabled || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-      try {
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        if (!AudioCtx) return;
-        const ctx = new AudioCtx();
-        const notes = [523.25, 659.25, 783.99, 1046.5];
-        notes.forEach((freq, i) => {
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-          osc.type = 'sine';
-          osc.frequency.value = freq;
-          gain.gain.setValueAtTime(0.08, ctx.currentTime + i * 0.09);
-          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.09 + 0.45);
-          osc.connect(gain);
-          gain.connect(ctx.destination);
-          osc.start(ctx.currentTime + i * 0.09);
-          if(i===notes.length-1) osc.onended=()=>ctx.close().catch(()=>{});
-          osc.stop(ctx.currentTime + i * 0.09 + 0.45);
-        });
-      } catch (e) {}
-    }
-
     function openRoomBgModal() {
       openModal(`
         <div class="space-y-4">
@@ -1883,7 +1801,7 @@ const games = state.gamesCatalog;
         <div class="space-y-4">
           <div class="flex justify-between items-center"><h3 class="font-extrabold text-sm">شارات ومميزات الغرفة (Lv.${state.roomLevel})</h3><button onclick="closeModal()"><i data-lucide="x" class="w-4 h-4"></i></button></div>
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-            ${state.roomBadges.map(b => `<div class="p-3 rounded-2xl border theme-card text-center text-xs font-extrabold theme-gold-text">${b}</div>`).join('')}
+            ${badgeChip(...roomBadge(state.activeRoom))}${state.roomBadges.map(b => `<div class="p-3 rounded-2xl border theme-card text-center text-xs font-extrabold theme-gold-text">${b}</div>`).join('')}
           </div>
           <div class="p-3 rounded-2xl border border-amber-400/25 bg-black/30 text-xs theme-muted">
             تمنح هذه الغرفة نقاط خبرة مضاعفة للمتحدثين وتدعم هدايا 4D والخلفيات الملكية.
@@ -1936,46 +1854,6 @@ const games = state.gamesCatalog;
       if (tk) tk.textContent = val;
       closeModal();
       showToast('تم تحديث الشريط المتحرك!');
-    }
-
-    function sendGift(giftId, targetName) {
-      const g = state.gifts.find(x => x.id === giftId);
-      if (!g) return;
-      if (state.user.gold < g.price) { showToast('رصيد الذهب غير كافٍ!'); return; }
-      state.user.gold -= g.price;
-      state.eventTasks.giftSent = true;
-      addXP(25);
-      updateWalletUI();
-      closeModal();
-
-      // Update leaderboard
-      const meLb = state.leaderboard.find(x => x.name === 'أنت');
-      if (meLb) meLb.amount += g.price;
-      else state.leaderboard.push({ name: 'أنت', avatar: state.user.avatar, amount: g.price });
-      state.leaderboard.sort((a, b) => b.amount - a.amount);
-
-      // Room chat & Banner
-      state.roomChats.push({ sender: 'النظام', text: `أهدى «أنت» ${g.icon} ${g.name} إلى ${targetName}!`, isSystem: true });
-      renderRoomChats();
-
-      playLuxuryGiftSound();
-      const banner = document.getElementById('giftBannerArea');
-      const el = document.createElement('div');
-      el.className = 'relative flex flex-col items-center justify-center p-6 rounded-3xl border border-amber-400/70 bg-slate-950/90 shadow-[0_0_50px_rgba(245,196,81,0.45)] backdrop-blur-lg overflow-hidden';
-      el.innerHTML = `
-        <div class="absolute w-36 h-36 rounded-full border-2 border-amber-400/70 shockwave-ring"></div>
-        <div class="absolute w-24 h-24 rounded-full border-2 border-teal-400/70 shockwave-ring" style="animation-delay:0.4s"></div>
-        <div class="absolute w-24 h-24 rounded-full bg-amber-400/20 blur-xl"></div>
-        <div class="gift-4d-icon w-28 h-28 rounded-3xl overflow-hidden border-2 border-amber-400 shadow-[0_0_30px_rgba(245,196,81,0.85)] relative z-10"><img src="${g.img}" alt="${g.name}" class="w-full h-full object-cover" /></div>
-        <span class="mt-2 px-3 py-0.5 rounded-full luxury-gold-gradient text-[10px] font-extrabold relative z-10">تأثير 4D • ${g.tier}</span>
-        <div class="mt-1 text-xs font-extrabold text-white relative z-10">أرسل <span class="theme-gold-text">أنت</span> ${g.name} إلى <span class="theme-accent-text">${targetName}</span></div>
-      `;
-      banner.appendChild(el);
-      setTimeout(() => el.remove(), 3400);
-
-      if (!matchMedia('(prefers-reduced-motion: reduce)').matches && typeof confetti === 'function') {
-        confetti({ particleCount: g.price >= 1500 ? 140 : 70, spread: 95, colors: ['#f5c451', '#00d4b8', '#ffffff'], origin: { y: 0.5 } });
-      }
     }
 
     function uploadGameCoverImg(e) {
@@ -2476,7 +2354,7 @@ const games = state.gamesCatalog;
         try { newRoom.id=(await api('rooms',{title,category:cat})).id; }
         catch(err){showToast(err.message);return;}finally{button.disabled=false;}
       }
-      state.rooms.unshift(newRoom);
+      collection.host=true;saveCollection();state.rooms.unshift(newRoom);
       closeModal();
       renderMain();
       enterRoom(newRoom.id);
@@ -2861,7 +2739,7 @@ async function setupServices() {
   try {
     const r=await fetch('/api/config',{signal:AbortSignal.timeout(5000)});
     if(!r.ok || !r.headers.get('content-type')?.includes('application/json')) return;
-    service=await r.json();
+    service=await r.json();if(service.voiceReady){void refreshPresence();setInterval(refreshPresence,15000);}
     for(const room of (service.rooms||[]).slice().reverse()){
       if(!/^room-[a-f0-9-]+$/.test(room.id)||state.rooms.some(r=>r.id===room.id))continue;
       state.rooms.unshift({...state.rooms[0],id:room.id,numId:room.id.slice(-6),title:room.title,category:room.category,tags:[room.category],listeners:0,host:'مالك الغرفة',isFav:false,discovery:'all',speaking:false});
@@ -2911,7 +2789,7 @@ function accountForm(mode='login') {
   };
 }
 function stopLive() {
-  liveGeneration++;
+  liveGeneration++;$room('voicePreset').value='natural';clearStage();giftHistory.clear();
   const room=liveRoom;liveRoom=null;liveRole='';
   if(room) void room.disconnect();
   $room('liveAudio').replaceChildren();$room('livePanel').hidden=true;
@@ -2933,7 +2811,9 @@ async function connectLive() {
     room.on('trackSubscribed',track=>{if(room===liveRoom&&track.kind==='audio')$room('liveAudio').append(track.attach());});
     room.on('trackUnsubscribed',track=>track.detach().forEach(el=>el.remove()));
     room.on('dataReceived',(bytes,p,kind,topic)=>{
-      if(room!==liveRoom||!p||topic!=='room-chat'||bytes.length>1600)return;
+      if(room!==liveRoom||!p)return;
+      if(topic==='room-gift'||topic==='gift-applause'){receiveGift(topic,bytes,p);return;}
+      if(topic!=='room-chat'||bytes.length>1600)return;
       appendLiveMessage(p.name||'عضو',new TextDecoder().decode(bytes));
     });
     room.on('disconnected',()=>{if(room===liveRoom){stopLive();status.textContent='انقطع الاتصال';}});
@@ -2963,7 +2843,7 @@ function renderLive() {
     const el=document.createElement('div');el.className='voice-person'+(p.isSpeaking?' speaking':'');
     const name=document.createElement('b');name.textContent=p===room.localParticipant?'أنت':p.name||'عضو';
     const detail=document.createElement('small');detail.textContent=p.isSpeaking?'يتحدث الآن':p.isMicrophoneEnabled?'الميكروفون مفتوح':'يستمع';
-    el.append(name,detail);
+    el.append(name,detail);if(p===room.localParticipant){const badge=document.createElement('span');badge.innerHTML=ownBadge();el.append(badge);}
     if(p!==room.localParticipant&&['owner','moderator'].includes(liveRole)){
       for(const [action,label] of [['mute','كتم'],['remove','إخراج'],...(p.permissions?.canPublish?[['listener','نقل للاستماع']]:[['speaker','منح الميكروفون']])]){
         const b=document.createElement('button');b.textContent=label;b.onclick=async()=>{try{await api('moderate',{room:state.activeRoom.id,target:p.identity,action});}catch(e){showToast(e.message);}};el.append(b);
@@ -2972,7 +2852,7 @@ function renderLive() {
     grid.append(el);
   }
   const mic=$room('liveMic');mic.disabled=pendingMic||!room.localParticipant.permissions?.canPublish;
-  mic.textContent=room.localParticipant.isMicrophoneEnabled?'كتم الميكروفون':'فتح الميكروفون';
+  $room('voicePreset').disabled=!room.localParticipant.isMicrophoneEnabled;mic.textContent=room.localParticipant.isMicrophoneEnabled?'كتم الميكروفون':'فتح الميكروفون';
 }
 async function liveMicToggle(){
   const room=liveRoom;if(!room||pendingMic||!room.localParticipant.permissions?.canPublish)return;
@@ -3003,6 +2883,164 @@ function syncRoomPolicy(){
   $room('roomChatInput').placeholder=p.chat?'اكتب رسالة للغرفة…':'الدردشة مغلقة لهذه الغرفة';
 }
 
+
+const giftThemes={
+  g1:{ink:'#e5bd70',scene:'flight',notes:[392,523,784]},
+  g2:{ink:'#ff716b',scene:'drive',notes:[147,196,294]},
+  g3:{ink:'#49d0df',scene:'tide',notes:[349,440,523]},
+  g4:{ink:'#92b5ff',scene:'flight',notes:[262,392,587]},
+  g5:{ink:'#c495ff',scene:'rise',notes:[294,370,440]},
+  g6:{ink:'#ffd774',scene:'crown',notes:[523,659,784,1047]}
+};
+const decorations=[
+  {id:'welcome',name:'رفيق المجلس',icon:'coffee',ready:()=>true},
+  {id:'visitor',name:'رحّال الغرف',icon:'compass',ready:()=>collection.visits.length>=3,goal:'زُر ثلاث غرف مختلفة'},
+  {id:'giver',name:'صاحب الهدية',icon:'gift',ready:()=>collection.sent>=1,goal:'أرسل هديتك الأولى'},
+  {id:'patron',name:'راعي المجلس',icon:'gem',ready:()=>collection.sent>=5,goal:'أرسل خمس هدايا'},
+  {id:'host',name:'مضيف هلاا',icon:'mic',ready:()=>collection.host,goal:'أنشئ غرفة'}
+];
+const roomDecor={
+  'شعر':['ريشة الشعر','feather'],'ألعاب':['ساحة التحدي','gamepad-2'],
+  'غناء':['نغم المجلس','music-2'],'قرآن':['مجلس التلاوة','book-open'],
+  'دردشة':['ملتقى الأصدقاء','messages-square']
+};
+let collection={visits:[],sent:0,host:false,selected:'welcome',sound:true};
+try{
+  const saved=JSON.parse(localStorage.getItem('halaa.collection.1')||'null');
+  if(saved){collection.visits=Array.isArray(saved.visits)?saved.visits.filter(id=>typeof id==='string').slice(-200):[];
+    collection.sent=Number.isSafeInteger(saved.sent)&&saved.sent>0?saved.sent:0;collection.host=saved.host===true;
+    collection.sound=saved.sound!==false;collection.selected=decorations.some(x=>x.id===saved.selected&&x.ready())?saved.selected:'welcome';}
+}catch{}
+function saveCollection(){try{localStorage.setItem('halaa.collection.1',JSON.stringify(collection));}catch{}}
+function badgeChip(label,icon){return '<span class="insignia"><i data-lucide="'+icon+'"></i>'+htmlText(label)+'</span>';}
+function ownBadge(){const b=decorations.find(x=>x.id===collection.selected);return badgeChip(b.name,b.icon);}
+function badgeShelf(){
+  openModal('<div class="gallery-head"><h3>مجموعة شاراتي</h3><button class="control" onclick="closeModal()">إغلاق</button></div><div class="medal-grid">'+decorations.map(b=>'<button class="medal" data-badge="'+b.id+'" '+(b.ready()?'':'disabled')+' aria-pressed="'+(collection.selected===b.id)+'"><i data-lucide="'+b.icon+'"></i><b>'+b.name+'</b><small>'+(collection.selected===b.id?'مُرتداة':b.ready()?'ارتداء الشارة':b.goal)+'</small></button>').join('')+'</div>');
+  for(const b of $room('modalContent').querySelectorAll('[data-badge]'))b.onclick=()=>{collection.selected=b.dataset.badge;saveCollection();renderMain();if(state.activeRoom)renderMics();badgeShelf();};
+}
+function makeVoiceProcessor(mode){
+  let nodes=[],context,owned=false;
+  return {
+    name:'halaa-voice',
+    async init({track,audioContext}){
+      owned=!audioContext;context=audioContext||new AudioContext();
+      await context.resume();
+      const src=context.createMediaStreamSource(new MediaStream([track]));
+      const out=context.createMediaStreamDestination();
+      nodes=[src,out];this.processedTrack=out.stream.getAudioTracks()[0];
+      if(mode==='studio'){
+        const cut=context.createBiquadFilter();cut.type='highpass';cut.frequency.value=85;
+        const eq=context.createBiquadFilter();eq.type='peaking';eq.frequency.value=2600;eq.gain.value=2.5;
+        const compressor=context.createDynamicsCompressor();compressor.ratio.value=3;
+        src.connect(cut).connect(eq).connect(compressor).connect(out);nodes.push(cut,eq,compressor);
+      }else{
+        const delay=context.createDelay(.3);delay.delayTime.value=.13;
+        const wet=context.createGain();wet.gain.value=.18;
+        const dry=context.createGain();dry.gain.value=.82;
+        src.connect(dry).connect(out);src.connect(delay).connect(wet).connect(out);nodes.push(delay,wet,dry);
+      }
+    },
+    async restart(options){await this.destroy();await this.init(options);},
+    async destroy(){for(const node of nodes)node.disconnect();nodes=[];this.processedTrack?.stop();this.processedTrack=undefined;if(owned&&context&&context.state!=='closed')await context.close();}
+  };
+}
+async function applyLiveVoice(select){
+  const track=liveRoom?.localParticipant.getTrackPublication('microphone')?.track;
+  if(!track||!liveRoom.localParticipant.isMicrophoneEnabled){select.value='natural';showToast('افتح الميكروفون أولاً');return;}
+  select.disabled=true;
+  try{if(select.value==='natural')await track.stopProcessor();else await track.setProcessor(makeVoiceProcessor(select.value));}
+  catch{await track.stopProcessor().catch(()=>{});select.value='natural';showToast('تعذّر تشغيل المؤثر في هذا المتصفح');}
+  finally{select.disabled=false;}
+}
+
+function roomBadge(room){return roomDecor[room.category]||roomDecor['دردشة'];}
+function wave(active){return '<span class="room-wave '+(active?'on':'')+'" aria-hidden="true"><i></i><i></i><i></i><i></i></span>';}
+const lobbyCounts=new Map();
+let presenceBusy=false;
+async function refreshPresence(){
+  if(!service?.voiceReady||document.hidden||presenceBusy)return;
+  presenceBusy=true;
+  try{const r=await fetch('/api/presence',{signal:AbortSignal.timeout(7000)});if(!r.ok)throw Error();
+    const counts=await r.json();lobbyCounts.clear();for(const [k,n] of Object.entries(counts))if(Number.isSafeInteger(n)&&n>=0)lobbyCounts.set(k,n);
+    for(const el of document.querySelectorAll('[data-count-room]'))el.textContent=String(lobbyCounts.get(el.dataset.countRoom)||0);
+  }catch{lobbyCounts.clear();for(const el of document.querySelectorAll('[data-count-room]'))el.textContent='—';}
+  finally{presenceBusy=false;}
+}
+function cardForRoom(r){
+  const [badge,icon]=roomBadge(r);
+  const n=service?.voiceReady?(lobbyCounts.has(r.id)?lobbyCounts.get(r.id):'—'):r.listeners;
+  return '<article class="lounge-tile"><button class="lounge-open" onclick="enterRoom(\''+r.id+'\')" aria-label="دخول '+htmlText(r.title)+'"><span class="lounge-art"><img src="'+r.cover+'" alt="" loading="lazy"><span class="lounge-count" title="'+(service?.voiceReady?'متصلون':'عدد المعاينة')+'"><i data-lucide="headphones"></i><b data-count-room="'+r.id+'">'+n+'</b></span></span><b class="lounge-name">'+htmlText(r.title)+'</b><span class="lounge-info">'+badgeChip(badge,icon)+wave(service?.voiceReady?(state.activeRoom?.id===r.id&&liveRoom?.activeSpeakers.length>0):r.speaking)+'</span></button><button class="lounge-fav" onclick="toggleRoomFav(\''+r.id+'\')" aria-label="مفضلة '+htmlText(r.title)+'" aria-pressed="'+!!r.isFav+'"><i data-lucide="heart"></i></button></article>';
+}
+let giftChoice, giftTarget, giftPending=false, giftContext=null;
+const giftHistory=new Map();
+function openGiftDrawer(targetName='الغرفة'){
+  giftTarget=targetName;giftChoice=state.gifts[0].id;
+  openModal('<div class="gallery-head"><div><small class="theme-muted">إلى '+htmlText(targetName)+'</small><h3>هدايا المجلس</h3></div><button class="control" onclick="closeModal()">إغلاق</button></div><div id="giftHero"></div><div class="gift-samples">'+state.gifts.map(g=>'<button data-gift="'+g.id+'" aria-label="'+htmlText(g.name)+'"><img src="'+g.img+'" alt=""><span>'+htmlText(g.name)+'</span></button>').join('')+'</div><div class="gallery-foot"><button class="control" id="giftSound"></button><button class="control" id="giftPreview">معاينة المؤثر</button><button class="control theme-accent-bg" id="giftConfirm"></button></div>');
+  for(const b of $room('modalContent').querySelectorAll('[data-gift]'))b.onclick=()=>{giftChoice=b.dataset.gift;paintGift();};
+  $room('giftSound').onclick=()=>{collection.sound=!collection.sound;saveCollection();paintGift();};
+  $room('giftPreview').onclick=()=>{const g=state.gifts.find(x=>x.id===giftChoice);paintGift(true);chime(g);};
+  $room('giftConfirm').onclick=()=>sendGift(giftChoice,giftTarget);paintGift();
+}
+function paintGift(play=false){
+  const g=state.gifts.find(x=>x.id===giftChoice),t=giftThemes[g.id];
+  const hero=$room('giftHero');hero.style.setProperty('--glow',t.ink);
+  hero.innerHTML='<div class="gift-portrait '+(play?'perform '+t.scene:'')+'"><img src="'+g.img+'" alt="'+htmlText(g.name)+'"></div><div><small>'+htmlText(g.tier)+'</small><h3>'+htmlText(g.name)+'</h3><b>'+g.price.toLocaleString('ar')+' 🪙</b></div>';
+  for(const b of $room('modalContent').querySelectorAll('[data-gift]'))b.setAttribute('aria-pressed',b.dataset.gift===g.id);
+  $room('giftSound').textContent=collection.sound?'الصوت مفعّل':'الصوت مكتوم';
+  $room('giftConfirm').textContent='إرسال · '+g.price.toLocaleString('ar')+' 🪙';
+  $room('giftConfirm').disabled=giftPending||state.user.gold<g.price;
+  if(state.user.gold<g.price)$room('giftConfirm').textContent='الرصيد غير كافٍ';
+}
+function chime(g){
+  if(!collection.sound||!state.roomSoundEnabled||state.quietMode)return;
+  try{
+    const ctx=giftContext||=new (window.AudioContext||window.webkitAudioContext)();
+    if(ctx.state==='suspended')void ctx.resume().catch(()=>{});
+    giftThemes[g.id].notes.forEach((hz,i)=>{
+      const osc=ctx.createOscillator(),amp=ctx.createGain(),start=ctx.currentTime+i*.095;
+      osc.type=g.id==='g2'?'triangle':'sine';osc.frequency.value=hz;
+      amp.gain.setValueAtTime(.0001,start);amp.gain.exponentialRampToValueAtTime(.052,start+.022);
+      amp.gain.exponentialRampToValueAtTime(.0001,start+.48);osc.connect(amp);amp.connect(ctx.destination);
+      osc.onended=()=>{osc.disconnect();amp.disconnect();};osc.start(start);osc.stop(start+.5);
+    });
+  }catch{}
+}
+let onStage=null,stageTimer=0,applause=0;
+function clearStage(){clearTimeout(stageTimer);onStage=null;const area=$room('giftBannerArea');if(area)area.replaceChildren();}
+function showStage(g,sender,target,id){
+  clearStage();onStage=id;applause=0;const t=giftThemes[g.id],el=document.createElement('div');
+  el.className='gift-stage';el.style.setProperty('--glow',t.ink);
+  el.innerHTML='<div class="gift-portrait perform '+t.scene+'"><img src="'+g.img+'" alt=""></div><div class="stage-copy"><small>'+htmlText(sender)+' أهدى '+htmlText(target)+'</small><strong>'+htmlText(g.name)+'</strong><span>'+htmlText(g.tier)+'</span></div><button class="control" aria-label="تفاعل مع الهدية">👏 <b>0</b></button>';
+  const reactions=new Set();el.querySelector('button').onclick=async e=>{const b=e.currentTarget;b.disabled=true;try{if(liveRoom)await liveRoom.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({id})),{reliable:true,topic:'gift-applause'});if(onStage===id)el.record('me');}catch{b.disabled=false;showToast('تعذر إرسال التفاعل');}};
+  el.record=who=>{if(!reactions.has(who)){reactions.add(who);el.querySelector('button b').textContent=String(++applause);}};
+  $room('giftBannerArea').append(el);stageTimer=setTimeout(clearStage,6500);chime(g);
+}
+async function sendGift(giftId,targetName){
+  const g=state.gifts.find(x=>x.id===giftId),room=state.activeRoom,session=liveRoom;
+  if(!room||!g||giftPending||state.user.gold<g.price)return;
+  const id=crypto.randomUUID();giftPending=true;const btn=$room('giftConfirm');if(btn)btn.disabled=true;
+  try{
+    if(session)await session.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({giftId,id,target:targetName})),{reliable:true,topic:'room-gift'});
+    state.user.gold-=g.price;state.eventTasks.giftSent=true;collection.sent++;saveCollection();addXP(25);updateWalletUI();
+    const me=state.leaderboard.find(x=>x.name==='أنت');if(me)me.amount+=g.price;else state.leaderboard.push({name:'أنت',avatar:state.user.avatar,amount:g.price});state.leaderboard.sort((a,b)=>b.amount-a.amount);
+    if(room!==state.activeRoom||session!==liveRoom)return;
+    closeModal();const line='أهدى '+g.name+' إلى '+targetName;
+    if(session)appendLiveMessage('أنت',line);else{state.roomChats.push({sender:'أنت',text:line});renderRoomChats();}
+    showStage(g,'أنت',targetName,id);
+  }catch{showToast('تعذر إرسال الهدية، أعد المحاولة');}finally{giftPending=false;if(btn?.isConnected)paintGift();}
+}
+function receiveGift(topic,bytes,p){
+  if(bytes.length>600||!p)return;
+  try{const data=JSON.parse(new TextDecoder().decode(bytes));
+    if(typeof data.id!=='string'||data.id.length>64)return;
+    if(topic==='gift-applause'){if(onStage===data.id)$room('giftBannerArea').firstChild?.record(p.identity);return;}
+    const g=state.gifts.find(x=>x.id===data.giftId);
+    if(!g||typeof data.target!=='string'||data.target.length>80||giftHistory.has(data.id))return;
+    if(giftHistory.size>=128)giftHistory.delete(giftHistory.keys().next().value);
+    giftHistory.set(data.id,true);appendLiveMessage(p.name||'عضو','أهدى '+g.name+' إلى '+data.target);
+    showStage(g,p.name||'عضو',data.target,data.id);
+  }catch{}
+}
 
 // Init
     setInterval(() => { state.serverEpochMs += 1000; }, 1000);

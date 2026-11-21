@@ -11,6 +11,16 @@ const write = (key, value) => db.prepare('INSERT OR REPLACE INTO settings VALUES
 const authReady = Boolean(env.SUPABASE_URL && env.SUPABASE_PUBLISHABLE_KEY);
 const voiceReady = Boolean(authReady && env.LIVEKIT_URL && env.LIVEKIT_API_KEY && env.LIVEKIT_API_SECRET);
 const live = voiceReady && new RoomServiceClient(env.LIVEKIT_URL.replace(/^wss:/,'https:'),env.LIVEKIT_API_KEY,env.LIVEKIT_API_SECRET);
+let snapshot, expiresAt=0, pendingPresence;
+async function presence(){
+  if(!live) return {};
+  if(snapshot && Date.now()<expiresAt)return snapshot;
+  pendingPresence ||= live.listRooms().then(rooms=>{
+    snapshot=Object.fromEntries(rooms.filter(r=>r.name.startsWith('halaa-')).map(r=>[r.name.slice(6),r.numParticipants]));
+    expiresAt=Date.now()+10000;return snapshot;
+  }).finally(()=>pendingPresence=null);
+  return pendingPresence;
+}
 const roomIds = new Set(JSON.parse(env.HALAA_ROOM_IDS || '["r1","r2","r3","r4","r5","r6"]'));
 function fail(status, message) { throw Object.assign(new Error(message), {status}); }
 async function identity(req) {
@@ -52,6 +62,7 @@ createServer(async(req,res)=>{
       const content=await readFile(new URL('../'+file,import.meta.url));
       res.writeHead(200,{'content-type':'text/html; charset=utf-8','referrer-policy':'no-referrer'});return res.end(content);
     }
+    if(req.method==='GET' && path==='/api/presence')return json(res,200,await presence());
     if(req.method==='GET' && path==='/api/config') return json(res,200,{authUrl:env.SUPABASE_URL||'',publicKey:env.SUPABASE_PUBLISHABLE_KEY||'',voiceReady,ad:read('homeAd'),rooms:db.prepare("SELECT value FROM settings WHERE key LIKE 'room:%' ORDER BY rowid DESC LIMIT 200").all().map(row=>{const {id,title,category}=JSON.parse(row.value);return {id,title,category};})});
     if(req.method!=='POST' || !['/api/ad','/api/voice','/api/moderate','/api/rooms'].includes(path)) return json(res,404,{});
     const user=await identity(req), data=await body(req);
