@@ -1,0 +1,36 @@
+name: Browser preview
+on:
+  push:
+    branches: [improve-room-search]
+    paths: ['.github/workflows/web-browser-preview.yml']
+permissions:
+  contents: write
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - name: Build preview
+        run: |
+          flutter create --no-pub --platforms=web --project-name halaa "$RUNNER_TEMP/halaa"
+          cp -r "$RUNNER_TEMP/halaa/web" .
+          flutter pub get
+          flutter build web --release --base-href "/NORALDAYEM/Halla/web-preview-20261121/"
+      - name: Publish browser assets
+        run: |
+          cd build/web
+          git init -b web-preview-20261121
+          git config user.name github-actions
+          git config user.email github-actions@users.noreply.github.com
+          git add .
+          git commit -m "Build browser preview"
+          git -c "http.https://github.com/.extraheader=$(git -C "$GITHUB_WORKSPACE" config --get http.https://github.com/.extraheader)" push "https://github.com/$GITHUB_REPOSITORY.git" HEAD:refs/heads/web-preview-20261121
+      - name: Verify public preview
+        run: |
+          url=https://raw.githack.com/NORALDAYEM/Halla/web-preview-20261121
+          curl -fsSL --retry 5 --retry-all-errors "$url/index.html" | grep -q flutter_bootstrap
+          curl -fsSL --retry 5 --retry-all-errors "$url/main.dart.js" -o "$RUNNER_TEMP/served.js"
+          cmp "$RUNNER_TEMP/served.js" build/web/main.dart.js
