@@ -33,6 +33,16 @@ class HalaaApp extends StatelessWidget {
   }
 }
 
+final _arabicMarks = RegExp(r'[\u0640\u064B-\u0652\u0670]');
+final _alefVariants = RegExp('[أإآٱ]');
+final _spaces = RegExp(r'\s+');
+
+String _normalizeRoomName(String value) => value
+    .replaceAll(_arabicMarks, '')
+    .replaceAll(_alefVariants, 'ا')
+    .trim()
+    .replaceAll(_spaces, ' ');
+
 class HalaaHome extends StatefulWidget {
   const HalaaHome({super.key});
 
@@ -43,7 +53,13 @@ class HalaaHome extends StatefulWidget {
 class _HalaaHomeState extends State<HalaaHome> {
   int page = 0;
   String country = 'الكل';
-  String search = '';
+  final searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
+  }
   late final Future<int>? roomCount = apiBaseUrl.isEmpty ? null : _fetchRoomCount();
 
   final rooms = const [
@@ -148,14 +164,16 @@ class _HalaaHomeState extends State<HalaaHome> {
   }
 
   Widget _rooms() {
+    final query = _normalizeRoomName(searchController.text);
     final visible = rooms.where((r) =>
-        (country == 'الكل' || r.$3 == country) && r.$1.contains(search)).toList();
+        (country == 'الكل' || r.$3 == country) && _normalizeRoomName(r.$1).contains(query)).toList();
     return Column(
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 14),
           child: TextField(
-            onChanged: (v) => setState(() => search = v),
+            controller: searchController,
+            onChanged: (_) => setState(() {}),
             decoration: InputDecoration(
               prefixIcon: const Icon(Icons.search),
               hintText: 'ابحث عن غرفة',
