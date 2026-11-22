@@ -4111,7 +4111,16 @@ function addJewelCollection(){
     // === ZEGOCLOUD LIVE AUDIO ROOM INTEGRATION (AppID: 400719759, Scene 8) ===
     // =========================================================================
     const ZEGO_DEFAULT_APP_ID = 400719759;
+    const ZEGO_FIXED_SERVER_SECRET = 'b75c1d08a1a252f425c9497953a7f138';
     const ZEGO_SECRET_KEY = 'halaa_zego_secret_400719759';
+    function getZegoDeviceUserId() {
+      let devId = localStorage.getItem('halaa_zego_device_uid');
+      if (!devId) {
+        devId = 'u_' + Math.random().toString(36).slice(2, 8) + '_' + Date.now().toString().slice(-4);
+        localStorage.setItem('halaa_zego_device_uid', devId);
+      }
+      return devId;
+    }
     let _zegoInstance = null;
     let _zegoSdkPromise = null;
 
@@ -4130,7 +4139,7 @@ function addJewelCollection(){
     }
 
     function openZegoConfigModal() {
-      const savedSecret = localStorage.getItem(ZEGO_SECRET_KEY) || '';
+      const savedSecret = localStorage.getItem(ZEGO_SECRET_KEY) || ZEGO_FIXED_SERVER_SECRET;
       openModal(`
         <div class="space-y-4">
           <div class="flex justify-between items-center border-b pb-2.5" style="border-color: var(--border-subtle);">
@@ -4180,7 +4189,7 @@ function addJewelCollection(){
       const room = state.activeRoom;
       if (!room) { showToast('ادخل إلى غرفة صوتية أولاً'); return; }
       const roomID = 'halaa_' + String(room.id || 'r1').replace(/[^a-zA-Z0-9_-]/g, '');
-      const userID = (state.user.numId || ('u_' + Math.floor(Math.random() * 999999))).toString();
+      const userID = getZegoDeviceUserId();
       const userName = state.user.name || 'عضو هلاا';
       const isHost = Boolean(state.user.isAdmin || room.discovery === 'my');
 
@@ -4204,9 +4213,9 @@ function addJewelCollection(){
           }
         } catch (_) { /* Running standalone/offline without Node backend */ }
 
-        // 2) Fallback to local ServerSecret for direct HTML / Netlify preview testing
+        // 2) Direct fixed ServerSecret for instant GitHub Pages / mobile connection
         if (!kitToken) {
-          const localSecret = (localStorage.getItem(ZEGO_SECRET_KEY) || '').trim();
+          const localSecret = (localStorage.getItem(ZEGO_SECRET_KEY) || ZEGO_FIXED_SERVER_SECRET).trim();
           if (localSecret.length !== 32) {
             openZegoConfigModal();
             return;
