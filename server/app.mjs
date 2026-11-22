@@ -1,9 +1,43 @@
+import crypto from 'node:crypto';
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { DatabaseSync } from 'node:sqlite';
 import { AccessToken, RoomServiceClient, TrackSource } from 'livekit-server-sdk';
 
 const env = process.env;
+const zegoAppId = Number(env.ZEGO_APP_ID || 400719759);
+const zegoServerSecret = (env.ZEGO_SERVER_SECRET || '').trim();
+const zegoReady = Boolean(zegoAppId && zegoServerSecret.length === 32);
+
+export function generateZegoToken04(appId, userId, secret, effectiveTimeInSeconds = 3600, payload = '') {
+  if (!appId || typeof appId !== 'number') fail(500, 'ZEGO_APP_ID غير صالح');
+  if (!userId || typeof userId !== 'string') fail(400, 'معرّف المستخدم غير صالح');
+  if (!secret || secret.length !== 32) fail(503, 'يرجى ضبط متغير ZEGO_SERVER_SECRET (32 حرفاً) على الخادم');
+  const createTime = Math.floor(Date.now() / 1000);
+  const tokenInfo = {
+    app_id: appId,
+    user_id: userId,
+    nonce: Math.floor(Math.random() * 2147483647),
+    ctime: createTime,
+    expire: createTime + effectiveTimeInSeconds,
+    payload: payload || ''
+  };
+  const plainText = JSON.stringify(tokenInfo);
+  const iv = crypto.randomBytes(16).toString('hex').slice(0, 16);
+  const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(secret, 'utf8'), Buffer.from(iv, 'utf8'));
+  const encrypted = Buffer.concat([cipher.update(plainText, 'utf8'), cipher.final()]);
+
+  const b1 = Buffer.alloc(8);
+  b1.writeBigInt64BE(BigInt(tokenInfo.expire), 0);
+  const b2 = Buffer.alloc(2);
+  b2.writeUInt16BE(iv.length, 0);
+  const b3 = Buffer.from(iv, 'utf8');
+  const b4 = Buffer.alloc(2);
+  b4.writeUInt16BE(encrypted.length, 0);
+
+  return '04' + Buffer.concat([b1, b2, b3, b4, encrypted]).toString('base64');
+}
+
 const db = new DatabaseSync(env.HALAA_DB || 'halaa.sqlite');
 db.exec('CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)');
 const read = key => JSON.parse(db.prepare('SELECT value FROM settings WHERE key=?').get(key)?.value ?? 'null');
@@ -63,7 +97,17 @@ createServer(async(req,res)=>{
       res.writeHead(200,{'content-type':'text/html; charset=utf-8','referrer-policy':'no-referrer'});return res.end(content);
     }
     if(req.method==='GET' && path==='/api/presence')return json(res,200,await presence());
-    if(req.method==='GET' && path==='/api/config') return json(res,200,{authUrl:env.SUPABASE_URL||'',publicKey:env.SUPABASE_PUBLISHABLE_KEY||'',voiceReady,ad:read('homeAd'),rooms:db.prepare("SELECT value FROM settings WHERE key LIKE 'room:%' ORDER BY rowid DESC LIMIT 200").all().map(row=>{const {id,title,category}=JSON.parse(row.value);return {id,title,category};})});
+    if(req.method==='GET' && path==='/api/config') return json(res,200,{authUrl:env.SUPABASE_URL||'',publicKey:env.SUPABASE_PUBLISHABLE_KEY||'',voiceReady:voiceReady||zegoReady,zegoAppId,zegoReady,ad:read('homeAd'),rooms:db.prepare("SELECT value FROM settings WHERE key LIKE 'room:%' ORDER BY rowid DESC LIMIT 200").all().map(row=>{const {id,title,category}=JSON.parse(row.value);return {id,title,category};})});
+    
+    if(req.method==='POST' && path==='/api/zego-token'){
+      if(!zegoReady) fail(503,'يرجى ضبط متغير ZEGO_SERVER_SECRET في إعدادات الخادم');
+      const data=await body(req);
+      const roomID=String(data.roomID||'halaa-r1').replace(/[^a-zA-Z0-9_-]/g,'').slice(0,64)||'halaa-r1';
+      const userID=String(data.userID||('u_'+Date.now())).replace(/[^a-zA-Z0-9_-]/g,'').slice(0,64);
+      const payload=JSON.stringify({room_id:roomID,privilege:{1:1,2:1},stream_id_list:null});
+      const token=generateZegoToken04(zegoAppId,userID,zegoServerSecret,7200,payload);
+      return json(res,200,{appID:zegoAppId,roomID,userID,token});
+    }
     if(req.method!=='POST' || !['/api/ad','/api/voice','/api/moderate','/api/rooms'].includes(path)) return json(res,404,{});
     const user=await identity(req), data=await body(req);
     if(path==='/api/rooms'){
