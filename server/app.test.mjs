@@ -13,12 +13,17 @@ test('room and advert permissions are enforced by the server', async t=>{
   }).listen(0,'127.0.0.1');
   await once(auth,'listening');t.after(()=>auth.close());
   const port=31872, base='http://127.0.0.1:'+port;
-  const proc=spawn(process.execPath,['app.mjs'],{env:{...process.env,PORT:String(port),HALAA_DB:':memory:',SUPABASE_URL:'http://127.0.0.1:'+auth.address().port,SUPABASE_PUBLISHABLE_KEY:'test',LIVEKIT_URL:'wss://localhost',LIVEKIT_API_KEY:'test',LIVEKIT_API_SECRET:'test-secret-used-only-for-unit-tests'}});
+  const proc=spawn(process.execPath,['app.mjs'],{env:{...process.env,PORT:String(port),ZEGO_SERVER_SECRET:'0123456789abcdef0123456789abcdef',HALAA_DB:':memory:',SUPABASE_URL:'http://127.0.0.1:'+auth.address().port,SUPABASE_PUBLISHABLE_KEY:'test',LIVEKIT_URL:'wss://localhost',LIVEKIT_API_KEY:'test',LIVEKIT_API_SECRET:'test-secret-used-only-for-unit-tests'}});
   t.after(()=>proc.kill());
   let logs='';proc.stderr.on('data',c=>logs+=c);
   for(let i=0;i<60;i++){if(proc.exitCode!==null)assert.fail(logs);try{await fetch(base+'/api/config');break;}catch{await new Promise(r=>setTimeout(r,100));}}
   const post=(path,id,data)=>fetch(base+'/api/'+path,{method:'POST',headers:{authorization:'Bearer '+id,'content-type':'application/json'},body:JSON.stringify(data)});
   assert.equal((await post('voice','bad',{room:'r1'})).status,401);
+  assert.equal((await post('zego-token','bad',{room:'r1'})).status,401);
+  assert.equal((await post('zego-token','guest',{room:'unknown'})).status,404);
+  const zego=await (await post('zego-token','guest',{room:'r1',userID:'admin'})).json();
+  assert.equal(zego.userID,'guest');assert.equal(zego.role,'listener');assert.equal(zego.roomID,'halaa_r1');
+  assert.ok(zego.token.startsWith('04'));
   const created=await post('rooms','host',{title:'غرفة اختبار',category:'شعر'});assert.equal(created.status,201);
   const {id:room}=await created.json();
   for(const [id,role,canPublish] of [['host','owner',true],['guest','listener',false]]){

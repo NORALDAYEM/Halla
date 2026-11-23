@@ -91,6 +91,14 @@ export function validAd(a) {
 createServer(async(req,res)=>{
   try {
     const path=new URL(req.url,'http://localhost').pathname;
+    if(path.startsWith('/api/') && req.headers.origin==='https://noraldayem.github.io'){
+      res.setHeader('Access-Control-Allow-Origin',req.headers.origin);
+      res.setHeader('Vary','Origin');
+      if(req.method==='OPTIONS'){
+        res.writeHead(204,{'Access-Control-Allow-Methods':'GET, POST, OPTIONS','Access-Control-Allow-Headers':'Content-Type, Authorization'});
+        return res.end();
+      }
+    }
     if(req.method==='GET' && ['/','/halaa_voice_app.html','/halaa_mobile_screens_showcase.html'].includes(path)){
       const file=path.includes('showcase')?'halaa_mobile_screens_showcase.html':'halaa_voice_app.html';
       const content=await readFile(new URL('../'+file,import.meta.url));
@@ -101,12 +109,14 @@ createServer(async(req,res)=>{
     
     if(req.method==='POST' && path==='/api/zego-token'){
       if(!zegoReady) fail(503,'يرجى ضبط متغير ZEGO_SERVER_SECRET في إعدادات الخادم');
+      const user=await identity(req);
       const data=await body(req);
-      const roomID=String(data.roomID||'halaa-r1').replace(/[^a-zA-Z0-9_-]/g,'').slice(0,64)||'halaa-r1';
-      const userID=String(data.userID||('u_'+Date.now())).replace(/[^a-zA-Z0-9_-]/g,'').slice(0,64);
-      const payload=JSON.stringify({room_id:roomID,privilege:{1:1,2:1},stream_id_list:null});
+      const room=data.room ?? (typeof data.roomID==='string' ? data.roomID.replace(/^halaa_/,'') : '');
+      if(typeof room!=='string'||!room||(!roomIds.has(room)&&!read('room:'+room))) fail(404,'الغرفة غير موجودة');
+      const roomID='halaa_'+room, userID=user.id, role=roomRole(user,room);
+      const payload=JSON.stringify({room_id:roomID,privilege:{1:1,2:grant(role).canPublish?1:0},stream_id_list:null});
       const token=generateZegoToken04(zegoAppId,userID,zegoServerSecret,7200,payload);
-      return json(res,200,{appID:zegoAppId,roomID,userID,token});
+      return json(res,200,{appID:zegoAppId,roomID,userID,role,token});
     }
     if(req.method!=='POST' || !['/api/ad','/api/voice','/api/moderate','/api/rooms'].includes(path)) return json(res,404,{});
     const user=await identity(req), data=await body(req);
