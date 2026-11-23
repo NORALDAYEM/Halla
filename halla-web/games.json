@@ -1,0 +1,9 @@
+[
+  {"id":"ludo","title":"LUDO","arabic":"لودو","symbol":"🎲","colors":["#03c882","#009d74"]},
+  {"id":"carrom","title":"CARROM","arabic":"كيرم","symbol":"◉","colors":["#ff9646","#e4522f"]},
+  {"id":"baloot","title":"BALOOT","arabic":"بلوت","symbol":"🂡","colors":["#fbc65f","#c5892e"]},
+  {"id":"umo","title":"UMO","arabic":"أومو","symbol":"🃏","colors":["#00cfe0","#009dbf"]},
+  {"id":"pool","title":"8-BALL","arabic":"بلياردو","symbol":"🎱","colors":["#6485d3","#304c88"]},
+  {"id":"domino","title":"DOMINO","arabic":"دومينو","symbol":"🁣","colors":["#a17ac0","#70478b"]},
+  {"id":"chess","title":"CHESS","arabic":"شطرنج","symbol":"♞","colors":["#bb886c","#80614e"]}
+]

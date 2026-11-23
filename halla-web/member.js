@@ -20,6 +20,8 @@ const sdk = import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/+e
 function notice(title,message){
   $('#notice h2').textContent=title;$('#notice p').textContent=message;$('#notice').showModal();
 }
+$('#rewards').onclick=()=>notice('الجوائز','لا توجد جوائز متاحة حاليًا.');
+$('#gifts').onclick=()=>notice('الهدايا','لا توجد هدايا مستلمة.');
 $('#dismiss').onclick=()=>$('#notice').close();
 $('#accountAction').onclick=async()=>{
   if(!user){go('login');return;}
@@ -57,12 +59,32 @@ function authScreen(mode){
     finally{$('#submit').disabled=false;}
   };
 }
-const games=[['LUDO','🎲','#03c882','#009d74'],['CARROM','◉','#ff9646','#e4522f'],['BALOOT','🂡','#fbc65f','#c5892e'],['UMO','🃏','#00cfe0','#009dbf']];
-for(const [name,icon,a,b] of games){
-  const btn=document.createElement('button');btn.className='game '+name.toLowerCase();btn.style.setProperty('--a',a);btn.style.setProperty('--b',b);
-  const mark=document.createElement('span');mark.textContent=icon;mark.ariaHidden='true';btn.append(mark,name);
-  btn.onclick=()=>notice('قريبًا', 'لعبة '+name+' ستتوفر قريبًا في هلاا.');$('.gamegrid').append(btn);
+async function loadGames(){
+  const grid=$('.gamegrid'), toggle=$('#allGames');
+  try{
+    const response=await fetch('games.json');
+    if(!response.ok)throw Error();
+    const games=await response.json();
+    for(const [index,game] of games.entries()){
+      const btn=document.createElement('button');
+      btn.classList.add('game',game.id);btn.hidden=index>=4;
+      btn.style.setProperty('--a',game.colors[0]);btn.style.setProperty('--b',game.colors[1]);
+      const mark=game.image?new Image():document.createElement('span');
+      if(game.image){mark.src=game.image;mark.alt='';}else mark.textContent=game.symbol;
+      mark.ariaHidden='true';btn.append(mark,game.title);
+      btn.onclick=()=>notice('قريبًا','لعبة '+game.arabic+' ستتوفر قريبًا في هلاا.');
+      grid.append(btn);
+    }
+    toggle.hidden=games.length<=4;
+    toggle.onclick=()=>{
+      const expanded=toggle.getAttribute('aria-expanded')!=='true';
+      toggle.setAttribute('aria-expanded',String(expanded));
+      toggle.textContent=expanded?'عرض أقل':'كل الألعاب ‹';
+      [...grid.children].forEach((card,i)=>card.hidden=!expanded&&i>=4);
+    };
+  }catch{grid.textContent='تعذر تحميل الألعاب.';}
 }
+loadGames();
 const rooms=[{"id": "r1", "title": "مجلس السوالف والقصيد 🇸🇦", "category": "شعر", "cover": "assets/54e916da3ef118b4b2be0f374b01afba2f3338b325b76807d36341691e7d6b3d.jpg"}, {"id": "r2", "title": "تحدي اللودو والبلياردو 🎮", "category": "ألعاب", "cover": "assets/9a85cfcb0bfae832b74addffc0d5b1b16cce4fbfc1340471faf1162281c5a908.jpg"}, {"id": "r3", "title": "جلسة طرب وعود هادئة 🎶", "category": "غناء", "cover": "assets/0bbde3a00e75fc0ed7f897404c1c7d607b8f986418371267b042de0384b27ef9.jpg"}, {"id": "r4", "title": "تلاوة وهدوء (وضع صامت للموسيقى) 📖", "category": "قرآن", "cover": "assets/54e916da3ef118b4b2be0f374b01afba2f3338b325b76807d36341691e7d6b3d.jpg"}, {"id": "r5", "title": "غرفة الأصدقاء - دردشة مسائية ☕", "category": "دردشة", "cover": "assets/0bbde3a00e75fc0ed7f897404c1c7d607b8f986418371267b042de0384b27ef9.jpg"}, {"id": "r6", "title": "غرفتي الخاصة — هلاا VIP ✨", "category": "دردشة", "cover": "assets/62cb9f56bd3f374f74ce234cd923cb19b938399264efe04a9ade8ff47fda1d80.jpg"}];
 for(const r of rooms){
   const btn=document.createElement('button');btn.className='room';
