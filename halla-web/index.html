@@ -336,6 +336,9 @@ input.control{display:block;width:100%}.control:disabled{opacity:.55}.voice-tool
 </style>
 <style>
 .h-entry{display:grid;place-items:center;min-height:82vh;padding:20px;background:#101f1e;color:#f1f4eb;font:16px/1.5 system-ui}.h-entry[hidden]{display:none}.h-card{width:min(100%,680px);overflow:hidden;border:1px solid #54726d;border-radius:24px;background:#152b28;box-shadow:0 20px 65px #0005}.h-photo{height:clamp(125px,22vh,210px);width:100%;object-fit:cover;object-position:center 58%}.h-copy{padding:clamp(18px,4vw,32px)}.h-copy h2{font-size:2rem;font-weight:800}.h-copy label{display:block;margin-top:10px}.h-copy input,.h-copy button{font:inherit;border-radius:10px;padding:10px 14px}.h-copy input{width:100%;background:#f9faf5;color:#102824}.h-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}.h-actions button{background:#d9edc6;color:#102824;font-weight:bold}.h-actions button+button{background:transparent;color:#e7efd9;border:1px solid #729186}.h-copy p{margin-top:8px}.h-entry{position:fixed;inset:0;z-index:99999;overflow:auto}.h-entry a{color:inherit}.h-credits{font-size:11px;color:#bbcec4}
+</style><style>
+.h-entry{background:#1a111d;padding:0;display:flex;justify-content:center}.h-card{position:relative;display:flex;flex-direction:column;justify-content:flex-end;min-height:100%;width:100%;max-width:1100px;border:0;border-radius:0;background:linear-gradient(0deg,#160c1bf5 0%,#170d1dad 33%,transparent 68%),url('lounge.jpg') center 36%/cover}.h-card>.h-photo{display:none}.h-copy{width:min(100%,460px);margin:0 auto;padding:24px;color:#fff}.h-copy:before{content:'هلاا';display:block;font-size:34px;font-weight:900;color:#ffad92}.h-copy h2{font-size:22px}.h-copy input{border:1px solid #977e93}.h-actions button{flex:1;background:#ffad92}.h-actions button+button{background:#211523;color:white;border-color:#997c91}.h-credits{display:none}
+@media(min-width:760px){.h-card{background:linear-gradient(270deg,#1a111d 0%,#1a111d 42%,transparent 60%),url('lounge.jpg') left 35%/60% auto no-repeat}.h-copy{margin-right:0;margin-left:auto;align-self:center}.h-card{justify-content:center}}
 </style></head>
 <body class="min-h-screen flex justify-center items-start md:py-4">
 
@@ -3278,7 +3281,7 @@ async function setupServices() {
 
 const entryPanel=document.getElementById('halaEntry');
 const entryForm=document.getElementById('halaLogin');
-function enterHala(){entryPanel.hidden=true;}
+function enterHala(){entryPanel.hidden=true;const route=new URLSearchParams(location.search).get('view');if(['rooms','games','store','home'].includes(route))switchTab(route);}
 document.getElementById('halaGuest').onclick=enterHala;
 entryForm.onsubmit=async event=>{
   event.preventDefault();
@@ -3725,6 +3728,7 @@ function addJewelCollection(){
       addJewelCollection();restorePersonal();
       updateWalletUI();
       switchTab('home');
+      if(['rooms','games','store','home'].includes(new URLSearchParams(location.search).get('view')))enterHala();
     });
   
     // =========================================================================
