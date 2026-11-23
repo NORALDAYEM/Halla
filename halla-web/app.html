@@ -3260,9 +3260,14 @@ async function api(path,data) {
 async function setupServices() {
   if(!['https:','http:'].includes(location.protocol)||window.top!==window.self)return;
   try {
+    if(location.hostname==='noraldayem.github.io' && apiOrigin===location.origin){
+      service={authUrl:'https://uwjrboviicypyhregpoo.supabase.co',publicKey:'sb_publishable_QbUKNVMYDRK63NjB26tCtw_jzOaEXdR',edgeVoice:true,zegoReady:true};
+    } else {
     const r=await fetch(apiOrigin+'/api/config',{signal:AbortSignal.timeout(5000)});
     if(!r.ok || !r.headers.get('content-type')?.includes('application/json')) return;
-    service=await r.json();if(service.voiceReady){void refreshPresence();setInterval(refreshPresence,15000);}
+    service=await r.json();
+    }
+    if(service.voiceReady){void refreshPresence();setInterval(refreshPresence,15000);}
     for(const room of (service.rooms||[]).slice().reverse()){
       if(!/^room-[a-f0-9-]+$/.test(room.id)||state.rooms.some(r=>r.id===room.id))continue;
       state.rooms.unshift({...state.rooms[0],id:room.id,numId:room.id.slice(-6),title:room.title,category:room.category,tags:[room.category],listeners:0,host:'مالك الغرفة',isFav:false,discovery:'all',speaking:false});
@@ -4216,7 +4221,12 @@ function addJewelCollection(){
       const userName=state.user.name || 'عضو هلاا';
       showToast('جارٍ الاتصال بالغرفة الصوتية…');
       try {
-        const data=await api('zego-token',{room:room.id});
+        let data;
+        if(service.edgeVoice){
+          const result=await account.functions.invoke('zego-token',{body:{room:room.id}});
+          if(result.error){let message='تعذر الاتصال بخدمة الصوت';try{message=(await result.error.context.json()).error||message;}catch{}throw Error(message);}
+          data=result.data;
+        } else {data=await api('zego-token',{room:room.id});}
         const ZegoUIKitPrebuilt=await loadZegoSdk();
         if(state.activeRoom?.id!==room.id)return;
         const kitToken=ZegoUIKitPrebuilt.generateKitTokenForProduction(data.appID,data.token,data.roomID,data.userID,userName);
