@@ -50,7 +50,7 @@
     }
     const request = generation;
     submit.disabled = true;
-    status.textContent = 'جارٍ التحقق…';
+    status.style.color = ''; status.style.fontWeight = ''; status.textContent = 'جارٍ التحقق…';
     try {
       const result = await HallaAccounts.passwordRequest(mode, fields.email.value.trim(),
         fields.password.value, fields.nickname.value.trim(), fields.gender.value, fields.country.value);
@@ -66,9 +66,9 @@
       }
     } catch (error) {
       if (request !== generation) return;
-      status.textContent = error.code === 'email_not_confirmed' ? 'أكّد بريدك الإلكتروني أولًا.' :
+    status.style.color = '#dc2626'; status.style.fontWeight = '700';   status.textContent = error.code === 'email_not_confirmed' ? 'أكّد بريدك الإلكتروني أولًا.' :
         signup ? 'تعذّر التسجيل. راجع البيانات والاتصال ثم حاول مجددًا.' :
-        'تعذّر الدخول. تحقّق من البريد وكلمة المرور ثم حاول مجددًا.';
+        'اسم المستخدم أو كلمة المرور غير صحيحة';
     } finally {
       if (generation === request) submit.disabled = false;
     }
