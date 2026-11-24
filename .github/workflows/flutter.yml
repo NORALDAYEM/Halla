@@ -25,7 +25,6 @@ jobs:
           if [ ! -f halla-web/app.html ]; then cp halla-web/index.html halla-web/app.html; fi
           mkdir -p halla-web/studio
           cp -a studio/build/web/. halla-web/studio/
-          echo '<!DOCTYPE html><html lang="ar" dir="rtl"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>هلاا</title><meta http-equiv="refresh" content="0;url=studio/"><a href="studio/">دخول هلاا</a></html>' > halla-web/index.html
           git config user.name github-actions
           git config user.email github-actions@users.noreply.github.com
           git add halla-web
