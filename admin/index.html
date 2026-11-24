@@ -34,27 +34,27 @@ button{cursor:pointer;border:none;background:none}
 .bg-scrim{position:fixed;inset:0;z-index:1;pointer-events:none;background:radial-gradient(circle at 50% 22%,rgba(9,32,40,.22),rgba(5,18,24,.76))}
 
 /* Login Screen */
-.login-shell{position:relative;z-index:2;min-height:100svh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:max(20px,env(safe-area-inset-top)) 16px max(24px,env(safe-area-inset-bottom))}
+.login-shell{position:relative;z-index:2;height:100svh;max-height:100svh;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:max(10px,env(safe-area-inset-top)) 14px max(10px,env(safe-area-inset-bottom))}
 .hero-brand{position:relative;display:grid;place-items:center;min-height:220px;text-align:center;flex-shrink:0}
- .app-logo{display:block;width:min(30.4svh,248px);max-width:65vw;height:auto;margin:0 auto 4px;pointer-events:none!important;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;transform:none!important;transition:none!important;animation:none!important;filter:drop-shadow(0 8px 20px rgba(0,0,0,.28))} 
+ .app-logo{display:block;width:min(21svh,148px);max-width:65vw;height:auto;margin:0 auto 4px;pointer-events:none!important;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;transform:none!important;transition:none!important;animation:none!important;filter:drop-shadow(0 8px 20px rgba(0,0,0,.28))} 
 .brand-title{font-size:22px;font-weight:800;letter-spacing:.3px;text-shadow:0 2px 12px rgba(0,0,0,.55)}
 
-.login-card{width:min(100%,370px);background:rgba(10,30,38,.52);border:1px solid rgba(255,255,255,.3);border-radius:28px;padding:22px 20px 18px;backdrop-filter:blur(16px) saturate(125%);-webkit-backdrop-filter:blur(16px) saturate(125%);box-shadow:0 20px 50px rgba(0,0,0,.42)}
+.login-card{width:min(100%,346px);background:rgba(10,30,38,.52);border:1px solid rgba(255,255,255,.3);border-radius:28px;padding:22px 20px 18px;backdrop-filter:blur(16px) saturate(125%);-webkit-backdrop-filter:blur(16px) saturate(125%);box-shadow:0 20px 50px rgba(0,0,0,.42)}
 .field{margin-bottom:13px}
 .field label{display:block;font-size:13px;font-weight:700;color:#d6f4f7;margin-bottom:6px}
 .input-wrap{position:relative;display:flex;align-items:center}
-.input-wrap input{width:100%;height:48px;padding:0 14px;border-radius:999px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);color:#fff;font-size:15px;outline:none;transition:border-color .2s,background .2s}
+.input-wrap input{width:100%;height:42px;padding:0 14px;border-radius:999px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);color:#fff;font-size:15px;outline:none;transition:border-color .2s,background .2s}
 .input-wrap input::placeholder{color:rgba(255,255,255,.55)}
 .input-wrap input:focus{border-color:#5eead4;background:rgba(255,255,255,.2)}
 .toggle-pw{position:absolute;left:12px;padding:6px 8px;font-size:12.5px;color:#bfeef3;border-radius:10px}
-.btn-login{width:100%;height:50px;margin-top:6px;border-radius:999px;background:linear-gradient(115deg,#14b8a6,#0f7682);color:#fff;font-size:16px;font-weight:800;box-shadow:0 8px 22px rgba(20,184,166,.35);transition:transform .12s}
+.btn-login{width:100%;height:44px;margin-top:6px;border-radius:999px;background:linear-gradient(115deg,#14b8a6,#0f7682);color:#fff;font-size:16px;font-weight:800;box-shadow:0 8px 22px rgba(20,184,166,.35);transition:transform .12s}
 .btn-login:active{transform:scale(.98)}
 .login-err{min-height:18px;margin-top:8px;font-size:12.5px;font-weight:700;color:#fca5a5;text-align:center}
 
 /* Frosted Circular App-Style Options Row (Matches Halaa .options) */
 .options{display:flex;align-items:center;justify-content:center;gap:24px;margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.22)}
   .opt-item{display:flex;flex-direction:column;align-items:center;gap:6px;color:#fff;font-size:12px;font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,.45)}
-  .opt-circle{width:50px;height:50px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,rgba(255,255,255,.82),rgba(213,243,247,.62));border:1px solid #ffffff90;backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);box-shadow:0 5px 14px rgba(37,121,136,.22),inset 0 1px 4px rgba(255,255,255,.75);transition:transform .12s}
+  .opt-circle{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,rgba(255,255,255,.82),rgba(213,243,247,.62));border:1px solid #ffffff90;backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);box-shadow:0 5px 14px rgba(37,121,136,.22),inset 0 1px 4px rgba(255,255,255,.75);transition:transform .12s}
   .opt-item:active .opt-circle{transform:scale(.94)}
   .opt-circle svg{width:23px;height:23px;stroke:#143a42;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
@@ -86,7 +86,7 @@ dialog.adm-dialog::backdrop{background:rgba(5,15,20,.65);backdrop-filter:blur(4p
 .sync-pill{padding:6px 11px;border-radius:999px;background:rgba(16,185,129,.16);border:1px solid rgba(16,185,129,.4);color:#6ee7b7;font-size:12px;font-weight:700}
 
 .dash-body{display:grid;grid-template-columns:230px 1fr;flex:1;min-height:0}
-.sidebar{padding:14px 10px;border-left:1px solid var(--border);background:rgba(7,22,28,.75);display:flex;flex-direction:column;gap:6px}
+.sidebar{padding:14px 10px;scrollbar-width:none;-ms-overflow-style:none;border-left:1px solid var(--border);background:rgba(7,22,28,.75);display:flex;flex-direction:column;gap:6px}
 .nav-btn{display:flex;align-items:center;gap:10px;width:100%;padding:11px 13px;border-radius:14px;text-align:right;font-size:13.5px;font-weight:700;color:#cde8ec;transition:background .15s}
 .nav-btn:hover{background:rgba(255,255,255,.08)}
 .nav-btn.active{background:linear-gradient(115deg,rgba(20,184,166,.34),rgba(15,118,130,.45));border:1px solid rgba(94,234,212,.45);color:#fff}
@@ -133,7 +133,7 @@ th{background:rgba(255,255,255,.07);color:#99f6e4;font-weight:800}
 @media(max-width:780px){
   .dash-body{grid-template-columns:1fr}
   .sidebar{flex-direction:row;overflow-x:auto;border-left:none;border-bottom:1px solid var(--border);padding:8px}
-  .nav-btn{width:auto;white-space:nowrap;padding:8px 12px}
+  .nav-btn{width:auto;white-space:nowrap;padding:8px 12px} .sidebar::-webkit-scrollbar{display:none} .content{padding:12px} .grid{grid-template-columns:1fr;gap:10px} .card{padding:12px;border-radius:16px} .table-wrap{-webkit-overflow-scrolling:touch;border-radius:12px} table{font-size:12px} th,td{padding:8px 9px;white-space:nowrap} .row{flex-wrap:wrap;gap:6px}
 }
 .subtabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px} .subtab{padding:8px 14px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);font-size:13px;font-weight:700;color:#d6f4f7} .subtab.active{background:linear-gradient(115deg,#14b8a6,#0f7682);border-color:#5eead4;color:#fff} .perm-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin-top:8px} .perm-group{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:10px} .perm-group h4{font-size:12.5px;color:#5eead4;margin-bottom:8px} .perm-item{display:flex;align-items:center;gap:8px;font-size:12.5px;padding:4px 0;cursor:pointer} .perm-item input{width:16px;height:16px;accent-color:#14b8a6;margin:0}
 </style>
@@ -285,7 +285,7 @@ th{background:rgba(255,255,255,.07);color:#99f6e4;font-weight:800}
             <label style="font-size:12.5px;display:block;margin-top:8px">Socket.IO / Realtime URL</label><input class="ctrl" dir="ltr" id="srv-ws">
             <label style="font-size:12.5px;display:block;margin-top:8px">ZEGOCLOUD / Agora App ID</label><input class="ctrl" dir="ltr" id="srv-rtc">
             <label style="font-size:12.5px;display:block;margin-top:8px">IDrive e2 / S3 Endpoint</label><input class="ctrl" dir="ltr" id="srv-s3">
-            <label style="font-size:12.5px;display:block;margin-top:8px">رابط المزامنة OTA (GitHub Pages)</label><input class="ctrl" dir="ltr" id="srv-ota">
+            <label style="font-size:12.5px;display:block;margin-top:8px">رابط المزامنة OTA (GitHub Pages)</label><input class="ctrl" dir="ltr" id="srv-ota"><label style="font-size:12.5px;display:block;margin-top:8px">Server Token</label><input class="ctrl" dir="ltr" id="srv-token">
           </div>
           <div class="card">
             <h3>بوابات الدفع والعملات</h3>
