@@ -1,4 +1,4 @@
-const CACHE = 'halaa-admin-v1';
+const CACHE = 'halaa-admin-v2';
 self.addEventListener('install', (e) => {
   self.skipWaiting();
 });
