@@ -12,6 +12,7 @@
   let lastMarkup = '';
   const styles = Array.from(document.head.querySelectorAll('style'));
   const cssSnapshots = new Map();
+  const bc = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('halla_sync') : null;
 
   function render() {
     const task = [...waits.values()].filter(t => t.ready).pop();
@@ -60,6 +61,21 @@
     }
   }
 
+  function syncScripts(fragment) {
+    const loaded = new Set(Array.from(document.scripts, s => s.getAttribute('src')?.split('?')[0]).filter(Boolean));
+    fragment.querySelectorAll('script[src]').forEach(sc => {
+      const rawSrc = sc.getAttribute('src');
+      const base = rawSrc ? rawSrc.split('?')[0] : '';
+      if (base && !loaded.has(base)) {
+        loaded.add(base);
+        const s = document.createElement('script');
+        s.src = rawSrc;
+        s.defer = true;
+        document.head.append(s);
+      }
+    });
+  }
+
   const bustUrl = (raw) => {
     const u = new URL(raw, location.href);
     u.searchParams.set('_sync', Date.now().toString());
@@ -73,11 +89,11 @@
 
   async function syncExternalCss(signal) {
     const links = Array.from(document.querySelectorAll('link[rel="stylesheet"][href]'));
-    for (const link of links) {
+    await Promise.all(links.map(async (link) => {
       const base = cleanUrl(link.href);
       try {
         const res = await fetch(bustUrl(base), { cache: 'no-store', signal });
-        if (!res.ok) continue;
+        if (!res.ok) return;
         const cssText = await res.text();
         const prev = cssSnapshots.get(base);
         cssSnapshots.set(base, cssText);
@@ -89,14 +105,14 @@
           link.after(nextLink);
         }
       } catch {}
-    }
+    }));
   }
 
   async function refreshFiles(force = false) {
     if (pending || document.hidden || !navigator.onLine) return;
     pending = true;
     const abort = new AbortController();
-    const timer = setTimeout(() => abort.abort(), 8000);
+    const timer = setTimeout(() => abort.abort(), 6000);
     const startedAt = Date.now();
     if (force) {
       refreshing = true;
@@ -104,36 +120,48 @@
     }
     try {
       const page = bustUrl(location.pathname + location.search);
-      const response = await fetch(page, { cache: 'no-store', signal: abort.signal });
-      if (response.ok && !response.redirected) {
+      const [response] = await Promise.all([
+        fetch(page, { cache: 'no-store', signal: abort.signal }),
+        syncExternalCss(abort.signal)
+      ]);
+      if (response && response.ok && !response.redirected) {
         const markup = await response.text();
         if (!document.hidden && markup !== lastMarkup) {
           if (lastMarkup !== '') {
             const template = document.createElement('template');
             template.innerHTML = markup;
             const fragment = template.content;
-            const incoming = Array.from(fragment.querySelectorAll('style'));
-            incoming.forEach((source, index) => {
-              let sheet = styles[index];
-              if (!sheet) {
-                sheet = document.createElement('style');
-                document.head.append(sheet);
-                styles.push(sheet);
+            requestAnimationFrame(() => {
+              const incoming = Array.from(fragment.querySelectorAll('style'));
+              incoming.forEach((source, index) => {
+                let sheet = styles[index];
+                if (!sheet) {
+                  sheet = document.createElement('style');
+                  document.head.append(sheet);
+                  styles.push(sheet);
+                }
+                if (sheet.textContent !== source.textContent) sheet.textContent = source.textContent;
+              });
+              updateTerms(fragment);
+              const curHelp = document.getElementById('help');
+              const nextHelp = fragment.getElementById('help');
+              if (curHelp && nextHelp && !curHelp.open && curHelp.innerHTML !== nextHelp.innerHTML) {
+                curHelp.innerHTML = nextHelp.innerHTML;
               }
-              if (sheet.textContent !== source.textContent) sheet.textContent = source.textContent;
+              syncScripts(fragment);
             });
-            updateTerms(fragment);
           }
           lastMarkup = markup;
         }
       }
-      await syncExternalCss(abort.signal);
-      window.dispatchEvent(new CustomEvent('halla:sync', { detail: { force, timestamp: Date.now() } }));
+      const detail = { force, timestamp: Date.now() };
+      window.dispatchEvent(new CustomEvent('halla:sync', { detail }));
+      if (bc && force) bc.postMessage({ type: 'sync', detail });
     } catch {
     } finally {
       clearTimeout(timer);
       if (force) {
-        const waitLeft = Math.max(0, 650 - (Date.now() - startedAt));
+        const waitLeft = Math.max(0, 420 - (Date.now() - startedAt));
         setTimeout(() => {
           refreshing = false;
           render();
@@ -143,9 +171,19 @@
     }
   }
 
-  setInterval(() => void refreshFiles(false), 5000);
+  if (bc) {
+    bc.onmessage = (e) => {
+      if (e.data?.type === 'sync') {
+        window.dispatchEvent(new CustomEvent('halla:sync', { detail: e.data.detail }));
+      }
+    };
+  }
+
+  setInterval(() => void refreshFiles(false), 2000);
   for (const event of ['online', 'pageshow', 'focus']) window.addEventListener(event, () => void refreshFiles(false));
-  document.addEventListener('visibilitychange', () => void refreshFiles(false));
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') void refreshFiles(false);
+  });
   void refreshFiles(false);
 
   function cancelPull() {
