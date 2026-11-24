@@ -2,6 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <script src="/Halla/halla-web/android-update.js" defer></script>
+<script src="support-tickets.js?v=20261124b" defer></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#c4f9ef">
@@ -123,6 +124,54 @@ dialog#service-terms {overflow:hidden; position:fixed; box-sizing:border-box; ma
   dialog.addEventListener('close', () => { reader.scrollTop = 0; });
 })();
 </script>
-<dialog id="help"><h2>مساعدة الدخول</h2><p>اختر طريقة الوصول إلى حسابك.</p><a href="member.html?view=login">الدخول بالبريد الإلكتروني</a> <a href="member.html?view=reset">استعادة كلمة المرور</a> <a href="member.html?view=username">الدخول باسم المستخدم</a> <button type="button" class="dialog-x" aria-label="إغلاق النافذة">×</button></dialog>
-<script>const help=document.querySelector('#help');document.querySelector('.help').onclick=()=>help.showModal();help.querySelector('button').onclick=()=>help.close();</script></body></html>
-
+<dialog id="help" dir="rtl">
+  <div class="help-header">
+    <h2>الدعم الفني</h2>
+    <button type="button" class="help-close" aria-label="إغلاق">×</button>
+  </div>
+  <div class="help-tabs" role="tablist">
+    <button type="button" class="help-tab active" data-help-tab="new" role="tab" aria-selected="true">تذكرة جديدة</button>
+    <button type="button" class="help-tab" data-help-tab="track" role="tab" aria-selected="false">متابعة تذكرة</button>
+  </div>
+  <div data-help-panel="new">
+    <form id="support-ticket-form" class="ticket-form" novalidate>
+      <label class="ticket-label" for="ticket-reason">سبب المشكلة</label>
+      <select id="ticket-reason" required>
+        <option value="">اختر سبب المشكلة...</option>
+        <option value="حظر IP">حظر IP</option>
+        <option value="الحساب لا يعمل">الحساب لا يعمل</option>
+        <option value="مشكلة في الدخول">مشكلة في الدخول</option>
+        <option value="نسيان كلمة المرور">نسيان كلمة المرور</option>
+        <option value="نسيان البيانات">نسيان البيانات</option>
+        <option value="شيء آخر">شيء آخر</option>
+      </select>
+      <label class="ticket-label" for="ticket-contact">بيانات التواصل أو الحساب</label>
+      <input type="text" id="ticket-contact" placeholder="اسم المستخدم أو البريد أو رقم الجوال">
+      <label class="ticket-label" for="ticket-details">تفاصيل المشكلة</label>
+      <textarea id="ticket-details" placeholder="اكتب تفاصيل المشكلة لمساعدتك بشكل أسرع..."></textarea>
+      <div id="ticket-form-error" class="ticket-form-error" role="alert"></div>
+      <button type="submit" class="ticket-btn-primary">إرسال التذكرة</button>
+    </form>
+    <div id="ticket-created-box" class="ticket-created-box" hidden>
+      <div>تم استلام تذكرتك بنجاح! احتفظ برقم التذكرة للمتابعة:</div>
+      <div id="ticket-created-id" class="ticket-created-id" dir="ltr"></div>
+      <div class="ticket-created-actions">
+        <button type="button" id="ticket-copy-id" class="ticket-btn-secondary">نسخ الرقم</button>
+        <button type="button" id="ticket-go-track" class="ticket-btn-primary">متابعة التذكرة</button>
+      </div>
+    </div>
+  </div>
+  <div data-help-panel="track" hidden>
+    <form id="ticket-track-form" class="ticket-track-form">
+      <label class="ticket-label" for="ticket-track-input">رقم التذكرة</label>
+      <div class="ticket-track-row">
+        <input type="text" id="ticket-track-input" placeholder="مثال: HLA-123456" dir="ltr">
+        <button type="submit" class="ticket-btn-primary">بحث</button>
+      </div>
+    </form>
+    <div id="ticket-track-result"></div>
+    <div id="ticket-recent-list" class="ticket-recent-list"></div>
+  </div>
+</dialog>
+<script>const help=document.querySelector('#help');document.querySelector('.help').onclick=()=>help.showModal();help.querySelector('.help-close').onclick=()=>help.close();</script>
+</body></html>
