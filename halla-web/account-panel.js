@@ -6,10 +6,10 @@
   const q=s=>dialog.querySelector(s),form=q('form'),fields=form.elements,action=q('[type=submit]'),again=q('.again'),mail=q('.mail');
   mail.href=accounts.member.href+'?view=login';
   q('.share').href='https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(accounts.base.href);
-  let step='',phone='',link=false,sequence=0;
+  let step='',phone='',link=false,recoverPhone=false,sequence=0;
   const names={google:'Google',facebook:'فيسبوك',phone:'الهاتف'};
   function show(title){
-    sequence++;form.reset();phone='';step='';q('h2').textContent=title;q('.info').textContent='';
+    sequence++;mail.href=accounts.member.href+'?view=login';mail.textContent='الدخول بالبريد';form.reset();phone='';step='';q('h2').textContent=title;q('.info').textContent='';
     for(const el of [action,again,mail,q('.share'),...form.querySelectorAll('label')])el.hidden=true;
     action.disabled=false;fields.phone.required=false;fields.code.required=false;
     if(!dialog.open)dialog.showModal();
@@ -57,20 +57,23 @@
       oauthPending = false;
     }
   }
-  async function open(provider){
+  async function open(provider,recovery=false){
     if (provider === 'facebook' || provider === 'google') return openProvider(provider);
     if(!names[provider])return;
-    const seq=show('الدخول أو الربط عبر '+names[provider]);q('.info').textContent='جارٍ التحقق من توفر الخدمة…';
+    recoverPhone=recovery;const seq=show(recovery?'استعادة كلمة المرور بالهاتف':'الدخول أو الربط عبر '+names[provider]);q('.info').textContent='جارٍ التحقق من توفر الخدمة…';
     try{
       if(!await accounts.enabled(provider)){
         if(seq!==sequence)return;
-        q('.info').textContent=provider==='phone'?'خدمة الرسائل النصية لم تُفعّل بعد.':'الدخول عبر '+names[provider]+' لم يُفعّل بعد.';
+        q('.info').textContent=provider==='phone'?'إرسال الرسائل النصية غير متاح حاليًا.':'الدخول عبر '+names[provider]+' لم يُفعّل بعد.';
+        if(recovery){
+          mail.href=accounts.member.href+'?view=reset';mail.textContent='استعادة كلمة المرور بالبريد';
+        }
         mail.hidden=false;return;
       }
       const {data,error}=await (await accounts.client()).auth.getSession();
       if(seq!==sequence)return;if(error)throw error;
-      link=Boolean(data.session);
-      if(url.searchParams.get('link')==='1'&&!link){q('.info').textContent='سجّل الدخول إلى حساب هلاا أولًا لإضافة وسيلة دخول إليه.';mail.hidden=false;return;}
+      link=!recovery && Boolean(data.session);
+      if(!recovery&&url.searchParams.get('link')==='1'&&!link){q('.info').textContent='سجّل الدخول إلى حساب هلاا أولًا لإضافة وسيلة دخول إليه.';mail.hidden=false;return;}
       q('.info').textContent='سنرسل رمزًا للتحقق من ملكية الرقم.';phoneStep(false);
     }catch{if(seq===sequence){q('.info').textContent='تعذر الاتصال بخدمة الحسابات. أعد المحاولة.';mail.hidden=false;}}
   }
@@ -82,15 +85,26 @@
       if(step==='send'){
         phone=accounts.phoneNumber(fields.phone.value);
         if(!phone){q('.info').textContent='أدخل رقمًا صالحًا مع مفتاح الدولة.';return;}
-        await accounts.sendCode(phone,link);if(seq!==sequence)return;
+        await accounts.sendCode(phone,link,recoverPhone);if(seq!==sequence)return;
         q('.info').textContent='أدخل الرمز المرسل إلى '+phone;phoneStep(true);
       }else if(step==='verify'){
         const code=fields.code.value.trim().replace(/[٠-٩]/g,n=>String('٠١٢٣٤٥٦٧٨٩'.indexOf(n)));
         if(!/^\d{4,10}$/.test(code)){q('.info').textContent='تحقق من الأرقام المكتوبة.';return;}
-        await accounts.verify(phone,code,link);if(seq===sequence)location.replace(accounts.member.href);
+        await accounts.verify(phone,code,link);if(seq===sequence)location.replace(accounts.member.href+(recoverPhone?'?view=recover':''));
       }
     }catch{if(seq===sequence)q('.info').textContent='تعذّرت المتابعة. تحقق من البيانات أو أعد المحاولة لاحقًا.';}
     finally{if(seq===sequence){action.disabled=false;again.disabled=false;}}
+  };
+  for(const button of document.querySelectorAll('[data-open]')){
+    button.onclick=()=>document.getElementById(button.dataset.open).showModal();
+  }
+  for(const button of document.querySelectorAll('[data-close]')){
+    button.onclick=()=>button.closest('dialog').close();
+  }
+  const recoveryButton=document.querySelector('[data-recover-phone]');
+  if(recoveryButton)recoveryButton.onclick=()=>{
+    recoveryButton.closest('dialog').close();
+    open('phone',true);
   };
   for(const b of document.querySelectorAll('[data-provider]'))b.onclick=()=>open(b.dataset.provider.toLowerCase());
   for(const a of document.querySelectorAll('a[href$="?view=phone"]'))a.onclick=e=>{e.preventDefault();open('phone');};

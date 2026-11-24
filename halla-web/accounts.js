@@ -28,9 +28,9 @@ window.HallaAccounts = (() => {
     const result=link?await auth.linkIdentity({provider,options}):await auth.signInWithOAuth({provider,options});
     if(result.error)throw result.error;
   }
-  async function sendCode(phone,link){
+  async function sendCode(phone,link,recovery=false){
     const auth=(await client()).auth;
-    const result=link?await auth.updateUser({phone}):await auth.signInWithOtp({phone});
+    const result=link?await auth.updateUser({phone}):await auth.signInWithOtp({phone,options:{shouldCreateUser:!recovery}});
     if(result.error)throw result.error;
   }
   async function verify(phone,token,link){
