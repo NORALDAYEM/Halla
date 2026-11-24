@@ -37,7 +37,7 @@
     if (checking || document.hidden) return;
     checking = true;
     try {
-      const response = await fetch(new URL('current.json', releases), {cache:'no-store'});
+      const response = await fetch(new URL(`current.json?_sync=${Date.now()}`, releases), {cache:'no-store'});
       if (!response.ok) return;
       const release = await response.json();
       requireUpdate(release);
@@ -47,5 +47,8 @@
   check();
   window.addEventListener('pageshow', check);
   document.addEventListener('visibilitychange', check);
-  setInterval(check, 60000);
+  window.addEventListener('halla:sync', check);
+  window.addEventListener('online', check);
+  window.addEventListener('focus', check);
+  setInterval(check, 15000);
 })();
