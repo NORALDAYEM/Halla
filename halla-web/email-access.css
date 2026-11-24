@@ -1,6 +1,6 @@
 .actions .provider.email-mode {font-weight:700;color:white;border:1px solid #ffffff61}
 .actions .provider.email-mode {
-  background: transparent;
+  background: linear-gradient(110deg, rgb(18 104 60 / 34%), rgb(22 132 78 / 30%));
   box-shadow: none;
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
