@@ -1,7 +1,9 @@
 .actions .provider.email-mode {font-weight:700;color:white;border:1px solid #ffffff61}
 .actions .provider.email-mode {
-  background: linear-gradient(110deg, rgb(10 77 45 / 45%), rgb(13 91 56 / 40%));
-  backdrop-filter: blur(5px);
+  background: transparent;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
   text-shadow: 0 1px 2px #123b2c;
 }
 .email-mode svg {position:absolute;right:20px;top:50%;transform:translateY(-50%);width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
