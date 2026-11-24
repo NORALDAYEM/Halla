@@ -136,6 +136,7 @@ th{background:rgba(255,255,255,.07);color:#99f6e4;font-weight:800}
   .sidebar{flex-direction:row;overflow-x:auto;border-left:none;border-bottom:1px solid var(--border);padding:8px}
   .nav-btn{width:auto;white-space:nowrap;padding:8px 12px}
 }
+.subtabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px} .subtab{padding:8px 14px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);font-size:13px;font-weight:700;color:#d6f4f7} .subtab.active{background:linear-gradient(115deg,#14b8a6,#0f7682);border-color:#5eead4;color:#fff} .perm-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin-top:8px} .perm-group{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:10px} .perm-group h4{font-size:12.5px;color:#5eead4;margin-bottom:8px} .perm-item{display:flex;align-items:center;gap:8px;font-size:12.5px;padding:4px 0;cursor:pointer} .perm-item input{width:16px;height:16px;accent-color:#14b8a6;margin:0}
 </style>
 </head>
 <body>
@@ -221,7 +222,8 @@ th{background:rgba(255,255,255,.07);color:#99f6e4;font-weight:800}
       <button class="nav-btn" data-tab="app">📱 ضبط التطبيق</button>
       <button class="nav-btn" data-tab="servers">🌐 السيرفرات والربط</button>
       <button class="nav-btn" data-tab="gifts">🎁 الهدايا والعملات</button>
-      <button class="nav-btn" data-tab="users">👥 المستخدمين والصلاحيات</button>
+      <button class="nav-btn" data-tab="app-users">👥 مستخدمو التطبيق <span class="badge" id="app-users-badge">0</span></button>
+      <button class="nav-btn" data-tab="admin-users">🛡️ مستخدمو الإدارة والصلاحيات <span class="badge" id="admin-users-badge">0</span></button>
       <button class="nav-btn" data-tab="tickets">🎫 تذاكر الدعم <span class="badge" id="tickets-badge">0</span></button>
       <button class="nav-btn" data-tab="code">💻 التعديلات البرمجية</button>
       <button class="nav-btn" data-tab="security">🛡️ الأمان وكلمة المرور</button>
@@ -326,27 +328,8 @@ th{background:rgba(255,255,255,.07);color:#99f6e4;font-weight:800}
         </div>
       </section>
 
-      <section class="tab-pane" data-pane="users" hidden>
-        <div class="panel-head"><h2>المستخدمين والصلاحيات والحظر</h2></div>
-        <div class="card" style="margin-bottom:14px">
-          <h3>إضافة / تعديل مستخدم وصلاحية</h3>
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px">
-            <input class="ctrl" id="usr-name" placeholder="اسم المستخدم / المعرّف">
-            <input class="ctrl" id="usr-ip" dir="ltr" placeholder="IP (اختياري)">
-            <select class="ctrl" id="usr-role">
-              <option value="مستخدم">مستخدم</option>
-              <option value="VIP">VIP</option>
-              <option value="مشرف">مشرف غرفة</option>
-              <option value="رئيس دولة">رئيس دولة</option>
-              <option value="مدير عام">مدير عام</option>
-            </select>
-            <button type="button" class="btn-sm" id="btn-add-user">إضافة / تحديث</button>
-          </div>
-        </div>
-        <div class="card">
-          <div class="table-wrap"><table><thead><tr><th>المستخدم</th><th>IP</th><th>الصلاحية</th><th>العملات</th><th>الحالة</th><th>إجراءات</th></tr></thead><tbody id="users-tbody"></tbody></table></div>
-        </div>
-      </section>
+   <section class="tab-pane" data-pane="app-users" hidden><div class="panel-head"><h2>👥 مستخدمو التطبيق</h2></div><div class="card" style="margin-bottom:14px"><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin-bottom:10px"><input class="ctrl" id="usr-search" placeholder="بحث بالاسم أو IP..."><select class="ctrl" id="usr-filter"><option value="all">كل الحالات</option><option value="active">نشط</option><option value="banned">محظور</option></select></div><h3>إضافة / تعديل مستخدم</h3><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px"><input class="ctrl" id="usr-name" placeholder="الاسم / المعرف"><input class="ctrl" id="usr-ip" dir="ltr" placeholder="IP (اختياري)"><input class="ctrl" id="usr-country" placeholder="الدولة (مثل SA)"><select class="ctrl" id="usr-role"><option value="مستخدم">مستخدم</option><option value="VIP">VIP</option><option value="صاحب غرفة">صاحب غرفة</option><option value="مراقب محتوى">مراقب محتوى</option><option value="مدير عام">مدير عام</option></select><button type="button" class="btn-sm" id="btn-add-user">إضافة / حفظ</button></div></div><div class="card"><div class="table-wrap"><table><thead><tr><th>المستخدم</th><th>IP</th><th>الدولة</th><th>الفئة</th><th>العملات</th><th>الحالة</th><th>الإجراءات</th></tr></thead><tbody id="users-tbody"></tbody></table></div></div></section>
+      <section class="tab-pane" data-pane="admin-users" hidden><div class="panel-head"><h2>🛡️ مستخدمو الإدارة والصلاحيات</h2></div><div class="card" style="margin-bottom:14px"><h3>إضافة / تعديل حساب إداري</h3><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin-bottom:10px"><input class="ctrl" id="ad-user" placeholder="اسم الدخول"><input class="ctrl" id="ad-pass" type="password" placeholder="كلمة المرور"><input class="ctrl" id="ad-title" placeholder="المنصب (مثل: دعم فني)"><input class="ctrl" id="ad-scope" placeholder="النطاق (مثل: الكل أو SA)"></div><div class="subtabs"><button type="button" class="subtab" id="btn-perm-all">منح الكل</button><button type="button" class="subtab" id="btn-perm-support">دعم فني</button><button type="button" class="subtab" id="btn-perm-country">رئيس دولة</button><button type="button" class="subtab" id="btn-perm-none">إلغاء الكل</button></div><div class="perm-grid" id="ad-perm-grid"></div><div style="margin-top:12px"><button type="button" class="btn-sm" id="btn-add-admin">حفظ حساب الإدارة</button></div></div><div class="card"><div class="table-wrap"><table><thead><tr><th>اسم الدخول</th><th>المنصب</th><th>النطاق</th><th>الصلاحيات</th><th>الحالة</th><th>الإجراءات</th></tr></thead><tbody id="admin-users-tbody"></tbody></table></div></div></section>
 
       <section class="tab-pane" data-pane="tickets" hidden>
         <div class="panel-head"><h2>صندوق تذاكر الدعم الفني والبلاغات</h2><button type="button" class="btn-ghost" id="btn-refresh-tickets">تحديث القائمة</button></div>
@@ -443,7 +426,7 @@ th{background:rgba(255,255,255,.07);color:#99f6e4;font-weight:800}
     <div id="adm-track-res" style="margin-top:10px;font-size:13px"></div>
   </div>
 </dialog>
-
+<dialog class="adm-dialog" id="dlg-user-perms"><div class="dlg-head"><h3>🔐 صلاحيات المستخدم</h3><button type="button" class="dlg-close" data-close>×</button></div><div class="dlg-body"><div id="up-target" style="font-weight:700;margin-bottom:8px;color:#5eead4"></div><div id="up-grid" class="perm-grid"></div><div style="margin-top:12px;display:flex;gap:8px;justify-content:flex-end"><button type="button" class="btn-sm" id="btn-save-user-perms">حفظ الصلاحيات</button><button type="button" class="btn-ghost" data-close>إلغاء</button></div></div></dialog>
 <div class="toast" id="toast" hidden></div>
 
 <script>
@@ -461,7 +444,7 @@ th{background:rgba(255,255,255,.07);color:#99f6e4;font-weight:800}
   const TICKETS_KEY = 'halla.support.tickets.v1';
   const LOCK_KEY = 'halla.admin.lock.v1';
   const LOG_KEY = 'halla.admin.audit.v1';
-  const bc = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('halla_sync') : null;
+  const ADMIN_USERS_KEY = 'halla.admin.users.v1'; const APP_USER_PERMS = [{k:'login',l:'الدخول'},{k:'mic',l:'المايك الصوتي'},{k:'cam',l:'المايك المرئي'},{k:'chat',l:'الدردشة'},{k:'dm',l:'DM'},{k:'createRoom',l:'إنشاء غرفة'},{k:'gifts',l:'الهدايا'},{k:'games',l:'الألعاب'},{k:'moments',l:'اللحظات'}]; const ADMIN_PERM_GROUPS = [{g:'التطبيق والمحتوى',items:[{k:'app.brand',l:'الهوية والمظهر'},{k:'app.home',l:'الشاشة الرئيسية'},{k:'app.rooms',l:'الغرف'},{k:'app.gifts',l:'الهدايا'},{k:'app.games',l:'الألعاب'}]},{g:'المستخدمون والرقابة',items:[{k:'users.view',l:'عرض المستخدمين'},{k:'users.edit',l:'تعديل المستخدمين'},{k:'users.ban',l:'الحظر وفك الحظر'},{k:'users.coins',l:'شحن العملات'},{k:'users.perms',l:'صلاحيات التطبيق'}]},{g:'الدعم والتقارير',items:[{k:'support.view',l:'عرض التذاكر'},{k:'support.reply',l:'الرد على التذاكر'},{k:'support.close',l:'إغلاق التذاكر'},{k:'audit.view',l:'سجل المراقبة'},{k:'logs.export',l:'تصدير السجلات'}]},{g:'الإدارة والنظام',items:[{k:'admin.manage',l:'إدارة المشرفين'},{k:'admin.roles',l:'تعديل الصلاحيات'},{k:'system.code',l:'الأكواد البرمجية'},{k:'system.backup',l:'النسخ الاحتياطي'},{k:'system.security',l:'إعدادات الأمان'}]}]; let currentAdminSession = null; const bc = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('halla_sync') : null;
 
   // Register Service Worker + PWA Install Prompt for standalone mobile installation
   if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
@@ -647,7 +630,7 @@ th{background:rgba(255,255,255,.07);color:#99f6e4;font-weight:800}
     const p = document.getElementById('adm-pass').value;
     const auth = await ensureAuth();
     const hash = await sha256(p);
-    if (u.toUpperCase() === auth.username.toUpperCase() && hash === auth.passHash) {
+   const adminUsers = loadJson(ADMIN_USERS_KEY, []); const subAdmin = adminUsers.find(a => a.username === u && a.passHash === hash && a.active !== false); const isMainAdmin = (u === auth.username && hash === auth.passHash); if (isMainAdmin || subAdmin) { currentAdminSession = isMainAdmin ? { username: auth.username, title: 'المدير العام', scope: 'GLOBAL', isSuper: true, perms: ADMIN_PERM_GROUPS.flatMap(g => g.items.map(i => i.k)) } : { username: subAdmin.username, title: subAdmin.title || 'مشرف', scope: subAdmin.scope || 'GLOBAL', isSuper: false, perms: Array.isArray(subAdmin.perms) ? subAdmin.perms : [] };
       saveJson(LOCK_KEY, { fails: 0, until: 0 });
       addAudit(`تسجيل دخول ناجح للمشرف (${u})`);
       loginView.hidden = true;
@@ -809,9 +792,9 @@ th{background:rgba(255,255,255,.07);color:#99f6e4;font-weight:800}
     mapVal('code-js', 'customJs');
 
     renderGifts();
-    renderUsers();
+    renderAppUsers();
     renderTickets();
-    renderAudit();
+    renderAudit(); renderAppUsers(); renderAdminPermGrid(); renderAdminUsers(); applyAdminRoleVisibility();
   }
 
   function renderGifts() {
@@ -862,8 +845,8 @@ th{background:rgba(255,255,255,.07);color:#99f6e4;font-weight:800}
       </tr>
     `).join('');
   }
-  window._grantCoins = (i) => { cfg.users[i].coins += 500; renderUsers(); broadcastConfig(); toast('تم شحن 500 عملة'); };
-  window._toggleBan = (i) => { cfg.users[i].status = cfg.users[i].status === 'نشط' ? 'محظور' : 'نشط'; renderUsers(); broadcastConfig(); };
+  window._grantCoins = (i) => { cfg.users[i].coins += 500; renderAppUsers(); broadcastConfig(); toast('تم شحن 500 عملة'); };
+  window._toggleBan = (i) => { cfg.users[i].status = cfg.users[i].status === 'نشط' ? 'محظور' : 'نشط'; renderAppUsers(); broadcastConfig(); };
 
   document.getElementById('btn-add-user').onclick = () => {
     const name = document.getElementById('usr-name').value.trim();
@@ -874,7 +857,7 @@ th{background:rgba(255,255,255,.07);color:#99f6e4;font-weight:800}
     if (ex) { ex.role = role; if (ip) ex.ip = ip; }
     else cfg.users.unshift({ id: 'u' + Date.now(), name, ip, role, coins: 500, status: 'نشط' });
     document.getElementById('usr-name').value = '';
-    renderUsers();
+    renderAppUsers();
     broadcastConfig();
     toast('تم تحديث الصلاحيات وبثها');
   };
@@ -953,7 +936,7 @@ th{background:rgba(255,255,255,.07);color:#99f6e4;font-weight:800}
     toast('تم تحديث اسم المستخدم وكلمة المرور بنجاح ✓');
   };
 
-  window.addEventListener('storage', (e) => {
+  let editingPermUserId = null;   function renderAppUsers() {     const tb = document.getElementById('users-tbody'); if (!tb) return;     const q = (document.getElementById('usr-search')?.value || '').trim().toLowerCase();     const f = document.getElementById('usr-filter')?.value || 'all';     const allUsers = cfg.users || [];     const badge = document.getElementById('app-users-badge'); if (badge) badge.textContent = allUsers.length;     const list = allUsers.filter(u => {       const matchQ = !q || (u.name || '').toLowerCase().includes(q) || (u.ip || '').toLowerCase().includes(q) || (u.country || '').toLowerCase().includes(q);       const matchF = f === 'all' || (f === 'banned' ? u.status === 'محظور' : u.status !== 'محظور');       return matchQ && matchF;     });     tb.innerHTML = list.map(u => {       const idx = allUsers.indexOf(u);       const permsObj = u.perms || {};       const pCount = APP_USER_PERMS.filter(p => permsObj[p.k] !== false).length;       return `<tr><td><b>${u.name || ''}</b></td><td>${u.ip || '-'}</td><td>${u.country || 'GLOBAL'}</td><td>${u.role || 'عضو'}</td><td>${u.coins || 0}</td><td><span class="tag ${u.status === 'محظور' ? 'tag-ban' : 'tag-ok'}">${u.status || 'نشط'}</span></td><td><button type="button" class="btn-ghost" onclick="window._openUserPerms(${idx})">${pCount}/${APP_USER_PERMS.length}</button></td><td style="display:flex;gap:4px"><button type="button" class="btn-ghost" onclick="window._grantCoins(${idx})">+500</button><button type="button" class="btn-ghost" onclick="window._toggleBan(${idx})">${u.status === 'محظور' ? 'فك' : 'حظر'}</button></td></tr>`;     }).join('');   }   const usrSearchEl = document.getElementById('usr-search'); if (usrSearchEl) usrSearchEl.oninput = renderAppUsers;   const usrFilterEl = document.getElementById('usr-filter'); if (usrFilterEl) usrFilterEl.onchange = renderAppUsers;    window._openUserPerms = (idx) => {     const u = (cfg.users || [])[idx]; if (!u) return;     editingPermUserId = idx;     const t = document.getElementById('up-target'); if (t) t.textContent = u.name || '';     const grid = document.getElementById('up-grid');     if (grid) {       const perms = u.perms || {};       grid.innerHTML = APP_USER_PERMS.map(p => `<label class="perm-item"><input type="checkbox" data-uk="${p.k}"${perms[p.k] !== false ? ' checked' : ''}><span>${p.l}</span></label>`).join('');     }     document.getElementById('dlg-user-perms')?.showModal();   };   const btnSaveUP = document.getElementById('btn-save-user-perms');   if (btnSaveUP) btnSaveUP.onclick = () => {     const u = (cfg.users || [])[editingPermUserId]; if (!u) return;     const perms = {};     document.querySelectorAll('#up-grid input[data-uk]').forEach(cb => { perms[cb.dataset.uk] = cb.checked; });     u.perms = perms;     broadcastConfig();     renderAppUsers();     document.getElementById('dlg-user-perms')?.close();     addAudit('تحديث صلاحيات المستخدم: ' + u.name);     toast('تم حفظ صلاحيات المستخدم ✓');   };   document.querySelectorAll('#dlg-user-perms [data-close]').forEach(b => { b.onclick = () => document.getElementById('dlg-user-perms')?.close(); });    function renderAdminPermGrid() {     const grid = document.getElementById('ad-perm-grid'); if (!grid) return;     grid.innerHTML = ADMIN_PERM_GROUPS.map(g => `<div style="grid-column:1/-1;font-weight:700;color:#5eead4;margin-top:6px;font-size:12px">${g.g}</div>` + g.items.map(it => `<label class="perm-item"><input type="checkbox" data-ak="${it.k}"><span>${it.l}</span></label>`).join('')).join('');   }   const setAdminPerms = (fn) => { document.querySelectorAll('#ad-perm-grid input[data-ak]').forEach(cb => { cb.checked = fn(cb.dataset.ak); }); };   const bAll = document.getElementById('btn-perm-all'); if (bAll) bAll.onclick = () => setAdminPerms(() => true);   const bNone = document.getElementById('btn-perm-none'); if (bNone) bNone.onclick = () => setAdminPerms(() => false);   const bSup = document.getElementById('btn-perm-support'); if (bSup) bSup.onclick = () => setAdminPerms(k => ['support.view','support.reply','support.close','users.view','users.ban','audit.view'].includes(k));   const bCty = document.getElementById('btn-perm-country'); if (bCty) bCty.onclick = () => setAdminPerms(k => ['users.view','users.edit','users.ban','users.perms','support.view','support.reply','app.rooms'].includes(k));    function renderAdminUsers() {     const tb = document.getElementById('admin-users-tbody'); if (!tb) return;     const list = loadJson(ADMIN_USERS_KEY, []);     const badge = document.getElementById('admin-users-badge'); if (badge) badge.textContent = list.length;     tb.innerHTML = list.map((a, i) => `<tr><td><b>${a.username}</b></td><td>${a.title || '-'}</td><td>${a.scope || 'GLOBAL'}</td><td>${Array.isArray(a.perms) ? a.perms.length : 0}</td><td><span class="tag ${a.active === false ? 'tag-ban' : 'tag-ok'}">${a.active === false ? 'معطل' : 'نشط'}</span></td><td style="display:flex;gap:4px"><button type="button" class="btn-ghost" onclick="window._toggleAdminActive(${i})">${a.active === false ? 'تفعيل' : 'تعطيل'}</button><button type="button" class="btn-ghost" onclick="window._delAdminUser(${i})">حذف</button></td></tr>`).join('');   }   window._toggleAdminActive = (i) => { const list = loadJson(ADMIN_USERS_KEY, []); if (!list[i]) return; list[i].active = list[i].active === false; saveJson(ADMIN_USERS_KEY, list); renderAdminUsers(); if (bc) bc.postMessage({ type: 'halla:admin-users', users: list }); };   window._delAdminUser = (i) => { const list = loadJson(ADMIN_USERS_KEY, []); if (!list[i]) return; const name = list[i].username; list.splice(i, 1); saveJson(ADMIN_USERS_KEY, list); renderAdminUsers(); if (bc) bc.postMessage({ type: 'halla:admin-users', users: list }); addAudit('حذف حساب إدارة: ' + name); };    const btnAddAdm = document.getElementById('btn-add-admin');   if (btnAddAdm) btnAddAdm.onclick = async () => {     const username = (document.getElementById('ad-user')?.value || '').trim();     const pass = document.getElementById('ad-pass')?.value || '';     const title = (document.getElementById('ad-title')?.value || '').trim() || 'مشرف';     const scope = document.getElementById('ad-scope')?.value || 'GLOBAL';     if (!username) return toast('أدخل اسم المستخدم');     const perms = Array.from(document.querySelectorAll('#ad-perm-grid input[data-ak]:checked')).map(c => c.dataset.ak);     const list = loadJson(ADMIN_USERS_KEY, []);     const ex = list.find(a => a.username === username);     if (ex) { ex.title = title; ex.scope = scope; ex.perms = perms; if (pass) ex.passHash = await sha256(pass); }     else { if (!pass) return toast('أدخل كلمة المرور للحساب الجديد'); list.unshift({ username, passHash: await sha256(pass), title, scope, perms, active: true, createdAt: Date.now() }); }     saveJson(ADMIN_USERS_KEY, list);     if (document.getElementById('ad-user')) document.getElementById('ad-user').value = '';     if (document.getElementById('ad-pass')) document.getElementById('ad-pass').value = '';     renderAdminUsers();     if (bc) bc.postMessage({ type: 'halla:admin-users', users: list });     addAudit('حفظ حساب إدارة: ' + username);     toast('تم حفظ حساب الإدارة ✓');   };    function applyAdminRoleVisibility() {     const tabPermMap = { themes: 'app.brand', app: 'app.home', servers: 'app.rooms', gifts: 'app.gifts', 'app-users': 'users.view', 'admin-users': 'admin.manage', tickets: 'support.view', code: 'system.code', security: 'system.security' };     const isSuper = !currentAdminSession || currentAdminSession.isSuper;     const perms = currentAdminSession?.perms || [];     let firstVisible = null;     document.querySelectorAll('[data-tab]').forEach(btn => {       const req = tabPermMap[btn.dataset.tab];       const ok = isSuper || !req || perms.includes(req);       btn.style.display = ok ? '' : 'none';       if (ok && !firstVisible) firstVisible = btn;     });     const activeBtn = document.querySelector('[data-tab].active');     if (activeBtn && activeBtn.style.display === 'none' && firstVisible) firstVisible.click();   }   if (bc) bc.onmessage = (ev) => { if (ev.data?.type === 'halla:admin-users') renderAdminUsers(); };    window.addEventListener('storage', (e) => {
     if (e.key === TICKETS_KEY) renderTickets();
   });
 })();
