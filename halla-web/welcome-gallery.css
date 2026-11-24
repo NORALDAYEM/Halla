@@ -14,3 +14,9 @@ main{isolation:isolate;background:transparent}
 .account{padding:5px 14px;border-radius:20px;color:#174955;background:#ffffff87}
 .guest{background:linear-gradient(#fff28ac9,#ffcd37c9);border-color:#ad831c;color:#30250a}
 @media(prefers-reduced-motion:reduce){.welcome-gallery img{transition:none}}
+.full-logo{position:relative;width: min(30.4svh,248px);max-width:65%}.full-logo .logo{width:100%;height:auto}
+.live-crown,.mic-melody{display:none;pointer-events:none}
+.motion-logo .logo{clip-path:polygon(0 0,33% 0,33% 20.7%,66.2% 20.7%,66.2% 0,100% 0,100% 100%,0 100%)}
+.motion-logo .live-crown{display:block;position:absolute;left:29%;top:0;width:41%;height:22.3%}
+.motion-logo .mic-melody{display:block;position:absolute;inset:0}.mic-melody i{position:absolute;left:51%;top:31%;font:900 clamp(15px,3.2svh,25px)/1 system-ui;color:#007fa8;-webkit-text-stroke:.45px #fff;opacity:0;animation:mic-note-flight 3.6s ease-out infinite;--x:4.3em;--y:-2.8em;--r:18deg}.mic-melody i:nth-child(2){--x:-3.9em;--y:-3em;--r:-20deg;animation-delay:.9s}.mic-melody i:nth-child(3){--x:3.2em;--y:-3.7em;--r:13deg;animation-delay:1.8s}.mic-melody i:nth-child(4){--x:-4.5em;--y:-2em;--r:-14deg;animation-delay:2.7s}
+@keyframes mic-note-flight{0%{opacity:0;transform:translate(0,0) scale(.45)}18%{opacity:1}72%{opacity:1}100%{opacity:0;transform:translate(var(--x),var(--y)) scale(1.06) rotate(var(--r))}}
