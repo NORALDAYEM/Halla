@@ -1,7 +1,7 @@
 (() => {
   const accounts=window.HallaAccounts, url=new URL(location.href);
   const dialog=document.createElement('dialog'); dialog.id='account-panel';dialog.setAttribute('aria-labelledby','account-heading');
-  dialog.innerHTML='<h2 id="account-heading"></h2><p class="info" role="status"></p><form><label hidden>رقم الهاتف مع مفتاح الدولة<input name="phone" type="tel" dir="ltr" placeholder="+9665…" autocomplete="tel"></label><label hidden>رمز التحقق<input name="code" inputmode="numeric" dir="ltr" autocomplete="one-time-code" maxlength="10"></label><button class="primary" type="submit" hidden></button></form><button class="again" type="button" hidden>تغيير الرقم</button><a class="share" target="_blank" rel="noopener noreferrer" hidden>مشاركة دعوة هلاا على فيسبوك</a><a class="mail" hidden>الدخول بالبريد</a><button class="close" type="button">إغلاق</button>';
+  dialog.innerHTML='<h2 id="account-heading"></h2><p class="info" role="status"></p><form><label hidden>رقم الهاتف مع مفتاح الدولة<input name="phone" type="tel" dir="ltr" placeholder="+9665…" autocomplete="tel"></label><label hidden>رمز التحقق<input name="code" inputmode="numeric" dir="ltr" autocomplete="one-time-code" maxlength="10"></label><button class="primary" type="submit" hidden></button></form><button class="again" type="button" hidden>تغيير الرقم</button><a class="share" target="_blank" rel="noopener noreferrer" hidden>مشاركة دعوة هلاا على فيسبوك</a><a class="mail" hidden>الدخول بالبريد</a><button class="close dialog-x" aria-label="إغلاق النافذة" type="button">×</button>';
   document.body.append(dialog);
   const q=s=>dialog.querySelector(s),form=q('form'),fields=form.elements,action=q('[type=submit]'),again=q('.again'),mail=q('.mail');
   mail.href=accounts.member.href+'?view=login';
@@ -120,7 +120,7 @@
         if(seq!==sequence)return;
         if(provider==='google'){location.replace(accounts.member.href);return;}
         step='finished';q('h2').textContent='تم الدخول عبر فيسبوك';q('.info').textContent='يمكنك دعوة أصدقائك للانضمام إلى هلاا.';
-        q('.share').hidden=false;q('.close').textContent='متابعة إلى هلاا';
+        q('.share').hidden=false;
       }catch{if(seq===sequence){q('.info').textContent='تعذر إكمال الربط أو تم إلغاؤه. يمكنك المحاولة من جديد.';mail.hidden=false;}}
       finally{history.replaceState(null,'',url.pathname);}
     })();
