@@ -82,7 +82,7 @@
   }
   const bustUrl = (raw) => { const u = new URL(raw, location.href); u.searchParams.set('_sync', Date.now().toString()); return u.toString(); };
   const cleanUrl = (raw) => { const u = new URL(raw, location.href); u.searchParams.delete('_sync'); return u.toString(); };
-  async function syncExternalCss(force = false, signal) {
+  async function syncExternalCss(signal) {
     const links = Array.from(document.querySelectorAll('link[rel="stylesheet"][href]'));
     for (const link of links) {
       const base = cleanUrl(link.href);
@@ -92,7 +92,7 @@
         const cssText = await res.text();
         const prev = cssSnapshots.get(base);
         cssSnapshots.set(base, cssText);
-        if (force || (prev !== undefined && prev !== cssText)) link.href = bustUrl(base);
+        if (prev !== undefined && prev !== cssText) { const nextLink = document.createElement('link'); nextLink.rel = 'stylesheet'; nextLink.href = bustUrl(base); nextLink.onload = () => { if (link.parentNode) link.remove(); }; link.after(nextLink); }
       } catch {}
     }
   }
@@ -122,7 +122,7 @@
           lastMarkup = markup;
         }
       }
-      await syncExternalCss(force, abort.signal);
+      await syncExternalCss(abort.signal);
       window.dispatchEvent(new CustomEvent('halla:sync', { detail: { force, timestamp: Date.now() } }));
     } catch {} finally {
       clearTimeout(timer);
