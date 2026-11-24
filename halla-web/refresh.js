@@ -230,4 +230,63 @@
   }
 
   window.addEventListener('pageshow', () => { refreshing = false; cancelPull(); });
+  function applyAdminConfig(cfg) {
+    if (!cfg) {
+try { cfg = JSON.parse(localStorage.getItem('halla.app.config.v1') || 'null'); } catch {}
+    }
+    if (!cfg) return;
+    const root = document.documentElement;
+    if (cfg.primary) root.style.setProperty('--halla-primary', cfg.primary);
+    if (cfg.accent) root.style.setProperty('--halla-accent', cfg.accent);
+    if (cfg.fontScale) root.style.fontSize = cfg.fontScale + '%';
+
+    let dyn = document.getElementById('halla-admin-live-css');
+    if (!dyn) {
+      dyn = document.createElement('style');
+      dyn.id = 'halla-admin-live-css';
+      document.head.append(dyn);
+    }
+    const gAlpha = ((Number(cfg.guestOpacity) || 45) / 100).toFixed(2);
+    const cAlpha = ((Number(cfg.cardOpacity) || 77) / 100).toFixed(2);
+    const blur = Number(cfg.blur ?? 9);
+    const rad = Number(cfg.radius ?? 18);
+    dyn.textContent = `
+      a.guest { display: ${cfg.showGuest === false ? 'none' : 'inline-flex'} !important; background: linear-gradient(rgba(255,242,138,${gAlpha}), rgba(255,205,55,${gAlpha})) !important; border-radius: ${rad}px !important; }
+      .provider[data-provider="Google"] { display: ${cfg.showGoogle === false ? 'none' : 'block'} !important; }
+      .provider.fb { display: ${cfg.showFacebook === false ? 'none' : 'block'} !important; }
+      .provider.email-mode { display: ${cfg.showEmail === false ? 'none' : 'block'} !important; }
+      .options a[href*="view=phone"] { display: ${cfg.showPhone === false ? 'none' : 'inline-flex'} !important; }
+      .full-logo { pointer-events: ${cfg.lockLogo === false ? 'auto' : 'none'} !important; }
+      dialog { backdrop-filter: blur(${blur}px) saturate(112%) !important; }
+      ${cfg.customCss || ''}
+    `;
+    
+    let banner = document.getElementById('halla-maint-banner');
+    if (cfg.maintenance) {
+      if (!banner) {
+        banner = document.createElement('div');
+        banner.id = 'halla-maint-banner';
+        banner.style.cssText = 'position:fixed;inset:0;z-index:99999;display:grid;place-items:center;padding:24px;text-align:center;background:rgba(7,27,33,.92);color:#fff;font:700 17px/1.7 system-ui;backdrop-filter:blur(10px)';
+        document.body.append(banner);
+      }
+      banner.textContent = cfg.maintenanceMsg || 'التطبيق في صيانة سريعة.';
+    } else if (banner) {
+      banner.remove();
+    }
+
+    if (cfg.customJs && cfg.customJs !== applyAdminConfig._lastJs) {
+      applyAdminConfig._lastJs = cfg.customJs;
+      try { new Function(cfg.customJs)(); } catch {}
+    }
+  }
+
+  applyAdminConfig();
+  window.addEventListener('storage', (e) => { if (e.key === 'halla.app.config.v1') applyAdminConfig(); });
+  if (bc) {
+    const prevOnMsg = bc.onmessage;
+    bc.onmessage = (e) => {
+      if (e.data?.type === 'halla:config') applyAdminConfig(e.data.config);
+      if (prevOnMsg) prevOnMsg(e);
+    };
+  }
 })();
