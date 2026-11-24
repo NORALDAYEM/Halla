@@ -3,6 +3,8 @@ html,body{overscroll-behavior-y:contain}
 .hala-petals{display:inline-flex;align-items:center;gap:2px;height:29px}.hala-petals i{display:inline-block;font:700 22px/1 system-ui;color:#118b97;animation:hala-float 1.15s ease-in-out infinite alternate}.hala-petals i:nth-child(2n){font-size:18px;animation-delay:-.38s}.hala-petals i:nth-child(3n){animation-delay:-.75s;color:#54649f}
 @keyframes hala-float{from{transform:translateY(3px) rotate(-9deg)}to{transform:translateY(-4px) rotate(9deg)}}
 @media(prefers-reduced-motion:reduce){.hala-petals i{animation:none}}
+.full-logo{position:relative;display:block;width:min(30.4svh,248px);max-width:65%;pointer-events:none!important;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.full-logo *{pointer-events:none!important}
 a.guest {
   background: linear-gradient(rgba(255, 242, 138, 0.45), rgba(255, 205, 55, 0.42)) !important;
   border-color: rgba(255, 220, 110, 0.65) !important;
