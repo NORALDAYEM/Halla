@@ -22,7 +22,8 @@ window.HallaAccounts = (() => {
     const redirect=new URL('index.html',base);
     redirect.searchParams.set('account_return',provider);
     const androidFacebook = provider === 'facebook' && /\bHallaFacebook\/1\b/.test(navigator.userAgent);
-    const options = {redirectTo: androidFacebook ? 'com.halla.voiceclubs://auth/facebook' : redirect.href};
+    const androidGoogle = provider === 'google' && /\bHallaGoogle\/1\b/.test(navigator.userAgent);
+    const options = {redirectTo: androidFacebook || androidGoogle ? 'com.halla.voiceclubs://auth/' + provider : redirect.href};
     if(provider==='google')options.queryParams={prompt:'select_account'};
     const result=link?await auth.linkIdentity({provider,options}):await auth.signInWithOAuth({provider,options});
     if(result.error)throw result.error;

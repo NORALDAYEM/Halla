@@ -6,7 +6,7 @@
   const q=s=>dialog.querySelector(s),form=q('form'),fields=form.elements,action=q('[type=submit]'),again=q('.again'),mail=q('.mail');
   mail.href=accounts.member.href+'?view=login';
   q('.share').href='https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(accounts.base.href);
-  let mode='',step='',phone='',link=false,sequence=0;
+  let step='',phone='',link=false,sequence=0;
   const names={google:'Google',facebook:'فيسبوك',phone:'الهاتف'};
   function show(title){
     sequence++;form.reset();phone='';step='';q('h2').textContent=title;q('.info').textContent='';
@@ -24,36 +24,43 @@
   function close(){dialog.close();}
   q('.close').onclick=close;
   dialog.addEventListener('close',()=>{sequence++;if(step==='finished')location.replace(accounts.member.href);});
-  let facebookPending = false;
-  async function openFacebook() {
-    if (facebookPending) return;
-    facebookPending = true;
+  let oauthPending = false;
+  async function openProvider(provider) {
+    if (oauthPending) return;
+    oauthPending = true;
     const seq = ++sequence;
     try {
+      if (provider === 'google' && !await accounts.enabled(provider)) {
+        if (seq !== sequence) return;
+        show('الدخول عبر Google');
+        q('.info').textContent = 'تسجيل الدخول عبر Google غير متاح حاليًا.';
+        mail.hidden = false;
+        return;
+      }
       const {data, error} = await (await accounts.client()).auth.getSession();
       if (error) throw error;
       if (seq !== sequence) return;
       const hasSession = Boolean(data.session);
       if (url.searchParams.get('link') === '1' && !hasSession) {
-        show('ربط حساب فيسبوك');
-        q('.info').textContent = 'سجّل الدخول إلى حساب هلاا أولًا لإضافة فيسبوك إليه.';
+        show('ربط حساب ' + names[provider]);
+        q('.info').textContent = 'سجّل الدخول إلى حساب هلاا أولًا لربط وسيلة دخول جديدة به.';
         mail.hidden = false;
         return;
       }
-      await accounts.oauth('facebook', hasSession);
+      await accounts.oauth(provider, hasSession);
     } catch {
       if (seq !== sequence) return;
-      show('تسجيل الدخول عبر فيسبوك');
-      q('.info').textContent = 'تعذر فتح فيسبوك. تحقق من اتصالك ثم أعد المحاولة.';
+      show('تسجيل الدخول عبر ' + names[provider]);
+      q('.info').textContent = 'تعذر فتح ' + names[provider] + '. تحقق من اتصالك ثم أعد المحاولة.';
       mail.hidden = false;
     } finally {
-      facebookPending = false;
+      oauthPending = false;
     }
   }
   async function open(provider){
-    if (provider === 'facebook') return openFacebook();
+    if (provider === 'facebook' || provider === 'google') return openProvider(provider);
     if(!names[provider])return;
-    mode=provider;const seq=show('الدخول أو الربط عبر '+names[provider]);q('.info').textContent='جارٍ التحقق من توفر الخدمة…';
+    const seq=show('الدخول أو الربط عبر '+names[provider]);q('.info').textContent='جارٍ التحقق من توفر الخدمة…';
     try{
       if(!await accounts.enabled(provider)){
         if(seq!==sequence)return;
@@ -64,14 +71,7 @@
       if(seq!==sequence)return;if(error)throw error;
       link=Boolean(data.session);
       if(url.searchParams.get('link')==='1'&&!link){q('.info').textContent='سجّل الدخول إلى حساب هلاا أولًا لإضافة وسيلة دخول إليه.';mail.hidden=false;return;}
-      if(provider==='phone'){q('.info').textContent='سنرسل رمزًا للتحقق من ملكية الرقم.';phoneStep(false);}
-      else if(/; wv\)/i.test(navigator.userAgent)&&link){q('.info').textContent='للربط افتح حساب هلاا نفسه في متصفح الهاتف، ثم اختر وسيلة الربط من حسابي.';}else if(/; wv\)/i.test(navigator.userAgent)){
-        q('.info').textContent='لمتابعة اختيار الحساب في متصفح الهاتف، انسخ الرابط وافتحه في Chrome. سيكتمل الدخول هناك.';
-        step='browser';submitLabel('نسخ رابط الدخول');
-      }else{
-        q('.info').textContent=provider==='google'?'اختر حسابك من شاشة Google الآمنة.':'تابع إلى فيسبوك للموافقة على ربط حسابك.';
-        step='oauth';submitLabel(link?'ربط الحساب':'اختيار الحساب');
-      }
+      q('.info').textContent='سنرسل رمزًا للتحقق من ملكية الرقم.';phoneStep(false);
     }catch{if(seq===sequence){q('.info').textContent='تعذر الاتصال بخدمة الحسابات. أعد المحاولة.';mail.hidden=false;}}
   }
   again.onclick=()=>{phone='';fields.code.value='';q('.info').textContent='أدخل رقم الهاتف.';phoneStep(false);};
@@ -79,12 +79,6 @@
     e.preventDefault();if(action.disabled)return;
     const seq=sequence;action.disabled=true;again.disabled=true;
     try{
-      if(step==='browser'){
-        const address=new URL('index.html',accounts.base);address.searchParams.set('account',mode);
-        try{await navigator.clipboard.writeText(address.href);q('.info').textContent='تم نسخ الرابط. افتحه في متصفح الهاتف.';}
-        catch{q('.info').textContent=address.href;}return;
-      }
-      if(step==='oauth'){await accounts.oauth(mode,link);return;}
       if(step==='send'){
         phone=accounts.phoneNumber(fields.phone.value);
         if(!phone){q('.info').textContent='أدخل رقمًا صالحًا مع مفتاح الدولة.';return;}
