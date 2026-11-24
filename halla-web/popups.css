@@ -1,0 +1,48 @@
+/* Shared surfaces for the login, lobby and Android update dialogs. */
+dialog:is(#help, #account-panel, .login-info, #notice, #voice, .package-update) {
+  box-sizing: border-box;
+  max-height: 86svh;
+  overflow: auto;
+  border: 1px solid rgb(255 255 255 / 74%);
+  border-radius: 24px;
+  padding: clamp(18px, 5vw, 26px);
+  color: #143a42;
+  background: linear-gradient(130deg, rgb(248 255 252 / 77%), rgb(210 241 239 / 64%));
+  box-shadow: inset 0 1px 0 #ffffffa6, 0 12px 38px #163b4038;
+  -webkit-backdrop-filter: blur(9px) saturate(112%);
+  backdrop-filter: blur(9px) saturate(112%);
+}
+dialog:is(#help, #account-panel, .login-info, #notice, #voice, .package-update)::backdrop, #modalOverlay {
+  background: rgb(21 47 54 / 23%);
+  backdrop-filter: none;
+}
+dialog:is(#help, #account-panel, .login-info, #notice, #voice, .package-update) :is(button, a) {
+  color: #173d44;
+  background: linear-gradient(135deg, #ffffff99, #b5e4e0a8);
+  border: 1px solid #ffffffb3;
+  border-radius: 15px;
+  box-shadow: inset 0 1px 0 #ffffff99, 0 2px 5px #193e4219;
+}
+dialog:is(#account-panel, .login-info, #notice, .package-update) :is(.primary, .download),
+dialog.login-info a {
+  color: white;
+  background: linear-gradient(115deg, #126169eb, #195560ef);
+}
+dialog:is(#account-panel, .package-update) input {
+  color: #143a42;
+  background: #f5fffbaf;
+  border: 1px solid #77a6a7;
+}
+dialog :focus-visible { outline: 2px solid #156a70; outline-offset: 2px; }
+dialog.package-update { width: min(82vw, 360px); font: 16px/1.6 system-ui; }
+.package-update .download { display: block; padding: 10px; text-align: center; text-decoration: none; }
+#modalContent, #toastBox {
+  color: var(--text-main);
+  background: var(--bg-card);
+  background: color-mix(in srgb, var(--bg-card) 72%, transparent);
+  border: 1px solid color-mix(in srgb, var(--text-main) 22%, transparent);
+  -webkit-backdrop-filter: blur(9px) saturate(112%);
+  backdrop-filter: blur(9px) saturate(112%);
+  box-shadow: inset 0 1px 0 #ffffff38, 0 10px 32px #17394038;
+}
+[data-theme="royal-pearl"] #modalContent { background-color: rgb(255 251 243 / 73%) !important; }
