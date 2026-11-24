@@ -9,10 +9,10 @@ const sdk = HallaAccounts.client().then(instance => {
   client=instance;
   client.auth.onAuthStateChange((event,session)=>{
     user=session?.user;
-    if(event==='SIGNED_OUT'){endVoice();location.replace('studio/');return;}
+    if(event==='SIGNED_OUT') endVoice();
     $('#identity').textContent=user?.user_metadata?.nickname || (user?'عضو هلاا':'ضيف هلاا');
     $('#accountAction').textContent=user?'خروج':'دخول';
-    if(user && !['reset','recover'].includes(view) && view in authModes) location.replace('member.html');
+    if(event==='SIGNED_IN' && user && !['reset','recover'].includes(view) && view in authModes) location.replace('member.html');
     if(user?.user_metadata?.nickname && user.email) localStorage.setItem('halla.alias.'+user.user_metadata.nickname.trim().toLowerCase(),user.email);
   });
   return client;
@@ -28,6 +28,7 @@ $('#accountAction').onclick=async()=>{
   if(!user){go('login');return;}
   const {error}=await client.auth.signOut({scope:'local'});
   if(error)notice('تعذّر الخروج','أعد المحاولة.');
+  else location.replace('studio/');
 };
 $('#profile').onclick=()=>{
   if(!user){go('login');return;}
@@ -141,6 +142,8 @@ else if(Object.hasOwn(authModes,view))authScreen(view);
 else if(view==='guest')lobby();
 else {
   const done=window.hallaWait('جارٍ فتح حسابك…');
-  sdk.then(async c=>{if(c&&(await c.auth.getSession()).data.session)lobby();else location.replace('studio/');}).finally(done);
+  // The lobby is already available to guests. Protected actions check the session.
+  lobby();
+  sdk.finally(done);
 }
 
