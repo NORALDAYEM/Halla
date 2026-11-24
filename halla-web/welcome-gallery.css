@@ -5,7 +5,7 @@ main{isolation:isolate;background:transparent}
 .welcome-gallery img.visible{opacity:1}
 .welcome-gallery::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,#eafff91a,transparent 47%,#f8fcfa40 82%,#f8fcfa55)}
 .hero,.actions{background:transparent}
-.full-logo{mix-blend-mode:multiply}
+.full-logo{mix-blend-mode:normal}
 .provider[data-provider="Google"],.provider.fb,.options b,.account,.guest{border:1px solid #ffffff90;backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}
 .provider[data-provider="Google"]{background:linear-gradient(115deg,#ffffffa8,#e4f7ff80)}
 .provider.fb{background:linear-gradient(115deg,#edfffaad,#b9e9f399)}
