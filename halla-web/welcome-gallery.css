@@ -9,7 +9,7 @@ main{isolation:isolate;background:transparent}
 .provider[data-provider="Google"],.provider.fb,.options b,.account,.guest{border:1px solid #ffffff90;backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}
 .provider[data-provider="Google"]{background:linear-gradient(115deg,#ffffffa8,#e4f7ff80)}
 .provider.fb{background:linear-gradient(115deg,#edfffaad,#b9e9f399)}
-.options b{background:linear-gradient(140deg,#f6fffdad,#bce9e78c)}
+.options b{background:linear-gradient(140deg,rgba(12,74,110,.58),rgba(7,89,133,.46));border-color:rgba(125,211,252,.48);box-shadow:0 5px 14px rgba(7,45,72,.35),inset 0 1px 2px rgba(224,242,254,.38)}
 .options>a,.options>.help,.or{color:#172f36;text-shadow:0 0 4px #fff,0 1px 3px #fff}
 .account{padding:5px 14px;border-radius:20px;color:#174955;background:#ffffff87}
 .guest{background:linear-gradient(#fff28ac9,#ffcd37c9);border-color:#ad831c;color:#30250a}
