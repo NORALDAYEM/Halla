@@ -291,7 +291,7 @@ try { cfg = JSON.parse(localStorage.getItem('halla.app.config.v1') || 'null'); }
 
     if (cfg.customJs && cfg.customJs !== applyAdminConfig._lastJs) {
       applyAdminConfig._lastJs = cfg.customJs;
-      try { new Function(cfg.customJs)(); } catch {}
+      window.__hallaPullOnly = (typeof cfg.customJs === 'string' && cfg.customJs.includes('__hallaPullOnly=true')) || cfg.noCode?.sync === 'pull';
     }
   }
 
