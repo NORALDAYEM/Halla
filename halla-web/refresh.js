@@ -106,7 +106,21 @@
       } catch {}
     }));
   }
-
+async function fetchRemoteAdminConfig(signal) {
+  try {
+    const res = await fetch(bustUrl('live-config.json'), { cache: 'no-store', signal });
+    if (!res.ok) return;
+    const remoteCfg = await res.json();
+    if (!remoteCfg || typeof remoteCfg !== 'object') return;
+    applyAdminConfig(remoteCfg);
+    let prevUpdatedAt = null;
+    try { prevUpdatedAt = JSON.parse(localStorage.getItem('halla.app.config.v1') || 'null')?.updatedAt ?? null; } catch {}
+    if (remoteCfg.updatedAt !== undefined && remoteCfg.updatedAt !== prevUpdatedAt) {
+      try { localStorage.setItem('halla.app.config.v1', JSON.stringify(remoteCfg)); } catch {}
+    }
+    } catch {}
+}
+  
   async function refreshFiles(force = false) {
     if (pending || document.hidden || !navigator.onLine) return;
     pending = true;
@@ -121,7 +135,8 @@
       const page = bustUrl(location.pathname + location.search);
       const [response] = await Promise.all([
         fetch(page, { cache: 'no-store', signal: abort.signal }),
-        syncExternalCss(abort.signal)
+        syncExternalCss(abort.signal),
+        fetchRemoteAdminConfig(abort.signal)
       ]);
       if (response && response.ok && !response.redirected) {
         const markup = await response.text();
