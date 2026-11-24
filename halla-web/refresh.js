@@ -62,14 +62,13 @@
   }
 
   function syncScripts(fragment) {
-    const loaded = new Set(Array.from(document.scripts, s => s.getAttribute('src')?.split('?')[0]).filter(Boolean));
+    const loaded = new Set(Array.from(document.scripts, s => s.getAttribute('src')).filter(Boolean));
     fragment.querySelectorAll('script[src]').forEach(sc => {
       const rawSrc = sc.getAttribute('src');
-      const base = rawSrc ? rawSrc.split('?')[0] : '';
-      if (base && !loaded.has(base)) {
-        loaded.add(base);
+      if (rawSrc && !loaded.has(rawSrc)) {
+        loaded.add(rawSrc);
         const s = document.createElement('script');
-        s.src = rawSrc;
+        s.src = bustUrl(rawSrc);
         s.defer = true;
         document.head.append(s);
       }
