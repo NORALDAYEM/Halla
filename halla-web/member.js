@@ -5,8 +5,8 @@ const view = url.searchParams.get('view') || 'home';
 const go = view => location.assign('member.html?view=' + encodeURIComponent(view));
 const authModes = {login:'تسجيل الدخول',signup:'إنشاء حساب',reset:'استعادة الحساب',username:'الدخول باسم المستخدم',phone:'الدخول بالهاتف',recover:'تعيين كلمة مرور جديدة'};
 let client, user, voice, generation = 0;
-const sdk = import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/+esm').then(({createClient}) => {
-  client=createClient('https://uwjrboviicypyhregpoo.supabase.co','sb_publishable_QbUKNVMYDRK63NjB26tCtw_jzOaEXdR',{auth:{flowType:'pkce'}});
+const sdk = HallaAccounts.client().then(instance => {
+  client=instance;
   client.auth.onAuthStateChange((event,session)=>{
     user=session?.user;
     if(event==='SIGNED_OUT'){endVoice();location.replace('studio/');return;}
@@ -18,6 +18,7 @@ const sdk = import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/+e
   return client;
 }).catch(()=>null);
 function notice(title,message){
+  $('#notice .account-links')?.remove();
   $('#notice h2').textContent=title;$('#notice p').textContent=message;$('#notice').showModal();
 }
 $('#rewards').onclick=()=>notice('الجوائز','لا توجد جوائز متاحة حاليًا.');
@@ -28,7 +29,16 @@ $('#accountAction').onclick=async()=>{
   const {error}=await client.auth.signOut({scope:'local'});
   if(error)notice('تعذّر الخروج','أعد المحاولة.');
 };
-$('#profile').onclick=()=>user?notice('حسابي',user.user_metadata?.nickname || 'عضو هلاا'):go('login');
+$('#profile').onclick=()=>{
+  if(!user){go('login');return;}
+  notice('حسابي',user.user_metadata?.nickname || 'عضو هلاا');
+  const menu=document.createElement('div');menu.className='account-links';
+  for(const [provider,label] of [['google','ربط Google'],['facebook','ربط فيسبوك'],['phone','ربط الهاتف']]){
+    const button=document.createElement('button');button.textContent=label;
+    button.onclick=()=>location.assign('index.html?link=1&account='+provider);menu.append(button);
+  }
+  $('#notice p').after(menu);
+};
 function authScreen(mode){
   $('#auth').hidden=false;$('#formTitle').textContent=authModes[mode];
   const form=$('form');
@@ -39,20 +49,13 @@ function authScreen(mode){
   form.password.minLength=['signup','recover'].includes(mode)?10:1;
   $('#alt').textContent=mode==='login'?'إنشاء حساب بالبريد الإلكتروني':'الدخول بالبريد الإلكتروني';
   $('#alt').onclick=()=>go(mode==='login'?'signup':'login');
-  if(mode==='phone'){form.hidden=true;$('#status').textContent='الدخول بالهاتف ينتظر تفعيل خدمة الرسائل النصية.';return;}
   if(mode==='username')$('#status').textContent='استخدم اسم حساب سبق تسجيل دخوله بالبريد على هذا الجهاز.';
   form.onsubmit=async event=>{
     event.preventDefault();$('#submit').disabled=true;
     const done=window.hallaWait('جارٍ معالجة الطلب…');
     try{
       if(!await sdk)throw Error();
-      const mail=form.email.value.trim(),password=form.password.value,nickname=form.nickname.value.trim();
-      const redirect=new URL('member.html',location.href);
-      let result;
-      if(mode==='reset'){redirect.search='?view=recover';result=await client.auth.resetPasswordForEmail(mail,{redirectTo:redirect.href});}
-      else if(mode==='signup')result=await client.auth.signUp({email:mail,password,options:{data:{nickname},emailRedirectTo:redirect.href}});
-      else if(mode==='recover')result=await client.auth.updateUser({password});
-      else result=await client.auth.signInWithPassword({email:mode==='username'?localStorage.getItem('halla.alias.'+nickname.toLowerCase())||'':mail,password});
+      const result=await HallaAccounts.passwordRequest(mode,form.email.value.trim(),form.password.value,form.nickname.value.trim());
       if(result.error)throw result.error;
       if(mode==='signup'||mode==='reset')$('#status').textContent='راجع بريدك الإلكتروني لإكمال الطلب.';
       else location.replace('member.html');
@@ -132,7 +135,8 @@ async function join(room){
     voice.joinRoom({container:$('#mount'),scenario:{mode:kit.LiveStreaming,config:{role}},turnOnCameraWhenJoining:false,turnOnMicrophoneWhenJoining:false,showMyCameraToggleButton:false,showScreenSharingButton:false,showPreJoinView:false,showLeavingView:false,onJoinRoom:()=>{if(attempt===generation){finishVoiceWait?.();$('#voiceStatus').textContent='';}},onLeaveRoom:()=>{if(attempt===generation)endVoice();}});
   }catch{if(attempt===generation){finishVoiceWait?.();$('#voiceStatus').textContent='تعذر الاتصال بالغرفة. تحقق من تأكيد حسابك والاتصال ثم أعد المحاولة.';}}
 }
-if(Object.hasOwn(authModes,view))authScreen(view);
+if(view==='phone')location.replace('index.html?account=phone');
+else if(Object.hasOwn(authModes,view))authScreen(view);
 else if(view==='guest')lobby();
 else {
   const done=window.hallaWait('جارٍ فتح حسابك…');
