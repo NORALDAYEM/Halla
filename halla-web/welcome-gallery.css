@@ -20,3 +20,11 @@ main{isolation:isolate;background:transparent}
 .motion-logo .live-crown{display:block;position:absolute;left:29%;top:0;width:41%;height:22.3%}
 .motion-logo .mic-melody{display:block;position:absolute;inset:0}.mic-melody i{position:absolute;left:51%;top:31%;font:900 clamp(15px,3.2svh,25px)/1 system-ui;color:#007fa8;-webkit-text-stroke:.45px #fff;opacity:0;animation:mic-note-flight 3.6s ease-out infinite;--x:4.3em;--y:-2.8em;--r:18deg}.mic-melody i:nth-child(2){--x:-3.9em;--y:-3em;--r:-20deg;animation-delay:.9s}.mic-melody i:nth-child(3){--x:3.2em;--y:-3.7em;--r:13deg;animation-delay:1.8s}.mic-melody i:nth-child(4){--x:-4.5em;--y:-2em;--r:-14deg;animation-delay:2.7s}
 @keyframes mic-note-flight{0%{opacity:0;transform:translate(0,0) scale(.45)}18%{opacity:1}72%{opacity:1}100%{opacity:0;transform:translate(var(--x),var(--y)) scale(1.06) rotate(var(--r))}}
+
+.mic-melody i{top:29%;left:49%;animation-duration:4.8s}
+.mic-melody .flying-rose{font:normal clamp(14px,2.6svh,21px)/1 system-ui;-webkit-text-stroke:0;filter:drop-shadow(0 1px 1px #25101545)}
+.mic-melody i:nth-child(2){--x:-3.9em;--y:-2.9em;--r:-24deg;animation-delay:.65s}
+.mic-melody i:nth-child(3){animation-delay:1.55s}
+.mic-melody i:nth-child(4){--x:4.2em;--y:-2.2em;--r:28deg;animation-delay:2.25s}
+.mic-melody i:nth-child(5){--x:-3.7em;--y:-3.8em;--r:-15deg;animation-delay:3.05s}
+.mic-melody i:nth-child(6){--x:2.8em;--y:-4.2em;--r:13deg;animation-delay:3.9s}

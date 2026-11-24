@@ -14,9 +14,10 @@
   const music = document.createElement('span');
   music.className = 'mic-melody';
   music.setAttribute('aria-hidden','true');
-  for (const note of ['♪','♫','♬','♪']) {
+  for (const note of ['♪','🌹','♫','🌹','♬','🌹']) {
     const glyph = document.createElement('i');
     glyph.textContent = note;
+    if(note==='🌹') glyph.className='flying-rose';
     music.append(glyph);
   }
   emblem.append(music);
@@ -38,6 +39,22 @@
   }
   function draw(angle){
     ctx.clearRect(0,0,380,292);
+    // Velvet lining and rotating gold ribs sit inside the open gold coronet.
+    const velvet=ctx.createLinearGradient(90,70,286,182);
+    velvet.addColorStop(0,'#4d071c');velvet.addColorStop(.38,'#a91c41');
+    velvet.addColorStop(.63,'#77102c');velvet.addColorStop(1,'#360719');
+    ctx.fillStyle=velvet;
+    ctx.beginPath();ctx.moveTo(80,170);ctx.bezierCurveTo(87,99,133,60,190,57);
+    ctx.bezierCurveTo(247,60,293,99,300,170);ctx.closePath();ctx.fill();
+    for(let j=0;j<8;j++){
+      const a=angle+j*tau/8;
+      if(Math.cos(a)<0)continue;
+      const x=Math.sin(a),depth=Math.cos(a);
+      ctx.beginPath();ctx.moveTo(190,57);
+      ctx.bezierCurveTo(190+58*x,67+depth*9,190+106*x,95+depth*24,190+110*x,161+depth*16);
+      ctx.lineWidth=5;ctx.strokeStyle='#92540e';ctx.stroke();
+      ctx.lineWidth=2.8;ctx.strokeStyle='#ffdb78';ctx.stroke();
+    }
     const strips=[];
     for(let i=0;i<segments;i++){
       const a=i*tau/segments,b=(i+1)*tau/segments;
@@ -56,7 +73,14 @@
         const g=ctx.createRadialGradient(x-3,y-4,1,x,y,9);
         g.addColorStop(0,'#fff8c3');g.addColorStop(.45,'#f6b93d');g.addColorStop(1,'#744006');
         ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,8,0,tau);ctx.fill();
-        if(Math.cos(a)>0){const [jx,jy]=point(a,110,29);ctx.fillStyle='#006e93';ctx.beginPath();ctx.ellipse(jx,jy,5*Math.cos(a)+1,7,0,0,tau);ctx.fill();}
+        if(Math.cos(a)>0){
+          const [jx,jy]=point(a,110,32),w=9*Math.cos(a)+1;
+          const palette=i%2?['#5c0025','#ed2c62','#ffadc3']:['#002650','#008cc2','#b8fbff'];
+          ctx.fillStyle='#fff0ab';ctx.beginPath();ctx.ellipse(jx,jy,w+1.5,10,0,0,tau);ctx.fill();
+          face([[jx-w,jy],[jx,jy-9],[jx+w,jy],[jx,jy+9]],palette[0]);
+          face([[jx-w,jy],[jx,jy-9],[jx+2,jy-1]],palette[2]);
+          face([[jx+2,jy-1],[jx+w,jy],[jx,jy+9]],palette[1]);
+        }
       }});
     }
     strips.push({z:0,paint:()=>{
@@ -77,8 +101,11 @@
   }
   let frame=0,elapsed=0,last;
   function tick(time){
-    if(last!==undefined)elapsed+=time-last;
-    last=time;draw(elapsed*tau/8500);frame=requestAnimationFrame(tick);
+    if(last===undefined || time-last>=33){
+      if(last!==undefined)elapsed+=time-last;
+      last=time;draw(elapsed*tau/8500);
+    }
+    frame=requestAnimationFrame(tick);
   }
   function sync(){
     cancelAnimationFrame(frame);last=undefined;
