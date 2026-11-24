@@ -1,0 +1,21 @@
+{
+  "id": "/Halla/halla-web/admin/",
+  "name": "إدارة هلاا | Halaa Admin",
+  "short_name": "إدارة هلاا",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#071b21",
+  "theme_color": "#0f3d47",
+  "dir": "rtl",
+  "lang": "ar",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
