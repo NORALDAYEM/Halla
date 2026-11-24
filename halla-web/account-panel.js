@@ -24,7 +24,34 @@
   function close(){dialog.close();}
   q('.close').onclick=close;
   dialog.addEventListener('close',()=>{sequence++;if(step==='finished')location.replace(accounts.member.href);});
+  let facebookPending = false;
+  async function openFacebook() {
+    if (facebookPending) return;
+    facebookPending = true;
+    const seq = ++sequence;
+    try {
+      const {data, error} = await (await accounts.client()).auth.getSession();
+      if (error) throw error;
+      if (seq !== sequence) return;
+      const hasSession = Boolean(data.session);
+      if (url.searchParams.get('link') === '1' && !hasSession) {
+        show('ربط حساب فيسبوك');
+        q('.info').textContent = 'سجّل الدخول إلى حساب هلاا أولًا لإضافة فيسبوك إليه.';
+        mail.hidden = false;
+        return;
+      }
+      await accounts.oauth('facebook', hasSession);
+    } catch {
+      if (seq !== sequence) return;
+      show('تسجيل الدخول عبر فيسبوك');
+      q('.info').textContent = 'تعذر فتح فيسبوك. تحقق من اتصالك ثم أعد المحاولة.';
+      mail.hidden = false;
+    } finally {
+      facebookPending = false;
+    }
+  }
   async function open(provider){
+    if (provider === 'facebook') return openFacebook();
     if(!names[provider])return;
     mode=provider;const seq=show('الدخول أو الربط عبر '+names[provider]);q('.info').textContent='جارٍ التحقق من توفر الخدمة…';
     try{
