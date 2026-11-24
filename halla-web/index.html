@@ -54,6 +54,18 @@ dialog:is(#email-access, #account-panel, #help, #reset-options, #service-terms) 
   inset: -7px;
   border-radius: inherit;
 }
+</style><style>
+dialog#service-terms {overflow:hidden; position:fixed; box-sizing:border-box; max-height:90svh;}
+#service-terms h2 {padding-inline-end:40px; margin:0 0 10px;}
+#service-terms .terms-close {position:absolute; top:8px; left:8px; width:30px; height:30px; min-height:30px; margin:0; padding:0; border-radius:50%; line-height:1;}
+.terms-layout {position:relative; padding-left:16px;}
+.terms-scroll {max-height:min(54svh,28rem); overflow-y:auto; overscroll-behavior:contain; touch-action:pan-y pinch-zoom; scrollbar-width:none;}
+.terms-scroll::-webkit-scrollbar {display:none;}
+.terms-scroll section {padding:10px 0; border-bottom:1px solid #34665c38;}
+.terms-scroll h3 {font-size:1rem; margin:0 0 4px;}
+.terms-scroll p {font-size:.94rem; line-height:1.75; margin:0;}
+.terms-track {position:absolute; left:0; top:2px; bottom:2px; width:5px; border-radius:5px; background:#21443f33; pointer-events:none;}
+.terms-track span {display:block; width:100%; border-radius:inherit; background:#306f66;}
 </style></head>
 <body><main><div class="welcome-gallery" aria-hidden="true"><img class="visible" alt="" src="assets/welcome-gallery/pool-friends.webp" fetchpriority="high"><img alt=""></div><section class="hero" aria-label="هلاا"><a class="guest" href="member.html?view=guest">وضع الضيف</a><a class="full-logo" href="assets/halaa-clear-4k.webp" aria-label="عرض شعار هلاا بدقة 4K"><img class="logo" src="assets/halaa-clear.webp" alt="هلاا، ألعاب ودردشة" fetchpriority="high"></a></section>
 <section class="actions" aria-label="طرق الدخول">
@@ -80,10 +92,37 @@ dialog:is(#email-access, #account-panel, #help, #reset-options, #service-terms) 
 <a href="member.html?view=reset">إرسال رابط إلى بريدي الإلكتروني</a>
 <button type="button" data-recover-phone>إرسال رمز إلى رقم هاتفي</button>
 <button type="button" data-close class="dialog-x" aria-label="إغلاق النافذة">×</button></dialog>
-<dialog class="login-info" id="service-terms" aria-labelledby="terms-title"><h2 id="terms-title">شروط الخدمة</h2>
-<p>استخدم حسابك الشخصي، واحتفظ بكلمة المرور ورموز التحقق لنفسك.</p>
-<p>احترم المشاركين في الغرف والألعاب. يُحظر انتحال الهوية والإساءة ونشر معلومات الآخرين دون إذنهم.</p>
-<button type="button" data-close class="dialog-x" aria-label="إغلاق النافذة">×</button></dialog>
+<dialog class="login-info" id="service-terms" aria-labelledby="terms-title">
+<h2 id="terms-title">شروط الخدمة</h2>
+<button type="button" data-close class="dialog-x terms-close" aria-label="إغلاق النافذة">×</button>
+<div class="terms-layout"><div class="terms-scroll" tabindex="0" role="region" aria-label="بنود شروط الخدمة">
+<section><h3>الحساب وأمانه</h3><p>استخدم حسابك الشخصي واسمًا يميزك. احتفظ بكلمة المرور ورموز التحقق لنفسك. إذا وصلك طلب لهذه البيانات من شخص يدّعي أنه مشرف، فلا تشاركها معه.</p></section>
+<section><h3>المشاركة في الغرف الصوتية</h3><p>استأذن قبل فتح الميكروفون في الغرف التي تنظّم أدوار المتحدثين. أعطِ الآخرين فرصة للكلام، وتجنّب الضوضاء المتعمّدة أو العودة إلى الميكروفون بعد أن يطلب منك المشرف التوقف.</p></section>
+<section><h3>الاحترام والخصوصية</h3><p>يُحظر التنمّر والتهديد والتحرش وانتحال الهوية. لا تسجّل صوت مشارك أو تنشر صورته أو رسائله أو رقم هاتفه من دون إذنه، حتى لو كانت الغرفة عامة.</p></section>
+<section><h3>اللعب العادل</h3><p>التزم بقواعد اللعبة ودورك في المباراة. لا تستخدم برامج غش أو تستغل خللًا لتغيير النتيجة أو الرصيد. إذا لاحظت خطأ، اذكر اسم اللعبة وما حدث عند الإبلاغ عنه.</p></section>
+<section><h3>العملات والهدايا</h3><p>راجع اسم المستلم والهدية وعدد العملات قبل تأكيد الإرسال. عند الشراء، تحقّق من السعر والحساب المستخدم واحتفظ بالإيصال. تجنّب الروابط التي تطلب بيانات دخولك مقابل شحن مجاني.</p></section>
+<section><h3>المحتوى والروابط</h3><p>شارك ما تملكه أو لديك إذن بنشره. يُحظر إرسال روابط احتيالية أو ملفات ضارة أو إعلانات متكررة تعطل المحادثة.</p></section>
+<section><h3>الإبلاغ عن إساءة</h3><p>عند حدوث إساءة، يمكنك مغادرة الغرفة وإبلاغ مشرفها. اذكر اسم الغرفة ووقت الواقعة ووصفًا مختصرًا لما حدث، وتجنّب تضمين معلومات شخصية لا علاقة لها بالبلاغ.</p></section>
+</div><div class="terms-track" aria-hidden="true"><span></span></div></div>
+</dialog><script>
+(() => {
+  const dialog = document.getElementById('service-terms');
+  const reader = dialog.querySelector('.terms-scroll');
+  const track = dialog.querySelector('.terms-track');
+  const thumb = track.firstElementChild;
+  function syncIndicator() {
+    const range = reader.scrollHeight - reader.clientHeight;
+    track.hidden = range <= 0;
+    if (range <= 0) return;
+    const height = Math.max(18, track.clientHeight * reader.clientHeight / reader.scrollHeight);
+    thumb.style.height = height + 'px';
+    thumb.style.transform = 'translateY(' + (track.clientHeight - height) * Math.min(1, Math.max(0, reader.scrollTop / range)) + 'px)';
+  }
+  reader.addEventListener('scroll', syncIndicator, {passive:true});
+  new ResizeObserver(syncIndicator).observe(reader);
+  dialog.addEventListener('close', () => { reader.scrollTop = 0; });
+})();
+</script>
 <dialog id="help"><h2>مساعدة الدخول</h2><p>اختر طريقة الوصول إلى حسابك.</p><a href="member.html?view=login">الدخول بالبريد الإلكتروني</a> <a href="member.html?view=reset">استعادة كلمة المرور</a> <a href="member.html?view=username">الدخول باسم المستخدم</a> <button type="button" class="dialog-x" aria-label="إغلاق النافذة">×</button></dialog>
 <script>const help=document.querySelector('#help');document.querySelector('.help').onclick=()=>help.showModal();help.querySelector('button').onclick=()=>help.close();</script></body></html>
 
