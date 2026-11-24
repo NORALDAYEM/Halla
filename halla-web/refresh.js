@@ -28,6 +28,94 @@
   }
   window.hallaWait = begin;
 
+
+  // Keep the live document and its form, dialog and navigation state.
+  const styleSelector = 'style, link[rel="stylesheet"]';
+  const activeStyles = Array.from(document.head.querySelectorAll(styleSelector));
+  const knownCss = new Map();
+  let checking = false;
+
+  async function refreshStyles() {
+    if (checking || document.hidden || !navigator.onLine) return;
+    checking = true;
+    const staged = [];
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
+    try {
+      const page = new URL(location.href);
+      page.search = '';
+      page.hash = '';
+      const options = {cache: 'no-cache', signal: controller.signal};
+      const response = await fetch(page, options);
+      if (!response.ok || new URL(response.url).origin !== location.origin) return;
+      const markup = await response.text();
+      const headEnd = markup.search(/<\/head\s*>/i);
+      if (headEnd < 0) return;
+      const template = document.createElement('template');
+      template.innerHTML = markup.slice(0, headEnd);
+      const next = Array.from(template.content.querySelectorAll(styleSelector));
+      const previous = activeStyles.slice();
+      const replacements = await Promise.all(next.map(async (source, index) => {
+        const old = previous[index];
+        if (source.tagName === 'STYLE') {
+          if (old?.tagName === 'STYLE' && old.textContent === source.textContent) return old;
+          const node = document.createElement('style');
+          node.textContent = source.textContent;
+          node.media = source.media;
+          return node;
+        }
+        const url = new URL(source.getAttribute('href'), response.url);
+        if (url.origin !== location.origin) return old;
+        const cssResponse = await fetch(url, options);
+        if (!cssResponse.ok) throw new Error('Stylesheet unavailable');
+        const css = await cssResponse.text();
+        if (old && knownCss.get(old) === css && old.dataset.source === url.href) return old;
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.media = 'not all';
+        link.dataset.source = url.href;
+        // Keep the original directory so relative image and font URLs still resolve.
+        url.searchParams.set('hr', cssResponse.headers.get('etag') ||
+          cssResponse.headers.get('last-modified') || Date.now());
+        link.href = url.href;
+        staged.push(link);
+        await new Promise((resolve, reject) => {
+          if (controller.signal.aborted) return reject(new Error('Timed out'));
+          controller.signal.addEventListener('abort', reject, {once:true});
+          link.onload = resolve;
+          link.onerror = reject;
+          document.head.append(link);
+        });
+        knownCss.set(link, css);
+        return link;
+      }));
+      if (document.hidden || replacements.some(node => !node)) return;
+      if (replacements.length === previous.length && replacements.every((node,i) => node === previous[i])) return;
+      const x = window.scrollX, y = window.scrollY;
+      replacements.forEach((node, index) => {
+        if (node === previous[index]) return;
+        node.media = next[index].media;
+        if (previous[index]) previous[index].replaceWith(node);
+        else document.head.append(node);
+      });
+      previous.slice(replacements.length).forEach(node => node.remove());
+      activeStyles.splice(0, activeStyles.length, ...replacements);
+      if (window.scrollX !== x || window.scrollY !== y) window.scrollTo(x, y);
+      staged.length = 0;
+    } catch {
+      // Keep the current design if the connection drops during a refresh.
+    } finally {
+      controller.abort();
+      clearTimeout(timeout);
+      staged.forEach(node => node.remove());
+      checking = false;
+    }
+  }
+  setInterval(refreshStyles, 15000);
+  document.addEventListener('visibilitychange', refreshStyles);
+  window.addEventListener('online', refreshStyles);
+  window.addEventListener('pageshow', refreshStyles);
+
   function cancelPull() { start = null; distance = 0; render(); }
   document.addEventListener('touchstart', e => {
     if (e.touches.length !== 1 || window.scrollY > 0 || waits.size || refreshing ||
@@ -49,9 +137,9 @@
   document.addEventListener('touchcancel', cancelPull, {passive:true});
   document.addEventListener('touchend', () => {
     const reload = start && distance >= 80 && !refreshing && !waits.size;
-    if (reload) refreshing = true;
+    
     cancelPull();
-    if (reload) requestAnimationFrame(() => requestAnimationFrame(() => location.reload()));
+    if (reload) void refreshStyles();
   }, {passive:true});
   if (document.readyState !== 'complete') {
     const reloading = performance.getEntriesByType('navigation')[0]?.type === 'reload';
