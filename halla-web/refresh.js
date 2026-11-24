@@ -29,42 +29,77 @@
   window.hallaWait = begin;
 
 
-  // Revalidate static files in the HTTP cache for the next natural navigation.
-  // Do not apply styles, run scripts or replace the active document here.
   let pending = false;
+  let lastMarkup = '';
+  const styles = Array.from(document.head.querySelectorAll('style'));
+
+  function updateTerms(fragment) {
+    const dialog = document.getElementById('service-terms');
+    const next = fragment.querySelector('#service-terms .terms-scroll');
+    if (!dialog || !next) return;
+    let reader = dialog.querySelector('.terms-scroll');
+    if (!reader) {
+      const layout = next.closest('.terms-layout').cloneNode(true);
+      dialog.querySelectorAll(':scope > p').forEach(p => p.remove());
+      dialog.append(layout);
+      reader = layout.querySelector('.terms-scroll');
+      const track = layout.querySelector('.terms-track');
+      const thumb = track.firstElementChild;
+      function indicate() {
+        const range = reader.scrollHeight - reader.clientHeight;
+        track.hidden = range <= 0;
+        if (range <= 0) return;
+        const size = Math.max(18, track.clientHeight * reader.clientHeight / reader.scrollHeight);
+        thumb.style.height = size + 'px';
+        thumb.style.transform = 'translateY(' + (track.clientHeight - size) * reader.scrollTop / range + 'px)';
+      }
+      reader.addEventListener('scroll', indicate, {passive:true});
+      new ResizeObserver(indicate).observe(reader);
+    } else if (reader.innerHTML !== next.innerHTML) {
+      const top = reader.scrollTop;
+      reader.replaceChildren(...Array.from(next.children, section => section.cloneNode(true)));
+      reader.scrollTop = top;
+      reader.dispatchEvent(new Event('scroll'));
+    }
+  }
+
   async function refreshFiles() {
     if (pending || document.hidden || !navigator.onLine) return;
     pending = true;
     const abort = new AbortController();
-    const timer = setTimeout(() => abort.abort(), 12000);
+    const timer = setTimeout(() => abort.abort(), 8000);
     try {
-      const options = { cache: 'no-cache', redirect: 'error', signal: abort.signal };
-      const response = await fetch(location.href, options);
-      if (!response.ok) return;
+      const page = new URL(location.pathname, location.origin);
+      const response = await fetch(page, {cache:'no-cache', signal:abort.signal});
+      if (!response.ok || response.redirected) return;
       const markup = await response.text();
-      const end = markup.indexOf('</head>');
-      if (end < 0) return;
+      if (document.hidden || markup === lastMarkup) return;
       const template = document.createElement('template');
-      template.innerHTML = markup.slice(0, end);
-      const files = new Set();
-      for (const tag of template.content.querySelectorAll('link[rel="stylesheet"][href],script[src]')) {
-        const file = new URL(tag.getAttribute('href') || tag.getAttribute('src'), response.url);
-        if (file.origin === location.origin) files.add(file.href);
-      }
-      await Promise.allSettled(Array.from(files, async file => {
-        const asset = await fetch(file, options);
-        if (asset.ok) await asset.arrayBuffer();
-      }));
+      template.innerHTML = markup;
+      const fragment = template.content;
+      const incoming = Array.from(fragment.querySelectorAll('style'));
+      incoming.forEach((source, index) => {
+        let sheet = styles[index];
+        if (!sheet) {
+          sheet = document.createElement('style');
+          document.head.append(sheet);
+          styles.push(sheet);
+        }
+        if (sheet.textContent !== source.textContent) sheet.textContent = source.textContent;
+      });
+      updateTerms(fragment);
+      lastMarkup = markup;
     } catch {
-      // A subsequent check retries after network failures.
+      // Retry on the next foreground check.
     } finally {
       clearTimeout(timer);
       pending = false;
     }
   }
-  setInterval(refreshFiles, 15000);
-  for (const event of ['online', 'pageshow']) window.addEventListener(event, refreshFiles);
+  setInterval(refreshFiles, 5000);
+  for (const event of ['online', 'pageshow', 'focus']) window.addEventListener(event, refreshFiles);
   document.addEventListener('visibilitychange', refreshFiles);
+  void refreshFiles();
 
   function cancelPull() { start = null; distance = 0; }
   document.addEventListener('touchstart', e => {
