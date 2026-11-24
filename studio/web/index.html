@@ -12,7 +12,19 @@
 .full-logo{display:grid;place-items:center;max-width:65%}.full-logo .logo{display:block;max-width:100%}
 .options{gap:clamp(18px,6vw,34px)}.options>a,.options>.help{background:none;padding:2px;display:grid;justify-items:center;align-content:start;gap:6px;font-size:12px;color:#395560;min-width:54px}.options b{width:52px;height:52px;border-radius:50%;background:radial-gradient(circle at 35% 25%,#f5ffff,#d7f2f2 63%,#c2e8ea);box-shadow:0 5px 11px #336e772c,inset 0 2px 2px #fff,inset 0 -2px 3px #9acfd047}.options svg{width:32px;height:32px;stroke:none}.options :is(a,button):focus-visible{outline:2px solid #20708b;border-radius:12px}.options :is(a,button):active b{transform:translateY(2px)}#help h2{margin-top:0;font-size:21px}#help a,#help button{margin-block:3px}
 .guest:active{transform:translateY(2px);box-shadow:0 1px 0 #b5800b,inset 0 1px 3px #a971172b}.guest:focus-visible{outline:3px solid #15566a;outline-offset:4px}
-</style><link rel="stylesheet" href="../refresh.css?v=clear"><script src="../refresh.js?v=4414ee2f" defer></script><link rel="stylesheet" href="../welcome-gallery.css?v=royal2"><script defer src="../welcome-gallery.js"></script><script defer src="../crown.js?v=royal2"></script><link rel="stylesheet" href="../account-panel.css?v=terms-icon"><script defer src="../accounts.js?v=recovery1"></script><script defer src="../account-panel.js?v=recovery1"></script><link rel="stylesheet" href="/Halla/halla-web/popups.css?v=1"></head>
+</style><link rel="stylesheet" href="../refresh.css?v=clear"><script src="../refresh.js?v=4414ee2f" defer></script><link rel="stylesheet" href="../welcome-gallery.css?v=royal2"><script defer src="../welcome-gallery.js"></script><script defer src="../crown.js?v=royal2"></script><link rel="stylesheet" href="../account-panel.css?v=terms-icon"><script defer src="../accounts.js?v=recovery1"></script><script defer src="../account-panel.js?v=recovery1"></script><link rel="stylesheet" href="/Halla/halla-web/popups.css?v=1"><style>
+dialog#service-terms {overflow:hidden; position:fixed; box-sizing:border-box; max-height:90svh;}
+#service-terms h2 {padding-inline-end:40px; margin:0 0 10px;}
+#service-terms .terms-close {position:absolute; top:8px; left:8px; width:30px; height:30px; min-height:30px; margin:0; padding:0; border-radius:50%; line-height:1;}
+.terms-layout {position:relative; padding-left:16px;}
+.terms-scroll {max-height:min(54svh,28rem); overflow-y:auto; overscroll-behavior:contain; touch-action:pan-y pinch-zoom; scrollbar-width:none;}
+.terms-scroll::-webkit-scrollbar {display:none;}
+.terms-scroll section {padding:10px 0; border-bottom:1px solid #34665c38;}
+.terms-scroll h3 {font-size:1rem; margin:0 0 4px;}
+.terms-scroll p {font-size:.94rem; line-height:1.75; margin:0;}
+.terms-track {position:absolute; left:0; top:2px; bottom:2px; width:5px; border-radius:5px; background:#21443f33; pointer-events:none;}
+.terms-track span {display:block; width:100%; border-radius:inherit; background:#306f66;}
+</style></head>
 <body><main><div class="welcome-gallery" aria-hidden="true"><img class="visible" alt="" src="../assets/welcome-gallery/pool-friends.webp" fetchpriority="high"><img alt=""></div><section class="hero" aria-label="هلاا"><a class="guest" href="../member.html?view=guest">وضع الضيف</a><a class="full-logo" href="../assets/halaa-clear-4k.webp" aria-label="عرض شعار هلاا بدقة 4K"><img class="logo" src="../assets/halaa-clear.webp" alt="هلاا، ألعاب ودردشة" fetchpriority="high"></a></section>
 <section class="actions" aria-label="طرق الدخول">
 <button class="provider" data-provider="Google"><svg class="brand" aria-hidden="true" viewBox="0 0 24 18"><path fill="#4285F4" d="M1.64 18h3.81V7.64L0 3.55v12.81C0 17.27.73 18 1.64 18Z"/><path fill="#34A853" d="M18.55 18h3.81c.91 0 1.64-.73 1.64-1.64V3.55l-5.45 4.09Z"/><path fill="#EA4335" d="M5.45 7.64V.82L12 5.73 18.55.82v6.82L12 12.55Z"/><path fill="#C5221F" d="M0 3.55V2.18C0 .38 2.06-.65 3.49.43L5.45 1.9v6.82Z"/><path fill="#FBBC04" d="M18.55 1.9 20.51.43C21.94-.65 24 .38 24 2.18v1.37l-5.45 5.17Z"/></svg><span class="gmail">جيميل</span></button>
@@ -28,9 +40,36 @@
 <a href="../member.html?view=reset">إرسال رابط إلى بريدي الإلكتروني</a>
 <button type="button" data-recover-phone>إرسال رمز إلى رقم هاتفي</button>
 <button type="button" data-close>إغلاق</button></dialog>
-<dialog class="login-info" id="service-terms" aria-labelledby="terms-title"><h2 id="terms-title">شروط الخدمة</h2>
-<p>استخدم حسابك الشخصي، واحتفظ بكلمة المرور ورموز التحقق لنفسك.</p>
-<p>احترم المشاركين في الغرف والألعاب. يُحظر انتحال الهوية والإساءة ونشر معلومات الآخرين دون إذنهم.</p>
-<button type="button" data-close>إغلاق</button></dialog>
+<dialog class="login-info" id="service-terms" aria-labelledby="terms-title">
+<h2 id="terms-title">شروط الخدمة</h2>
+<button type="button" data-close class="dialog-x terms-close" aria-label="إغلاق النافذة">×</button>
+<div class="terms-layout"><div class="terms-scroll" tabindex="0" role="region" aria-label="بنود شروط الخدمة">
+<section><h3>الحساب وأمانه</h3><p>استخدم حسابك الشخصي واسمًا يميزك. احتفظ بكلمة المرور ورموز التحقق لنفسك. إذا وصلك طلب لهذه البيانات من شخص يدّعي أنه مشرف، فلا تشاركها معه.</p></section>
+<section><h3>المشاركة في الغرف الصوتية</h3><p>استأذن قبل فتح الميكروفون في الغرف التي تنظّم أدوار المتحدثين. أعطِ الآخرين فرصة للكلام، وتجنّب الضوضاء المتعمّدة أو العودة إلى الميكروفون بعد أن يطلب منك المشرف التوقف.</p></section>
+<section><h3>الاحترام والخصوصية</h3><p>يُحظر التنمّر والتهديد والتحرش وانتحال الهوية. لا تسجّل صوت مشارك أو تنشر صورته أو رسائله أو رقم هاتفه من دون إذنه، حتى لو كانت الغرفة عامة.</p></section>
+<section><h3>اللعب العادل</h3><p>التزم بقواعد اللعبة ودورك في المباراة. لا تستخدم برامج غش أو تستغل خللًا لتغيير النتيجة أو الرصيد. إذا لاحظت خطأ، اذكر اسم اللعبة وما حدث عند الإبلاغ عنه.</p></section>
+<section><h3>العملات والهدايا</h3><p>راجع اسم المستلم والهدية وعدد العملات قبل تأكيد الإرسال. عند الشراء، تحقّق من السعر والحساب المستخدم واحتفظ بالإيصال. تجنّب الروابط التي تطلب بيانات دخولك مقابل شحن مجاني.</p></section>
+<section><h3>المحتوى والروابط</h3><p>شارك ما تملكه أو لديك إذن بنشره. يُحظر إرسال روابط احتيالية أو ملفات ضارة أو إعلانات متكررة تعطل المحادثة.</p></section>
+<section><h3>الإبلاغ عن إساءة</h3><p>عند حدوث إساءة، يمكنك مغادرة الغرفة وإبلاغ مشرفها. اذكر اسم الغرفة ووقت الواقعة ووصفًا مختصرًا لما حدث، وتجنّب تضمين معلومات شخصية لا علاقة لها بالبلاغ.</p></section>
+</div><div class="terms-track" aria-hidden="true"><span></span></div></div>
+</dialog><script>
+(() => {
+  const dialog = document.getElementById('service-terms');
+  const reader = dialog.querySelector('.terms-scroll');
+  const track = dialog.querySelector('.terms-track');
+  const thumb = track.firstElementChild;
+  function syncIndicator() {
+    const range = reader.scrollHeight - reader.clientHeight;
+    track.hidden = range <= 0;
+    if (range <= 0) return;
+    const height = Math.max(18, track.clientHeight * reader.clientHeight / reader.scrollHeight);
+    thumb.style.height = height + 'px';
+    thumb.style.transform = 'translateY(' + (track.clientHeight - height) * Math.min(1, Math.max(0, reader.scrollTop / range)) + 'px)';
+  }
+  reader.addEventListener('scroll', syncIndicator, {passive:true});
+  new ResizeObserver(syncIndicator).observe(reader);
+  dialog.addEventListener('close', () => { reader.scrollTop = 0; });
+})();
+</script>
 <dialog id="help"><h2>مساعدة الدخول</h2><p>اختر طريقة الوصول إلى حسابك.</p><a href="../member.html?view=login">الدخول بالبريد الإلكتروني</a> <a href="../member.html?view=reset">استعادة كلمة المرور</a> <a href="../member.html?view=username">الدخول باسم المستخدم</a> <button type="button">إغلاق</button></dialog>
 <script>const help=document.querySelector('#help');document.querySelector('.help').onclick=()=>help.showModal();help.querySelector('button').onclick=()=>help.close();</script></body></html>
