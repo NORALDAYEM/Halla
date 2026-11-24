@@ -52,7 +52,7 @@ function authScreen(mode){
   $('#alt').onclick=()=>go(mode==='login'?'signup':'login');
   if(mode==='username')$('#status').textContent='استخدم اسم حساب سبق تسجيل دخوله بالبريد على هذا الجهاز.';
   form.onsubmit=async event=>{
-    event.preventDefault();$('#submit').disabled=true;
+    event.preventDefault();$('#submit').disabled=true;$('#status').style.color = ''; $('#status').style.fontWeight = '';
     const done=window.hallaWait('جارٍ معالجة الطلب…');
     try{
       if(!await sdk)throw Error();
@@ -60,7 +60,7 @@ function authScreen(mode){
       if(result.error)throw result.error;
       if(mode==='signup'||mode==='reset')$('#status').textContent='راجع بريدك الإلكتروني لإكمال الطلب.';
       else location.replace('member.html');
-    }catch{$('#status').textContent='تعذّر إكمال الطلب. تحقق من البيانات والاتصال ثم حاول مجددًا.';}
+    }catch (error) { $('#status').style.color = '#dc2626'; $('#status').style.fontWeight = '700'; if (mode === 'login') $('#status').textContent = 'اسم المستخدم أو كلمة المرور غير صحيحة'; else $('#status').textContent='تعذّر إكمال الطلب. تحقق من البيانات والاتصال ثم حاول مجددًا.';}
     finally{done();$('#submit').disabled=false;}
   };
 }
