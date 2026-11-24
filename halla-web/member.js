@@ -43,6 +43,7 @@ function authScreen(mode){
   if(mode==='username')$('#status').textContent='استخدم اسم حساب سبق تسجيل دخوله بالبريد على هذا الجهاز.';
   form.onsubmit=async event=>{
     event.preventDefault();$('#submit').disabled=true;
+    const done=window.hallaWait('جارٍ معالجة الطلب…');
     try{
       if(!await sdk)throw Error();
       const mail=form.email.value.trim(),password=form.password.value,nickname=form.nickname.value.trim();
@@ -56,7 +57,7 @@ function authScreen(mode){
       if(mode==='signup'||mode==='reset')$('#status').textContent='راجع بريدك الإلكتروني لإكمال الطلب.';
       else location.replace('member.html');
     }catch{$('#status').textContent='تعذّر إكمال الطلب. تحقق من البيانات والاتصال ثم حاول مجددًا.';}
-    finally{$('#submit').disabled=false;}
+    finally{done();$('#submit').disabled=false;}
   };
 }
 async function loadGames(){
@@ -108,7 +109,8 @@ for(const [id,icon,label] of tabs){
 }
 $('#more').onclick=()=>selectTab('rooms');
 function lobby(){ $('#lobby').hidden=false;$('nav').hidden=false;selectTab(view==='rooms'?'rooms':'games'); }
-function endVoice(){generation++;const old=voice;voice=null;if(old)old.destroy();$('#mount').replaceChildren();if($('#voice').open)$('#voice').close();}
+let finishVoiceWait;
+function endVoice(){finishVoiceWait?.();generation++;const old=voice;voice=null;if(old)old.destroy();$('#mount').replaceChildren();if($('#voice').open)$('#voice').close();}
 $('#leave').onclick=endVoice;$('#voice').oncancel=e=>{e.preventDefault();endVoice();};
 let zegoLoad;
 function loadVoice(){
@@ -120,15 +122,19 @@ function loadVoice(){
 async function join(room){
   if(!user){go('login');return;}
   const attempt=++generation;$('#voiceTitle').textContent=room.title;$('#voiceStatus').textContent='جارٍ الاتصال بالغرفة…';$('#voice').showModal();
+  finishVoiceWait=window.hallaWait('جارٍ الاتصال بالغرفة…',$('#voice'));
   try{
     const {data,error}=await client.functions.invoke('zego-token',{body:{room:room.id}});if(error)throw error;
     const kit=await loadVoice();if(attempt!==generation)return;
     const name=user.user_metadata?.nickname||'عضو '+user.id.slice(0,5);
     voice=kit.create(kit.generateKitTokenForProduction(data.appID,data.token,data.roomID,data.userID,name));
     const role=['owner','moderator'].includes(data.role)?kit.Host:data.role==='speaker'?kit.Cohost:kit.Audience;
-    voice.joinRoom({container:$('#mount'),scenario:{mode:kit.LiveStreaming,config:{role}},turnOnCameraWhenJoining:false,turnOnMicrophoneWhenJoining:false,showMyCameraToggleButton:false,showScreenSharingButton:false,showPreJoinView:false,showLeavingView:false,onJoinRoom:()=>$('#voiceStatus').textContent='',onLeaveRoom:()=>{if(attempt===generation)endVoice();}});
-  }catch{if(attempt===generation)$('#voiceStatus').textContent='تعذر الاتصال بالغرفة. تحقق من تأكيد حسابك والاتصال ثم أعد المحاولة.';}
+    voice.joinRoom({container:$('#mount'),scenario:{mode:kit.LiveStreaming,config:{role}},turnOnCameraWhenJoining:false,turnOnMicrophoneWhenJoining:false,showMyCameraToggleButton:false,showScreenSharingButton:false,showPreJoinView:false,showLeavingView:false,onJoinRoom:()=>{if(attempt===generation){finishVoiceWait?.();$('#voiceStatus').textContent='';}},onLeaveRoom:()=>{if(attempt===generation)endVoice();}});
+  }catch{if(attempt===generation){finishVoiceWait?.();$('#voiceStatus').textContent='تعذر الاتصال بالغرفة. تحقق من تأكيد حسابك والاتصال ثم أعد المحاولة.';}}
 }
 if(Object.hasOwn(authModes,view))authScreen(view);
 else if(view==='guest')lobby();
-else sdk.then(async c=>{if(c&&(await c.auth.getSession()).data.session)lobby();else location.replace('studio/');});
+else {
+  const done=window.hallaWait('جارٍ فتح حسابك…');
+  sdk.then(async c=>{if(c&&(await c.auth.getSession()).data.session)lobby();else location.replace('studio/');}).finally(done);
+}
