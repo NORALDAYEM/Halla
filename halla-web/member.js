@@ -135,10 +135,12 @@ async function join(room){
     voice.joinRoom({container:$('#mount'),scenario:{mode:kit.LiveStreaming,config:{role}},turnOnCameraWhenJoining:false,turnOnMicrophoneWhenJoining:false,showMyCameraToggleButton:false,showScreenSharingButton:false,showPreJoinView:false,showLeavingView:false,onJoinRoom:()=>{if(attempt===generation){finishVoiceWait?.();$('#voiceStatus').textContent='';}},onLeaveRoom:()=>{if(attempt===generation)endVoice();}});
   }catch{if(attempt===generation){finishVoiceWait?.();$('#voiceStatus').textContent='تعذر الاتصال بالغرفة. تحقق من تأكيد حسابك والاتصال ثم أعد المحاولة.';}}
 }
-if(view==='phone')location.replace('index.html?account=phone');
+if(view==='signup'||view==='login')location.replace('index.html?email='+view);
+else if(view==='phone')location.replace('index.html?account=phone');
 else if(Object.hasOwn(authModes,view))authScreen(view);
 else if(view==='guest')lobby();
 else {
   const done=window.hallaWait('جارٍ فتح حسابك…');
   sdk.then(async c=>{if(c&&(await c.auth.getSession()).data.session)lobby();else location.replace('studio/');}).finally(done);
 }
+

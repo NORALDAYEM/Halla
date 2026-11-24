@@ -42,16 +42,17 @@ window.HallaAccounts = (() => {
     if(/^05\d{8}$/.test(phone))phone='+966'+phone.slice(1);
     return /^\+[1-9]\d{7,14}$/.test(phone)?phone:'';
   }
-  async function passwordRequest(mode,mail,password,nickname){
+  async function passwordRequest(mode,mail,password,nickname,gender,country){
     const instance=await client();
 
       const redirect=new URL(member.href);
       let result;
       if(mode==='reset'){redirect.search='?view=recover';result=await instance.auth.resetPasswordForEmail(mail,{redirectTo:redirect.href});}
-      else if(mode==='signup')result=await instance.auth.signUp({email:mail,password,options:{data:{nickname},emailRedirectTo:redirect.href}});
+      else if(mode==='signup')result=await instance.auth.signUp({email:mail,password,options:{data:{nickname,gender,country},emailRedirectTo:redirect.href}});
       else if(mode==='recover')result=await instance.auth.updateUser({password});
       else result=await instance.auth.signInWithPassword({email:mode==='username'?localStorage.getItem('halla.alias.'+nickname.toLowerCase())||'':mail,password});
     return result;
   }
   return {base,member,client,enabled,oauth,sendCode,verify,phoneNumber,passwordRequest};
 })();
+

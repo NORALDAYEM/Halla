@@ -1,0 +1,12 @@
+.actions .provider.email-mode {font-weight:700;color:white;border:1px solid #ffffff61}
+.actions .email-login {background:linear-gradient(110deg,#12683c,#16844e)}
+.actions .email-signup {background:linear-gradient(110deg,#a14009,#bb530b)}
+.email-mode svg {position:absolute;right:20px;top:50%;transform:translateY(-50%);width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#email-access {width:min(92vw,420px);max-height:88svh;overflow:auto;border:1px solid #ffffffc7;border-radius:24px;background:linear-gradient(145deg,#f6fffcf4,#e0f4edf0);backdrop-filter:blur(14px);color:#193f39}
+#email-access h2 {margin:0 0 14px;font-size:1.35rem}
+#email-access form,#email-access label {display:grid;gap:5px}
+#email-access form {gap:12px}
+#email-access input,#email-access select {width:100%;min-width:0;padding:10px 12px;border:1px solid #9ebbb1;border-radius:12px;font:inherit;background:#ffffffcf;color:#193f39}
+#email-access [hidden],#email-access [role=status]:empty {display:none}
+#email-access [type=submit] {background:#136746;color:white;font-weight:700}
+#email-access [data-dismiss] {width:100%;margin-top:8px}
