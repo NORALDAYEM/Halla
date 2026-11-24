@@ -3,3 +3,12 @@ html,body{overscroll-behavior-y:contain}
 .hala-petals{display:inline-flex;align-items:center;gap:2px;height:29px}.hala-petals i{display:inline-block;font:700 22px/1 system-ui;color:#118b97;animation:hala-float 1.15s ease-in-out infinite alternate}.hala-petals i:nth-child(2n){font-size:18px;animation-delay:-.38s}.hala-petals i:nth-child(3n){animation-delay:-.75s;color:#54649f}
 @keyframes hala-float{from{transform:translateY(3px) rotate(-9deg)}to{transform:translateY(-4px) rotate(9deg)}}
 @media(prefers-reduced-motion:reduce){.hala-petals i{animation:none}}
+a.guest {
+  background: linear-gradient(rgba(255, 242, 138, 0.45), rgba(255, 205, 55, 0.42)) !important;
+  border-color: rgba(255, 220, 110, 0.65) !important;
+  box-shadow: 0 2px 0 rgba(181, 128, 11, 0.35), 0 6px 12px rgba(96, 80, 22, 0.2), inset 0 1px 1px rgba(255, 248, 205, 0.55) !important;
+  color: #2c2106 !important;
+  min-width: 118px;
+  min-height: 36px;
+  padding: 6px 20px;
+}
