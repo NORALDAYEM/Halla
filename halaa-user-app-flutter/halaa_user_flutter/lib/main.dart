@@ -6,6 +6,7 @@ import 'screens/app/member_home_screen.dart';
 import 'services/halaa_storage.dart';
 import 'services/supabase_auth_service.dart';
 import 'theme/halaa_themes.dart';
+import 'widgets/app_update_gate.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -76,7 +77,11 @@ class _HalaaUserAppState extends State<HalaaUserApp> {
           brightness: Brightness.dark,
         ),
       ),
-      home: !_ready
+      home: AppUpdateGate(
+        appKey: 'user_app',
+        currentVersion: '3.1.1',
+        currentBuild: 2,
+        child: !_ready
           ? const Scaffold(body: Center(child: CircularProgressIndicator()))
           : (_memberUser == null
               ? AppLoginScreen(
@@ -103,6 +108,7 @@ class _HalaaUserAppState extends State<HalaaUserApp> {
                     setState(() => _memberUser = null);
                   },
                 )),
+      ),
     );
   }
 }
