@@ -1,0 +1,20 @@
+{
+  "user_app": {
+    "latest_version": "3.1.1",
+    "latest_build": 2,
+    "min_required_build": 2,
+    "force_update": false,
+    "title": "تحديث جديد متوفر لتطبيق هلا",
+    "message": "يتوفر إصدار جديد يتضمن تحسينات وتعديلات مهمة. يرجى التحديث الآن للاستمرار بأفضل أداء.",
+    "download_url": "https://github.com/NORALDAYEM/Halla/releases/latest"
+  },
+  "admin_app": {
+    "latest_version": "3.1.1",
+    "latest_build": 2,
+    "min_required_build": 2,
+    "force_update": false,
+    "title": "تحديث جديد متوفر للوحة إدارة هلا",
+    "message": "يتوفر إصدار جديد للوحة الإدارة يتضمن تعديلات مهمة. يرجى التحديث الآن للاستمرار بأفضل أداء.",
+    "download_url": "https://github.com/NORALDAYEM/Halla/releases/latest"
+  }
+}
