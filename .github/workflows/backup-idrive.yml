@@ -26,9 +26,8 @@ jobs:
 
       - name: Sync repository files and upload ZIP snapshot to IDrive e2
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.IDRIVE_ACCESS_KEY }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.IDRIVE_SECRET_KEY }}
-          AWS_DEFAULT_REGION: us-west-4
+          RAW_ACCESS_KEY: ${{ secrets.IDRIVE_ACCESS_KEY }}
+          RAW_SECRET_KEY: ${{ secrets.IDRIVE_SECRET_KEY }}
           AWS_REQUEST_CHECKSUM_CALCULATION: when_required
           AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
           IDRIVE_ENDPOINT: ${{ secrets.IDRIVE_ENDPOINT || 'https://s3.us-west-4.idrivee2.com' }}
@@ -36,15 +35,41 @@ jobs:
         run: |
           set -euo pipefail
 
-          ENDPOINT="$IDRIVE_ENDPOINT"
+          export AWS_ACCESS_KEY_ID="$(printf '%s' "$RAW_ACCESS_KEY" | tr -d '[:space:]')"
+          export AWS_SECRET_ACCESS_KEY="$(printf '%s' "$RAW_SECRET_KEY" | tr -d '[:space:]')"
+
+          ENDPOINT="$(printf '%s' "$IDRIVE_ENDPOINT" | tr -d '[:space:]')"
           if [[ "$ENDPOINT" != http://* && "$ENDPOINT" != https://* ]]; then
             ENDPOINT="https://$ENDPOINT"
           fi
 
+          aws configure set default.s3.addressing_style path
+          aws configure set default.s3.signature_version s3v4
+
+          # Detect working signing region for IDrive e2 Oregon-2
+          WORKING_REGION=""
+          for r in us-west-4 us-east-1 or-2; do
+            if AWS_DEFAULT_REGION="$r" aws s3 ls "s3://${IDRIVE_BUCKET}/" --endpoint-url "$ENDPOINT" >/dev/null 2>&1; then
+              WORKING_REGION="$r"
+              break
+            fi
+          done
+
+          if [ -z "$WORKING_REGION" ]; then
+            echo "Failed to authenticate with IDrive e2 using endpoint $ENDPOINT and bucket $IDRIVE_BUCKET"
+            AWS_DEFAULT_REGION="us-west-4" aws s3 ls "s3://${IDRIVE_BUCKET}/" --endpoint-url "$ENDPOINT"
+            exit 1
+          fi
+
+          export AWS_DEFAULT_REGION="$WORKING_REGION"
+          echo "Authenticated with IDrive e2 using region: $AWS_DEFAULT_REGION"
+
+          # 1) Sync latest repository files to s3://halla/github-backup/latest/
           aws s3 sync . "s3://${IDRIVE_BUCKET}/github-backup/latest/" \
             --endpoint-url "$ENDPOINT" \
             --exclude ".git/*"
 
+          # 2) Create and upload a timestamped ZIP snapshot to s3://halla/github-backup/snapshots/
           TIMESTAMP=$(date -u +"%Y%m%d-%H%M%S")
           ARCHIVE_NAME="halla-main-${TIMESTAMP}.zip"
           zip -r "/tmp/${ARCHIVE_NAME}" . -x ".git/*"
