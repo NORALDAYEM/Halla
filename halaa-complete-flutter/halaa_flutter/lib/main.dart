@@ -1,34 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'models/halaa_config.dart';
+import 'models/halaa_models.dart';
 import 'screens/admin/admin_dashboard_screen.dart';
 import 'screens/admin/admin_login_screen.dart';
 import 'screens/app/app_login_screen.dart';
 import 'screens/app/member_home_screen.dart';
 import 'services/halaa_storage.dart';
+import 'services/supabase_auth_service.dart';
 import 'theme/halaa_themes.dart';
 
-/// Build-time entry selector:
-/// - Default / `--dart-define=ENTRY=app`   -> Halaa User App (`/Halla/halla-web/`)
-/// - `--dart-define=ENTRY=admin`           -> Halaa Admin Panel (`/Halla/admin/`)
 const String kEntryMode = String.fromEnvironment('ENTRY', defaultValue: 'app');
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const HalaaUnifiedApp());
+  runApp(const HalaaExactApp());
 }
 
-class HalaaUnifiedApp extends StatefulWidget {
-  const HalaaUnifiedApp({super.key});
+class HalaaExactApp extends StatefulWidget {
+  const HalaaExactApp({super.key});
 
   @override
-  State<HalaaUnifiedApp> createState() => _HalaaUnifiedAppState();
+  State<HalaaExactApp> createState() => _HalaaExactAppState();
 }
 
-class _HalaaUnifiedAppState extends State<HalaaUnifiedApp> {
+class _HalaaExactAppState extends State<HalaaExactApp> {
   final _storage = HalaaStorage();
-  late bool _inAdminPortal;
-  HalaaConfig _config = HalaaConfig.defaults(isAdminSubpath: kEntryMode == 'admin');
+  final _auth = SupabaseAuthService();
+  late bool _inAdmin;
+  HalaaConfig _cfg = HalaaConfig.defaults();
   String? _memberUser;
   String? _adminUser;
   bool _ready = false;
@@ -36,30 +35,40 @@ class _HalaaUnifiedAppState extends State<HalaaUnifiedApp> {
   @override
   void initState() {
     super.initState();
-    _inAdminPortal = kEntryMode == 'admin';
+    _inAdmin = kEntryMode == 'admin';
     _bootstrap();
   }
 
   Future<void> _bootstrap() async {
-    final isAdminSubpath = kEntryMode == 'admin';
-    final cfg = await _storage.loadConfig(isAdminSubpath: isAdminSubpath);
-    final member = await _storage.getMemberUser();
-    final admin = await _storage.getAdminUser();
+    final c = await _storage.loadConfig();
+    var m = await _storage.getMemberUser();
+    final oauthReturn = await _auth.checkOAuthReturn();
+    if (oauthReturn != null && oauthReturn.ok && oauthReturn.displayName != null) {
+      m = oauthReturn.displayName;
+      await _storage.setMemberUser(m);
+    }
+    final a = await _storage.getAdminUser();
     if (!mounted) return;
     setState(() {
-      _config = cfg;
-      _memberUser = member;
-      _adminUser = admin;
+      _cfg = c;
+      _memberUser = m;
+      _adminUser = a;
       _ready = true;
     });
   }
 
+  Future<void> _updateConfig(HalaaConfig next) async {
+    await _storage.saveConfig(next);
+    if (!mounted) return;
+    setState(() => _cfg = next);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final preset = findThemePreset(_config.activeTheme);
+    final preset = findThemePreset(_cfg.activeTheme);
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: _inAdminPortal ? 'إدارة هلاا | Halaa Admin' : 'هلاا | ألعاب ودردشة',
+      title: _inAdmin ? 'إدارة هلاا | Halaa Admin' : 'هلاا | ألعاب ودردشة',
       locale: const Locale('ar'),
       supportedLocales: const [Locale('ar'), Locale('en')],
       localizationsDelegates: const [
@@ -77,59 +86,69 @@ class _HalaaUnifiedAppState extends State<HalaaUnifiedApp> {
       ),
       home: !_ready
           ? const Scaffold(body: Center(child: CircularProgressIndicator()))
-          : _buildCurrentScreen(),
+          : _buildScreen(),
     );
   }
 
-  Widget _buildCurrentScreen() {
-    if (_inAdminPortal) {
+  Widget _buildScreen() {
+    if (_inAdmin) {
       if (_adminUser == null) {
         return AdminLoginScreen(
-          config: _config,
+          config: _cfg,
           onAuthenticated: (u) async {
             await _storage.setAdminUser(u);
-            await _storage.addLog('دخول المشرف $u');
+            await _storage.addLog('تسجيل دخول المشرف $u');
             if (!mounted) return;
             setState(() => _adminUser = u);
           },
-          onBackToApp: () => setState(() => _inAdminPortal = false),
+          onTicketCreated: (t) => _updateConfig(
+            _cfg.copyWith(tickets: [t, ..._cfg.tickets]),
+          ),
+          onBackToApp: () => setState(() => _inAdmin = false),
         );
       }
       return AdminDashboardScreen(
         username: _adminUser!,
-        initialConfig: _config,
+        initialConfig: _cfg,
         storage: _storage,
-        onConfigUpdated: (updated) => setState(() => _config = updated),
+        onConfigUpdated: (u) => setState(() => _cfg = u),
         onLogout: () async {
           await _storage.setAdminUser(null);
           if (!mounted) return;
           setState(() => _adminUser = null);
         },
-        onPreviewApp: () => setState(() => _inAdminPortal = false),
+        onPreviewApp: () => setState(() => _inAdmin = false),
       );
     }
 
     if (_memberUser == null) {
       return AppLoginScreen(
-        config: _config,
+        config: _cfg,
         onLoggedIn: (u) async {
           await _storage.setMemberUser(u);
           if (!mounted) return;
           setState(() => _memberUser = u);
         },
-        onOpenAdminPortal: () => setState(() => _inAdminPortal = true),
+        onRegisteredUser: (rec) => _updateConfig(
+          _cfg.copyWith(appUsers: [rec, ..._cfg.appUsers]),
+        ),
+        onTicketCreated: (t) => _updateConfig(
+          _cfg.copyWith(tickets: [t, ..._cfg.tickets]),
+        ),
+        onOpenAdminPortal: () => setState(() => _inAdmin = true),
+        authService: _auth,
       );
     }
 
     return MemberHomeScreen(
       displayName: _memberUser!,
-      config: _config,
+      config: _cfg,
       onLogout: () async {
         await _storage.setMemberUser(null);
         if (!mounted) return;
         setState(() => _memberUser = null);
       },
-      onOpenAdminPortal: () => setState(() => _inAdminPortal = true),
+      onOpenAdminPortal: () => setState(() => _inAdmin = true),
     );
   }
 }

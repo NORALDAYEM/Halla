@@ -1,11 +1,11 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
-import '../../models/halaa_config.dart';
+import '../../models/halaa_models.dart';
 import '../../theme/halaa_themes.dart';
-import '../../widgets/glass_box.dart';
-import '../../widgets/halaa_background.dart';
+import '../../widgets/welcome_gallery_bg.dart';
 
-/// Post-login member app unified with the exact same rotating glassmorphic
-/// background, real-photo game cards (Chess, Ludo, Pool, Domino), and 5 tabs.
+/// Post-login member screen (`halla-web/member.html`) unified with the exact
+/// same `.welcome-gallery` rotating background and 4 real-photo game cards.
 class MemberHomeScreen extends StatefulWidget {
   final String displayName;
   final HalaaConfig config;
@@ -25,85 +25,122 @@ class MemberHomeScreen extends StatefulWidget {
 }
 
 class _MemberHomeScreenState extends State<MemberHomeScreen> {
-  int _tabIndex = 1; // Games tab default to showcase real-photo game cards
-  String _roomCategory = 'شائع';
+  int _navIndex = 1; // الألعاب default
 
   @override
   Widget build(BuildContext context) {
     final theme = findThemePreset(widget.config.activeTheme);
-    final imgPrefix = widget.config.bgImages.isNotEmpty &&
-            widget.config.bgImages.first.url.startsWith('../halla-web/')
-        ? '../halla-web/assets/welcome-gallery/'
-        : 'assets/welcome-gallery/';
 
     return Scaffold(
-      body: HalaaBackground(
+      body: WelcomeGalleryBackground(
         images: widget.config.bgImages,
         rotationSeconds: widget.config.rotationSeconds,
-        theme: theme,
         child: SafeArea(
           child: Column(
             children: [
+              // Top bar matching member.html header
               Padding(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      backgroundColor: theme.primary,
-                      child: const Icon(Icons.person, color: Colors.white),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(18),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color.fromRGBO(10, 30, 38, 0.62),
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(
+                          color: const Color.fromRGBO(255, 255, 255, 0.28),
+                        ),
+                      ),
+                      child: Row(
                         children: [
-                          Text(
-                            widget.displayName,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w800,
-                              fontSize: 15,
-                              color: Colors.white,
+                          Image.asset(
+                            'assets/images/halaa-clear.webp',
+                            width: 34,
+                            height: 34,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  widget.displayName,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 14.5,
+                                  ),
+                                ),
+                                const Text(
+                                  'هلاا | الألعاب والغرف',
+                                  style: TextStyle(
+                                    color: Color(0xFF99F6E4),
+                                    fontSize: 11.5,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          const Text(
-                            'هلاا | ألعاب ودردشة صوتية',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Color(0xFFBAE6FD),
+                          IconButton(
+                            tooltip: 'الجوائز',
+                            onPressed: () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('🏆 قائمة الجوائز والمهام اليومية'),
+                                ),
+                              );
+                            },
+                            icon: const Text('🏆', style: TextStyle(fontSize: 18)),
+                          ),
+                          IconButton(
+                            tooltip: 'الهدايا',
+                            onPressed: () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('🎁 متجر الهدايا والعملات'),
+                                ),
+                              );
+                            },
+                            icon: const Text('🎁', style: TextStyle(fontSize: 18)),
+                          ),
+                          IconButton(
+                            tooltip: 'إدارة هلاا',
+                            onPressed: widget.onOpenAdminPortal,
+                            icon: const Icon(
+                              Icons.admin_panel_settings_outlined,
+                              color: Color(0xFF99F6E4),
+                            ),
+                          ),
+                          IconButton(
+                            tooltip: 'خروج',
+                            onPressed: widget.onLogout,
+                            icon: const Icon(
+                              Icons.logout_rounded,
+                              color: Color(0xFFFCA5A5),
                             ),
                           ),
                         ],
                       ),
                     ),
-                    IconButton(
-                      tooltip: 'لوحة الإدارة',
-                      onPressed: widget.onOpenAdminPortal,
-                      icon: const Icon(
-                        Icons.admin_panel_settings_outlined,
-                        color: Color(0xFF7DD3FC),
-                      ),
-                    ),
-                    IconButton(
-                      tooltip: 'خروج',
-                      onPressed: widget.onLogout,
-                      icon: const Icon(
-                        Icons.logout_rounded,
-                        color: Color(0xFFFCA5A5),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
               Expanded(
                 child: IndexedStack(
-                  index: _tabIndex,
+                  index: _navIndex,
                   children: [
-                    _buildRoomsTab(theme),
-                    _buildGamesTab(imgPrefix, theme),
-                    _buildMomentsTab(),
-                    _buildChatTab(),
-                    _buildProfileTab(theme),
+                    _roomsTab(),
+                    _gamesTab(theme),
+                    _momentsTab(),
+                    _chatTab(),
+                    _profileTab(theme),
                   ],
                 ),
               ),
@@ -112,10 +149,10 @@ class _MemberHomeScreenState extends State<MemberHomeScreen> {
         ),
       ),
       bottomNavigationBar: NavigationBar(
-        backgroundColor: const Color.fromRGBO(6, 26, 41, 0.94),
-        indicatorColor: const Color.fromRGBO(6, 182, 212, 0.28),
-        selectedIndex: _tabIndex,
-        onDestinationSelected: (i) => setState(() => _tabIndex = i),
+        backgroundColor: const Color.fromRGBO(7, 27, 33, 0.94),
+        indicatorColor: const Color.fromRGBO(20, 184, 166, 0.30),
+        selectedIndex: _navIndex,
+        onDestinationSelected: (i) => setState(() => _navIndex = i),
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.graphic_eq_rounded),
@@ -135,34 +172,34 @@ class _MemberHomeScreenState extends State<MemberHomeScreen> {
           ),
           NavigationDestination(
             icon: Icon(Icons.person_outline_rounded),
-            label: 'أنا',
+            label: 'حسابي',
           ),
         ],
       ),
     );
   }
 
-  Widget _buildGamesTab(String prefix, HalaaThemePreset theme) {
-    final games = [
+  Widget _gamesTab(HalaaThemePreset theme) {
+    const games = [
       (
-        title: 'الشطرنج الملكي',
-        subtitle: 'لعب مباشر ومشاهدة ومحادثة صوتية',
-        image: '${prefix}chessboard.webp',
+        'الشطرنج',
+        'assets/images/welcome-gallery/chessboard.webp',
+        'لعب مباشر ودردشة صوتية'
       ),
       (
-        title: 'الليدو الجماعي',
-        subtitle: 'تحديات أصدقاء وبطولات فورية',
-        image: '${prefix}ludo-friends.webp',
+        'الليدو',
+        'assets/images/welcome-gallery/ludo-friends.webp',
+        'تحديات جماعية وبطولات'
       ),
       (
-        title: 'البلياردو 8-Ball',
-        subtitle: 'فيزياء دقيقة وعصي متدرجة',
-        image: '${prefix}pool-table.webp',
+        'البلياردو',
+        'assets/images/welcome-gallery/pool-table.webp',
+        '8-Ball وفيزياء واقعية'
       ),
       (
-        title: 'الضومينو الكلاسيكي',
-        subtitle: 'جولات سريعة مع غرف صوتية',
-        image: '${prefix}game-table.webp',
+        'الضومينو',
+        'assets/images/welcome-gallery/game-table.webp',
+        'جولات سريعة مع الأصدقاء'
       ),
     ];
 
@@ -172,65 +209,62 @@ class _MemberHomeScreenState extends State<MemberHomeScreen> {
         crossAxisCount: 2,
         mainAxisSpacing: 12,
         crossAxisSpacing: 12,
-        childAspectRatio: 0.86,
+        childAspectRatio: 0.85,
       ),
       itemCount: games.length,
-      itemBuilder: (context, index) {
-        final g = games[index];
+      itemBuilder: (ctx, i) {
+        final g = games[i];
         return InkWell(
           onTap: () {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('جاري فتح طاولة ${g.title}...')),
+              SnackBar(content: Text('جاري تشغيل لعبة ${g.$1}...')),
             );
           },
           borderRadius: BorderRadius.circular(20),
-          child: GlassBox(
-            padding: EdgeInsets.zero,
-            borderRadius: 20,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  child: Image.network(
-                    g.image,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
-                      color: theme.bgTop,
-                      child: Icon(
-                        Icons.sports_esports_rounded,
-                        size: 42,
-                        color: theme.accent,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: const Color.fromRGBO(10, 30, 38, 0.62),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: const Color.fromRGBO(255, 255, 255, 0.28),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(
+                      child: Image.asset(g.$2, fit: BoxFit.cover),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(10),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            g.$1,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 15,
+                            ),
+                          ),
+                          Text(
+                            g.$3,
+                            style: const TextStyle(
+                              color: Color(0xFF99F6E4),
+                              fontSize: 11.5,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ),
+                  ],
                 ),
-                Padding(
-                  padding: const EdgeInsets.all(10),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        g.title,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w800,
-                          fontSize: 14,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        g.subtitle,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: Color(0xFFBAE6FD),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         );
@@ -238,65 +272,48 @@ class _MemberHomeScreenState extends State<MemberHomeScreen> {
     );
   }
 
-  Widget _buildRoomsTab(HalaaThemePreset theme) {
-    const categories = [
-      'شائع',
-      'جديد',
-      'المفضلة',
-      'غرف الدول',
-      'شعر',
-      'غناء',
-      'قرآن',
-      'ألعاب',
-    ];
+  Widget _roomsTab() {
     return ListView(
       padding: const EdgeInsets.all(14),
       children: [
-        SizedBox(
-          height: 40,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: categories.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 8),
-            itemBuilder: (_, i) {
-              final c = categories[i];
-              return ChoiceChip(
-                label: Text(c),
-                selected: _roomCategory == c,
-                onSelected: (_) => setState(() => _roomCategory = c),
-              );
-            },
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color.fromRGBO(10, 30, 38, 0.72),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: const Color.fromRGBO(255, 255, 255, 0.26)),
           ),
-        ),
-        const SizedBox(height: 14),
-        GlassBox(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'غرفة صوتية تفاعلية (${widget.config.micSeats} مقاعد)',
+                'نشاطات الغرف الصوتية (${widget.config.micSeats} مقاعد مايك)',
                 style: const TextStyle(
+                  color: Colors.white,
                   fontWeight: FontWeight.w800,
                   fontSize: 15,
                 ),
               ),
               const SizedBox(height: 12),
               Wrap(
-                spacing: 10,
-                runSpacing: 10,
+                spacing: 12,
+                runSpacing: 12,
                 children: List.generate(widget.config.micSeats, (i) {
                   return Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      CircleAvatar(
+                      const CircleAvatar(
                         radius: 22,
-                        backgroundColor: const Color.fromRGBO(14, 165, 233, 0.35),
-                        child: const Icon(Icons.mic_none_rounded, color: Colors.white),
+                        backgroundColor: Color(0xFF0F7682),
+                        child: Icon(Icons.mic_none_rounded, color: Colors.white),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         'مايك ${i + 1}',
-                        style: const TextStyle(fontSize: 11),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 11.5,
+                        ),
                       ),
                     ],
                   );
@@ -309,57 +326,78 @@ class _MemberHomeScreenState extends State<MemberHomeScreen> {
     );
   }
 
-  Widget _buildMomentsTab() {
-    return ListView(
-      padding: const EdgeInsets.all(14),
-      children: const [
-        GlassBox(
-          child: ListTile(
-            leading: CircleAvatar(child: Icon(Icons.auto_awesome)),
-            title: Text('اللحظات والقصص (24 ساعة)'),
-            subtitle: Text('شارك صورك وفيديوهاتك القصيرة وتفاعل مع الأصدقاء.'),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildChatTab() {
-    return ListView(
-      padding: const EdgeInsets.all(14),
-      children: const [
-        GlassBox(
-          child: ListTile(
-            leading: CircleAvatar(child: Icon(Icons.smart_toy_outlined)),
-            title: Text('فريق هلاا'),
-            subtitle: Text('أهلاً بك في تطبيق هلاا بنسخة Flutter الموحدة!'),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildProfileTab(HalaaThemePreset theme) {
+  Widget _momentsTab() {
     return ListView(
       padding: const EdgeInsets.all(14),
       children: [
-        GlassBox(
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color.fromRGBO(10, 30, 38, 0.72),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: const ListTile(
+            leading: CircleAvatar(child: Icon(Icons.auto_awesome)),
+            title: Text('اللحظات والقصص', style: TextStyle(color: Colors.white)),
+            subtitle: Text(
+              'شارك صورك ولحظاتك مع أصدقائك في هلاا.',
+              style: TextStyle(color: Color(0xFF99F6E4)),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _chatTab() {
+    return ListView(
+      padding: const EdgeInsets.all(14),
+      children: [
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color.fromRGBO(10, 30, 38, 0.72),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: const ListTile(
+            leading: CircleAvatar(child: Icon(Icons.chat_bubble_outline)),
+            title: Text('فريق هلاا', style: TextStyle(color: Colors.white)),
+            subtitle: Text(
+              'مرحباً بك في تطبيق هلاا بلغة Flutter!',
+              style: TextStyle(color: Color(0xFF99F6E4)),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _profileTab(HalaaThemePreset theme) {
+    return ListView(
+      padding: const EdgeInsets.all(14),
+      children: [
+        Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: const Color.fromRGBO(10, 30, 38, 0.74),
+            borderRadius: BorderRadius.circular(20),
+          ),
           child: Column(
             children: [
-              CircleAvatar(
-                radius: 34,
-                backgroundColor: theme.primary,
-                child: const Icon(Icons.person, size: 38, color: Colors.white),
-              ),
+              Image.asset('assets/images/halaa-clear.webp', height: 84),
               const SizedBox(height: 10),
               Text(
                 widget.displayName,
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 6),
               const Text(
-                'المستوى 1 • العملات الذهبية: 0 • الكريستال: 0',
-                style: TextStyle(fontSize: 12.5, color: Color(0xFFBAE6FD)),
+                'العملات الذهبية: 0 • الكريستال: 0',
+                style: TextStyle(color: Color(0xFF99F6E4)),
               ),
             ],
           ),

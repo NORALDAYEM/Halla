@@ -1,362 +1,445 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
-import '../../models/halaa_config.dart';
-import '../../theme/halaa_themes.dart';
-import '../../widgets/glass_box.dart';
-import '../../widgets/halaa_background.dart';
+import '../../models/halaa_models.dart';
+import '../../services/supabase_auth_service.dart';
+import '../../widgets/halaa_popups.dart';
+import '../../widgets/welcome_gallery_bg.dart';
 
-/// Matches the approved Halaa glassmorphic login screen:
-/// - Rotating welcome-gallery real-photo background
-/// - Translucent teal-blue "Halaa" & "ألعاب ودردشة" header
-/// - Solid yellow "وضع الضيف" button
-/// - Translucent sky-blue "جوجل" button with opaque turquoise "آخر تسجيل دخول" badge
-/// - Frosted glass "Facebook" button
-/// - Three frosted dark-sky-blue circular bottom icons (Support, Mail, Terms/Phone)
-class AppLoginScreen extends StatefulWidget {
+/// Exact pixel-faithful Flutter port of `halla-web/index.html` + `welcome-gallery.css`:
+/// - Rotating `welcome-gallery` real-photo background
+/// - Top-left golden-yellow `وضع الضيف` pill
+/// - Exact 3D logo `assets/images/halaa-clear.webp`
+/// - Exact 4 pill buttons: `تسجيل الدخول` (green), `تسجيل` (amber), `جيميل` (white-sky), `Facebook` (aqua-sky)
+/// - `نسيت كلمة المرور؟` link opening `#reset-options` popup
+/// - `─── أو ───` divider
+/// - 3 frosted dark-sky-blue circular icons: `الهاتف`, `شروط الخدمة`, `المساعدة`
+class AppLoginScreen extends StatelessWidget {
   final HalaaConfig config;
   final ValueChanged<String> onLoggedIn;
+  final ValueChanged<AppUserRecord> onRegisteredUser;
+  final ValueChanged<SupportTicket> onTicketCreated;
   final VoidCallback onOpenAdminPortal;
+  final SupabaseAuthService authService;
 
   const AppLoginScreen({
     super.key,
     required this.config,
     required this.onLoggedIn,
+    required this.onRegisteredUser,
+    required this.onTicketCreated,
     required this.onOpenAdminPortal,
+    required this.authService,
   });
 
-  @override
-  State<AppLoginScreen> createState() => _AppLoginScreenState();
-}
 
-class _AppLoginScreenState extends State<AppLoginScreen> {
-  void _showEmailDialog() {
-    final userCtrl = TextEditingController();
-    final passCtrl = TextEditingController();
-    String? errorMsg;
+  Future<void> _handleOAuth(BuildContext context, String provider) async {
+    final label = provider == 'google' ? 'جيميل (Google)' : 'فيسبوك';
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('جارٍ فتح تسجيل الدخول عبر $label...'),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+    final err = await authService.startOAuth(provider);
+    if (err != null && context.mounted) {
+      showHalaaGlassDialog<void>(
+        context: context,
+        title: 'الدخول عبر $label',
+        child: Text(
+          err,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            color: Color(0xFFDC2626),
+            fontWeight: FontWeight.w700,
+            fontSize: 14,
+          ),
+        ),
+      );
+    }
+  }
 
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
-          backgroundColor: const Color(0xFF071B2B),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: const BorderSide(color: Color.fromRGBO(56, 189, 248, 0.35)),
-          ),
-          title: const Text(
-            'الدخول بالبريد الإلكتروني',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: userCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'البريد الإلكتروني أو اسم المستخدم',
-                  border: OutlineInputBorder(),
+  Widget _pillButton({
+    required String label,
+    required List<Color> gradientColors,
+    required Color textColor,
+    required Widget icon,
+    required VoidCallback onTap,
+    Color borderColor = const Color(0x90FFFFFF),
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(999),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(999),
+            child: Container(
+              height: 51,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.centerRight,
+                  end: Alignment.centerLeft,
+                  colors: gradientColors,
                 ),
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: passCtrl,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'كلمة المرور',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              if (errorMsg != null) ...[
-                const SizedBox(height: 10),
-                Text(
-                  errorMsg!,
-                  style: const TextStyle(
-                    color: Color(0xFFDC2626),
-                    fontWeight: FontWeight.w700,
-                    fontSize: 13,
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(color: borderColor),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x24257988),
+                    blurRadius: 13,
+                    offset: Offset(0, 5),
                   ),
-                ),
-              ],
-            ],
+                ],
+              ),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Positioned(right: 16, child: icon),
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                      color: textColor,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('إلغاء'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final u = userCtrl.text.trim();
-                final p = passCtrl.text.trim();
-                if (u.isEmpty) {
-                  setDialogState(() => errorMsg = 'اسم المستخدم غير صحيح');
-                  return;
-                }
-                if (p.length < 4) {
-                  setDialogState(() => errorMsg = 'كلمة المرور غير صحيحة');
-                  return;
-                }
-                Navigator.pop(ctx);
-                widget.onLoggedIn(u);
-              },
-              child: const Text('دخول'),
-            ),
-          ],
         ),
       ),
     );
   }
 
-  Widget _bottomCircleIcon({
+  Widget _bottomOption({
+    required String label,
     required IconData icon,
-    required String tooltip,
+    required Color iconColor,
     required VoidCallback onTap,
   }) {
-    return Tooltip(
-      message: tooltip,
-      child: InkWell(
-        onTap: onTap,
-        customBorder: const CircleBorder(),
-        child: Container(
-          width: 52,
-          height: 52,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Color.fromRGBO(12, 74, 110, 0.58),
-                Color.fromRGBO(7, 89, 133, 0.46),
-              ],
-            ),
-            border: Border.all(
-              color: const Color.fromRGBO(125, 211, 252, 0.35),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ClipOval(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+              child: Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color.fromRGBO(12, 74, 110, 0.58),
+                      Color.fromRGBO(7, 89, 133, 0.46),
+                    ],
+                  ),
+                  border: Border.all(
+                    color: const Color.fromRGBO(125, 211, 252, 0.48),
+                  ),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color.fromRGBO(7, 45, 72, 0.35),
+                      blurRadius: 14,
+                      offset: Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: Icon(icon, color: iconColor, size: 28),
+              ),
             ),
           ),
-          child: Icon(icon, color: Colors.white, size: 24),
-        ),
+          const SizedBox(height: 6),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF172F36),
+              shadows: [
+                Shadow(color: Colors.white, blurRadius: 4),
+                Shadow(color: Colors.white, blurRadius: 8),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = findThemePreset(widget.config.activeTheme);
-
     return Scaffold(
-      body: HalaaBackground(
-        images: widget.config.bgImages,
-        rotationSeconds: widget.config.rotationSeconds,
-        theme: theme,
+      body: WelcomeGalleryBackground(
+        images: config.bgImages,
+        rotationSeconds: config.rotationSeconds,
         child: SafeArea(
           child: Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 420),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 22,
-                  vertical: 16,
-                ),
-                child: Column(
-                  children: [
-                    Align(
-                      alignment: Alignment.topLeft,
-                      child: IconButton(
-                        tooltip: 'بوابة الإدارة',
-                        onPressed: widget.onOpenAdminPortal,
-                        icon: const Icon(
-                          Icons.admin_panel_settings_outlined,
-                          color: Color.fromRGBO(186, 230, 253, 0.78),
+              constraints: const BoxConstraints(maxWidth: 540),
+              child: Stack(
+                children: [
+                  SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 16,
+                    ),
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 28),
+                        // Exact 3D Halaa Logo from assets/images/halaa-clear.webp
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(
+                            maxHeight: 250,
+                            maxWidth: 250,
+                          ),
+                          child: Image.asset(
+                            'assets/images/halaa-clear.webp',
+                            fit: BoxFit.contain,
+                          ),
                         ),
-                      ),
-                    ),
-                    const Spacer(),
-                    // Logo + Translucent teal-blue title
-                    Container(
-                      width: 96,
-                      height: 96,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: LinearGradient(
-                          colors: [theme.primary, const Color(0xFFF59E0B)],
+                        const SizedBox(height: 18),
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 360),
+                          child: Column(
+                            children: [
+                              // 1. تسجيل الدخول (Green translucent pill)
+                              _pillButton(
+                                label: 'تسجيل الدخول',
+                                gradientColors: const [
+                                  Color.fromRGBO(18, 104, 60, 0.65),
+                                  Color.fromRGBO(22, 132, 78, 0.56),
+                                ],
+                                textColor: Colors.white,
+                                icon: const Icon(
+                                  Icons.login_rounded,
+                                  color: Colors.white,
+                                  size: 24,
+                                ),
+                                onTap: () => showEmailAccessPopup(
+                                  context: context,
+                                  isSignup: false,
+                                  onSuccess: (u) => onLoggedIn(u.nickname),
+                                ),
+                              ),
+                              // 2. تسجيل (Amber/orange translucent pill)
+                              _pillButton(
+                                label: 'تسجيل',
+                                gradientColors: const [
+                                  Color.fromRGBO(161, 64, 9, 0.65),
+                                  Color.fromRGBO(187, 83, 11, 0.56),
+                                ],
+                                textColor: Colors.white,
+                                icon: const Icon(
+                                  Icons.person_add_alt_1_rounded,
+                                  color: Colors.white,
+                                  size: 24,
+                                ),
+                                onTap: () => showEmailAccessPopup(
+                                  context: context,
+                                  isSignup: true,
+                                  onSuccess: (u) {
+                                    onRegisteredUser(u);
+                                    onLoggedIn(u.nickname);
+                                  },
+                                ),
+                              ),
+                              // 3. جيميل (Frosted white-sky pill)
+                              _pillButton(
+                                label: 'جيميل',
+                                gradientColors: const [
+                                  Color(0xA8FFFFFF),
+                                  Color(0x80E4F7FF),
+                                ],
+                                textColor: const Color(0xFF111111),
+                                icon: const Icon(
+                                  Icons.mail_rounded,
+                                  color: Color(0xFFEA4335),
+                                  size: 26,
+                                ),
+                                onTap: () => _handleOAuth(context, 'google'),
+                              ),
+                              // 4. Facebook (Frosted aqua-sky pill)
+                              _pillButton(
+                                label: 'Facebook',
+                                gradientColors: const [
+                                  Color(0xADEDFFFA),
+                                  Color(0x99B9E9F3),
+                                ],
+                                textColor: const Color(0xFF111111),
+                                icon: const CircleAvatar(
+                                  radius: 15,
+                                  backgroundColor: Color(0xFF0866FF),
+                                  child: Icon(
+                                    Icons.facebook_rounded,
+                                    color: Colors.white,
+                                    size: 22,
+                                  ),
+                                ),
+                                onTap: () => _handleOAuth(context, 'facebook'),
+                              ),
+                              // Forgot password link
+                              TextButton(
+                                onPressed: () =>
+                                    showResetPasswordPopup(context),
+                                child: const Text(
+                                  'نسيت كلمة المرور؟',
+                                  style: TextStyle(
+                                    color: Color(0xFF174955),
+                                    fontWeight: FontWeight.w700,
+                                    decoration: TextDecoration.underline,
+                                    shadows: [
+                                      Shadow(color: Colors.white, blurRadius: 4),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              // Divider: أو
+                              const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 8),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    SizedBox(
+                                      width: 54,
+                                      child: Divider(
+                                        color: Color(0xFFDEEAEB),
+                                        thickness: 1.2,
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                      ),
+                                      child: Text(
+                                        'أو',
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w700,
+                                          color: Color(0xFF172F36),
+                                          shadows: [
+                                            Shadow(
+                                              color: Colors.white,
+                                              blurRadius: 4,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      width: 54,
+                                      child: Divider(
+                                        color: Color(0xFFDEEAEB),
+                                        thickness: 1.2,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              // 3 Frosted Dark-Sky-Blue Circular Bottom Icons
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  _bottomOption(
+                                    label: 'الهاتف',
+                                    icon: Icons.phone_android_rounded,
+                                    iconColor: const Color(0xFF35B394),
+                                    onTap: () => onLoggedIn('الدخول بالهاتف'),
+                                  ),
+                                  const SizedBox(width: 28),
+                                  _bottomOption(
+                                    label: 'شروط الخدمة',
+                                    icon: Icons.error_outline_rounded,
+                                    iconColor: const Color(0xFFEFBD45),
+                                    onTap: () =>
+                                        showServiceTermsPopup(context),
+                                  ),
+                                  const SizedBox(width: 28),
+                                  _bottomOption(
+                                    label: 'المساعدة',
+                                    icon: Icons.support_agent_rounded,
+                                    iconColor: const Color(0xFF38BDF8),
+                                    onTap: () => showSupportPopup(
+                                      context: context,
+                                      existingTickets: config.tickets,
+                                      onTicketCreated: onTicketCreated,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                            ],
+                          ),
                         ),
-                        border: Border.all(
-                          color: const Color.fromRGBO(255, 255, 255, 0.55),
-                          width: 2.5,
+                      ],
+                    ),
+                  ),
+                  // Top-left exact golden-yellow `وضع الضيف` pill
+                  Positioned(
+                    top: 12,
+                    left: 14,
+                    child: InkWell(
+                      onTap: () => onLoggedIn('وضع الضيف'),
+                      borderRadius: BorderRadius.circular(18),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 6,
                         ),
-                      ),
-                      child: const Icon(
-                        Icons.mic_rounded,
-                        size: 50,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    Text(
-                      'Halaa',
-                      style: TextStyle(
-                        fontSize: 38,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 1.2,
-                        color: const Color.fromRGBO(56, 189, 248, 0.88),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      'ألعاب ودردشة',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: Color.fromRGBO(125, 211, 252, 0.85),
-                      ),
-                    ),
-                    const Spacer(),
-                    // Solid Yellow Guest Button
-                    SizedBox(
-                      width: double.infinity,
-                      height: 52,
-                      child: ElevatedButton.icon(
-                        onPressed: () => widget.onLoggedIn('ضيف هلاا'),
-                        icon: const Icon(Icons.person_outline_rounded),
-                        label: const Text(
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Color(0xC9FFF28A),
+                              Color(0xC9FFCD37),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(color: const Color(0xFFAD831C)),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Color(0x40605016),
+                              blurRadius: 10,
+                              offset: Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: const Text(
                           'وضع الضيف',
                           style: TextStyle(
-                            fontSize: 16,
+                            color: Color(0xFF30250A),
+                            fontSize: 13,
                             fontWeight: FontWeight.w800,
                           ),
                         ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFFACC15),
-                          foregroundColor: const Color(0xFF0F172A),
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(18),
-                          ),
-                        ),
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    // Translucent Sky-Blue Google Button + Opaque Turquoise Badge
-                    Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        SizedBox(
-                          width: double.infinity,
-                          height: 52,
-                          child: ElevatedButton.icon(
-                            onPressed: () => widget.onLoggedIn('حساب Google'),
-                            icon: const Icon(Icons.g_mobiledata_rounded, size: 30),
-                            label: const Text(
-                              'جوجل',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor:
-                                  const Color.fromRGBO(14, 165, 233, 0.45),
-                              foregroundColor: Colors.white,
-                              elevation: 0,
-                              side: const BorderSide(
-                                color: Color.fromRGBO(125, 211, 252, 0.55),
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(18),
-                              ),
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          top: -10,
-                          left: 14,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 3,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF06B6D4),
-                              borderRadius: BorderRadius.circular(99),
-                            ),
-                            child: const Text(
-                              'آخر تسجيل دخول',
-                              style: TextStyle(
-                                fontSize: 10.5,
-                                fontWeight: FontWeight.w800,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    // Frosted Glass Facebook Button
-                    GlassBox(
-                      padding: EdgeInsets.zero,
-                      borderRadius: 18,
-                      fillColor: const Color.fromRGBO(255, 255, 255, 0.14),
-                      borderColor: const Color.fromRGBO(255, 255, 255, 0.30),
-                      child: SizedBox(
-                        width: double.infinity,
-                        height: 52,
-                        child: TextButton.icon(
-                          onPressed: () => widget.onLoggedIn('حساب Facebook'),
-                          icon: const Icon(
-                            Icons.facebook_rounded,
-                            color: Colors.white,
-                          ),
-                          label: const Text(
-                            'Facebook',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
+                  ),
+                  // Subtle top-right admin portal button
+                  Positioned(
+                    top: 8,
+                    right: 10,
+                    child: IconButton(
+                      tooltip: 'إدارة هلاا',
+                      onPressed: onOpenAdminPortal,
+                      icon: const Icon(
+                        Icons.admin_panel_settings_outlined,
+                        color: Color(0xFF174955),
                       ),
                     ),
-                    const SizedBox(height: 22),
-                    // Three Frosted Dark-Sky-Blue Circular Bottom Icons
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        _bottomCircleIcon(
-                          icon: Icons.support_agent_rounded,
-                          tooltip: 'الدعم الفني',
-                          onTap: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('فريق الدعم الفني متاح على مدار الساعة.'),
-                              ),
-                            );
-                          },
-                        ),
-                        const SizedBox(width: 20),
-                        _bottomCircleIcon(
-                          icon: Icons.mail_outline_rounded,
-                          tooltip: 'الدخول بالبريد',
-                          onTap: _showEmailDialog,
-                        ),
-                        const SizedBox(width: 20),
-                        _bottomCircleIcon(
-                          icon: Icons.phone_in_talk_outlined,
-                          tooltip: 'الهاتف وشروط الخدمة',
-                          onTap: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('بتسجيل دخولك فإنك توافق على شروط خدمة هلاا.'),
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),

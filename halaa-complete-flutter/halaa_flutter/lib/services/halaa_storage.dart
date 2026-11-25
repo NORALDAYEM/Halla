@@ -1,55 +1,37 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import '../models/halaa_config.dart';
+import '../models/halaa_models.dart';
 
 class HalaaStorage {
-  static const _configKey = 'halla.flutter.live_config.v2';
-  static const _adminUserKey = 'halla.flutter.admin_user.v2';
-  static const _memberUserKey = 'halla.flutter.member_user.v2';
-  static const _logsKey = 'halla.flutter.logs.v2';
+  static const _cfgKey = 'halla.exact.flutter.config.v3';
+  static const _adminAuthKey = 'halla.exact.flutter.admin.v3';
+  static const _memberAuthKey = 'halla.exact.flutter.member.v3';
+  static const _logsKey = 'halla.exact.flutter.logs.v3';
 
-  Future<HalaaConfig> loadConfig({bool isAdminSubpath = false}) async {
+  Future<HalaaConfig> loadConfig() async {
     final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_configKey);
+    final raw = prefs.getString(_cfgKey);
     if (raw != null && raw.isNotEmpty) {
       try {
         final decoded = jsonDecode(raw);
         if (decoded is Map<String, dynamic>) {
-          return HalaaConfig.fromJson(decoded, isAdminSubpath: isAdminSubpath);
+          return HalaaConfig.fromJson(decoded);
         }
       } catch (_) {}
     }
-    return HalaaConfig.defaults(isAdminSubpath: isAdminSubpath);
+    return HalaaConfig.defaults();
   }
 
   Future<void> saveConfig(HalaaConfig cfg) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_configKey, jsonEncode(cfg.toJson()));
-  }
-
-  Future<HalaaConfig?> fetchRemoteConfig({
-    required String url,
-    bool isAdminSubpath = false,
-  }) async {
-    try {
-      final resp = await http
-          .get(Uri.parse(url))
-          .timeout(const Duration(seconds: 6));
-      if (resp.statusCode == 200) {
-        final decoded = jsonDecode(utf8.decode(resp.bodyBytes));
-        if (decoded is Map<String, dynamic>) {
-          return HalaaConfig.fromJson(decoded, isAdminSubpath: isAdminSubpath);
-        }
-      }
-    } catch (_) {}
-    return null;
+    await prefs.setString(_cfgKey, jsonEncode(cfg.toJson()));
   }
 
   Future<String> pushToServer(HalaaConfig cfg, String token) async {
-    final endpoint = cfg.serverEndpoint.trim();
-    if (endpoint.isEmpty) {
-      return 'تم الحفظ محلياً بنجاح (أدخل رابط السيرفر للبث المباشر).';
+    final url = cfg.serverEndpoint.trim();
+    if (url.isEmpty) {
+      return 'تم حفظ التعديلات وتطبيقها محلياً بنجاح.';
     }
     try {
       final headers = <String, String>{'Content-Type': 'application/json'};
@@ -57,68 +39,57 @@ class HalaaStorage {
         headers['Authorization'] = 'Bearer ${token.trim()}';
       }
       final resp = await http
-          .post(
-            Uri.parse(endpoint),
-            headers: headers,
-            body: jsonEncode(cfg.toJson()),
-          )
+          .post(Uri.parse(url), headers: headers, body: jsonEncode(cfg.toJson()))
           .timeout(const Duration(seconds: 12));
       if (resp.statusCode >= 200 && resp.statusCode < 300) {
-        return 'تم الحفظ والبث الفوري إلى السيرفر بنجاح (${resp.statusCode}).';
+        return 'تم الحفظ والبث الفوري للسيرفر بنجاح (${resp.statusCode}).';
       }
       return 'تم الحفظ محلياً، واستجاب السيرفر بالرمز ${resp.statusCode}.';
     } catch (e) {
-      return 'تم الحفظ محلياً، وتعذّر الاتصال بالسيرفر: $e';
+      return 'تم الحفظ محلياً، وتعذّر الوصول للسيرفر: $e';
     }
   }
 
-  Future<String?> getAdminUser() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_adminUserKey);
-  }
+  Future<String?> getAdminUser() async =>
+      (await SharedPreferences.getInstance()).getString(_adminAuthKey);
 
-  Future<void> setAdminUser(String? user) async {
-    final prefs = await SharedPreferences.getInstance();
-    if (user == null) {
-      await prefs.remove(_adminUserKey);
+  Future<void> setAdminUser(String? u) async {
+    final p = await SharedPreferences.getInstance();
+    if (u == null) {
+      await p.remove(_adminAuthKey);
     } else {
-      await prefs.setString(_adminUserKey, user);
+      await p.setString(_adminAuthKey, u);
     }
   }
 
-  Future<String?> getMemberUser() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_memberUserKey);
-  }
+  Future<String?> getMemberUser() async =>
+      (await SharedPreferences.getInstance()).getString(_memberAuthKey);
 
-  Future<void> setMemberUser(String? user) async {
-    final prefs = await SharedPreferences.getInstance();
-    if (user == null) {
-      await prefs.remove(_memberUserKey);
+  Future<void> setMemberUser(String? u) async {
+    final p = await SharedPreferences.getInstance();
+    if (u == null) {
+      await p.remove(_memberAuthKey);
     } else {
-      await prefs.setString(_memberUserKey, user);
+      await p.setString(_memberAuthKey, u);
     }
   }
 
   Future<List<String>> loadLogs() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList(_logsKey) ??
+    final p = await SharedPreferences.getInstance();
+    return p.getStringList(_logsKey) ??
         const [
-          'تشغيل تطبيق هلاا ولوحة الإدارة بالكامل بلغة Flutter',
+          'تفعيل نسخة هلاا الكاملة بلغة Flutter بنفس الشعار والخلفيات والشاشات المنبثقة',
           'النسخ الاحتياطي التلقائي مفعّل مع سحابة IDrive e2 (حاوية halla)',
         ];
   }
 
   Future<void> addLog(String message) async {
-    final prefs = await SharedPreferences.getInstance();
-    final existing = prefs.getStringList(_logsKey) ?? <String>[];
+    final p = await SharedPreferences.getInstance();
+    final list = p.getStringList(_logsKey) ?? <String>[];
     final now = DateTime.now().toLocal();
-    final ts =
+    final stamp =
         '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')} '
         '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
-    await prefs.setStringList(
-      _logsKey,
-      ['[$ts] $message', ...existing].take(50).toList(),
-    );
+    await p.setStringList(_logsKey, ['[$stamp] $message', ...list].take(50).toList());
   }
 }

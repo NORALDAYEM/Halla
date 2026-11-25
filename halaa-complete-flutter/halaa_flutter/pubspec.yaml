@@ -1,7 +1,7 @@
 name: halaa_complete
-description: Halaa Voice Chat, Multiplayer Games & Admin Panel — Full Flutter (Dart) Application.
+description: Halaa Voice Chat, Multiplayer Games & Admin Panel — Pixel-Faithful Flutter (Dart) App.
 publish_to: 'none'
-version: 2.0.0+1
+version: 3.0.0+1
 
 environment:
   sdk: '>=3.2.0 <4.0.0'
@@ -13,6 +13,7 @@ dependencies:
     sdk: flutter
   http: ^1.2.2
   shared_preferences: ^2.3.2
+  url_launcher: ^6.3.1
 
 dev_dependencies:
   flutter_test:
@@ -21,3 +22,12 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/images/halaa-clear.webp
+    - assets/images/welcome-gallery/pool-friends.webp
+    - assets/images/welcome-gallery/chessboard.webp
+    - assets/images/welcome-gallery/ludo-friends.webp
+    - assets/images/welcome-gallery/pool-table.webp
+    - assets/images/welcome-gallery/game-table.webp
+    - assets/images/welcome-gallery/chess-pieces.webp
+    - assets/images/welcome-gallery/headphones.webp
