@@ -312,7 +312,7 @@ class _MemberHomeScreenState extends State<MemberHomeScreen> {
                         ),
                       ),
                     ],
-                  )),;
+                  ));
                 }),
               ),
             ],
