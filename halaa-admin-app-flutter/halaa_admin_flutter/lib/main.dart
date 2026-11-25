@@ -5,6 +5,7 @@ import 'screens/admin/admin_dashboard_screen.dart';
 import 'screens/admin/admin_login_screen.dart';
 import 'services/halaa_storage.dart';
 import 'theme/halaa_themes.dart';
+import 'widgets/app_update_gate.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -69,7 +70,11 @@ class _HalaaAdminStandaloneAppState extends State<HalaaAdminStandaloneApp> {
           brightness: Brightness.dark,
         ),
       ),
-      home: !_ready
+      home: AppUpdateGate(
+        appKey: 'admin_app',
+        currentVersion: '3.1.1',
+        currentBuild: 2,
+        child: !_ready
           ? const Scaffold(body: Center(child: CircularProgressIndicator()))
           : (_adminUser == null
               ? AdminLoginScreen(
@@ -95,6 +100,7 @@ class _HalaaAdminStandaloneAppState extends State<HalaaAdminStandaloneApp> {
                     setState(() => _adminUser = null);
                   },
                 )),
+      ),
     );
   }
 }
