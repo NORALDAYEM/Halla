@@ -102,7 +102,7 @@ class _WelcomeGalleryBackgroundState extends State<WelcomeGalleryBackground>
                 final isAltColor = (i + 1) % 3 == 0;
                 final isSmall = (i + 1) % 2 == 0;
                 return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 2.5),
+                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
                   child: Transform.translate(
                     offset: Offset(0, dy),
                     child: Transform.rotate(
@@ -110,7 +110,7 @@ class _WelcomeGalleryBackgroundState extends State<WelcomeGalleryBackground>
                       child: Text(
                         notes[i],
                         style: TextStyle(
-                          fontSize: isSmall ? 18 : 22,
+                          fontSize: isSmall ? 24 : 30,
                           fontWeight: FontWeight.w700,
                           color: isAltColor
                               ? const Color(0xFF54649F)
@@ -206,7 +206,7 @@ class _WelcomeGalleryBackgroundState extends State<WelcomeGalleryBackground>
           ),
           widget.child,
           Positioned(
-            top: MediaQuery.of(context).padding.top + 56,
+            top: MediaQuery.of(context).padding.top + 24,
             left: 0,
             right: 0,
             child: Center(child: _buildFloatingMelody()),
