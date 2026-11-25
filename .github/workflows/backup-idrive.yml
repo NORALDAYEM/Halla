@@ -1,0 +1,55 @@
+name: Backup Halla Repository to IDrive e2
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  backup-to-idrive-e2:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify IDrive e2 secrets
+        env:
+          IDRIVE_ACCESS_KEY: ${{ secrets.IDRIVE_ACCESS_KEY }}
+          IDRIVE_SECRET_KEY: ${{ secrets.IDRIVE_SECRET_KEY }}
+        run: |
+          if [ -z "$IDRIVE_ACCESS_KEY" ] || [ -z "$IDRIVE_SECRET_KEY" ]; then
+            echo "Missing required secrets: IDRIVE_ACCESS_KEY or IDRIVE_SECRET_KEY."
+            exit 1
+          fi
+
+      - name: Sync repository files and upload ZIP snapshot to IDrive e2
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.IDRIVE_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.IDRIVE_SECRET_KEY }}
+          AWS_DEFAULT_REGION: us-west-4
+          AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+          AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
+          IDRIVE_ENDPOINT: ${{ secrets.IDRIVE_ENDPOINT || 'https://s3.us-west-4.idrivee2.com' }}
+          IDRIVE_BUCKET: ${{ secrets.IDRIVE_BUCKET || 'halla' }}
+        run: |
+          set -euo pipefail
+
+          ENDPOINT="$IDRIVE_ENDPOINT"
+          if [[ "$ENDPOINT" != http://* && "$ENDPOINT" != https://* ]]; then
+            ENDPOINT="https://$ENDPOINT"
+          fi
+
+          aws s3 sync . "s3://${IDRIVE_BUCKET}/github-backup/latest/" \
+            --endpoint-url "$ENDPOINT" \
+            --exclude ".git/*"
+
+          TIMESTAMP=$(date -u +"%Y%m%d-%H%M%S")
+          ARCHIVE_NAME="halla-main-${TIMESTAMP}.zip"
+          zip -r "/tmp/${ARCHIVE_NAME}" . -x ".git/*"
+
+          aws s3 cp "/tmp/${ARCHIVE_NAME}" "s3://${IDRIVE_BUCKET}/github-backup/snapshots/${ARCHIVE_NAME}" \
+            --endpoint-url "$ENDPOINT"
+
+          echo "Backup completed to bucket '${IDRIVE_BUCKET}' on ${ENDPOINT}"
