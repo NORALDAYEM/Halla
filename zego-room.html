@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>غرفة هلا الصوتية | ZEGOCLOUD</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+    body { background: #071b21; color: #f8fafc; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: #0b2c36; border-bottom: 1px solid rgba(0,212,255,0.22); }
+    .topbar h1 { font-size: 15px; color: #00d4ff; }
+    .badge { font-size: 11px; background: rgba(17,139,151,0.3); border: 1px solid #118b97; padding: 3px 9px; border-radius: 999px; }
+    #root { flex: 1; width: 100%; position: relative; }
+    .setup-box { max-width: 440px; margin: 32px auto; background: #0d2b35; border: 1px solid rgba(0,212,255,0.25); border-radius: 16px; padding: 20px; }
+    .setup-box h2 { font-size: 16px; margin-bottom: 8px; color: #00d4ff; }
+    .setup-box p { font-size: 13px; color: #cbd5e1; line-height: 1.6; margin-bottom: 12px; }
+    .setup-box input, .setup-box textarea { width: 100%; background: #06171d; color: #fff; border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; padding: 10px; margin-bottom: 10px; font-size: 13px; }
+    .setup-box button { width: 100%; background: #118b97; color: #fff; border: none; border-radius: 12px; padding: 12px; font-size: 14px; font-weight: 700; cursor: pointer; }
+    .setup-box button:hover { background: #0e747e; }
+    .err { color: #fca5a5; font-size: 12.5px; margin-top: 8px; }
+  </style>
+  <script src="https://unpkg.com/@zegocloud/zego-uikit-prebuilt/zego-uikit-prebuilt.js"></script>
+</head>
+<body>
+  <div class="topbar">
+    <h1 id="roomTitle">غرفة هلا الصوتية</h1>
+    <span class="badge" id="metaBadge">AppID: 400719759</span>
+  </div>
+  <div id="root"></div>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const appID = Number(params.get('appID') || 400719759);
+    const roomID = params.get('roomID') || 'halaa_main_room';
+    const userID = params.get('userID') || ('halaa_' + Math.floor(10000 + Math.random() * 90000));
+    const userName = params.get('userName') || 'عضو هلا';
+    const roleParam = (params.get('role') || 'Host').toLowerCase();
+    const tokenEndpoint = params.get('tokenEndpoint') || '';
+    const urlToken = params.get('token') || '';
+    const title = params.get('title') || ('غرفة هلا: ' + roomID);
+
+    document.getElementById('roomTitle').textContent = title;
+    document.getElementById('metaBadge').textContent = 'AppID: ' + appID + ' • ' + roomID;
+
+    async function joinWithToken(token) {
+      const root = document.getElementById('root');
+      root.innerHTML = '';
+      const kitToken = ZegoUIKitPrebuilt.generateKitTokenForProduction(
+        appID, token.trim(), roomID, userID, userName
+      );
+      const role = roleParam === 'audience'
+        ? ZegoUIKitPrebuilt.Audience
+        : ZegoUIKitPrebuilt.Host;
+      const zp = ZegoUIKitPrebuilt.create(kitToken);
+      zp.joinRoom({
+        container: root,
+        scenario: { mode: ZegoUIKitPrebuilt.LiveStreaming, config: { role } },
+        turnOnCameraWhenJoining: false,
+        showMyCameraToggleButton: false,
+        showScreenSharingButton: false,
+        turnOnMicrophoneWhenJoining: role === ZegoUIKitPrebuilt.Host,
+        showTextChat: true,
+        showUserList: true,
+        showPreJoinView: true
+      });
+    }
+
+    function showTokenPrompt(errMsg) {
+      const saved = localStorage.getItem('halaa_zego_temp_token') || '';
+      document.getElementById('root').innerHTML = `
+        <div class="setup-box">
+          <h2>تفعيل الاتصال الصوتي (ZEGOCLOUD)</h2>
+          <p>الصق <b>الرمز المؤقت (Token)</b> من لوحة تحكم ZEGOCLOUD (أدوات التطوير ← أدوات الرموز المميزة) للدخول الفوري إلى الغرفة <b>${roomID}</b> باسم <b>${userName}</b>.</p>
+          <textarea id="tokInput" rows="3" placeholder="الصق التوكن هنا...">${saved}</textarea>
+          <button id="joinBtn">دخول الغرفة الصوتية الآن</button>
+          ${errMsg ? '<div class="err">' + errMsg + '</div>' : ''}
+        </div>
+      `;
+      document.getElementById('joinBtn').onclick = () => {
+        const val = document.getElementById('tokInput').value.trim();
+        if (!val) return;
+        localStorage.setItem('halaa_zego_temp_token', val);
+        joinWithToken(val);
+      };
+    }
+
+    (async function boot() {
+      if (urlToken) return joinWithToken(urlToken);
+      if (tokenEndpoint) {
+        try {
+          const u = tokenEndpoint + '?roomId=' + encodeURIComponent(roomID) + '&userId=' + encodeURIComponent(userID);
+          const res = await fetch(u);
+          if (res.ok) {
+            const data = await res.json();
+            if (data && data.token) return joinWithToken(data.token);
+          }
+        } catch (e) {}
+      }
+      const saved = localStorage.getItem('halaa_zego_temp_token');
+      if (saved) return joinWithToken(saved);
+      showTokenPrompt('');
+    })();
+  </script>
+</body>
+</html>
