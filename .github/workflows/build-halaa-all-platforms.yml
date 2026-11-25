@@ -5,8 +5,8 @@ on:
     branches:
       - main
     paths:
-      - 'halaa_user_flutter/**'
-      - 'halaa_admin_flutter/**'
+      - 'halaa-user-app-flutter/halaa_user_flutter/**'
+      - 'halaa-admin-app-flutter/halaa_admin_flutter/**'
   workflow_dispatch:
 
 permissions:
@@ -33,22 +33,22 @@ jobs:
           cache: true
 
       - name: Build Halaa User App (Web + Android APK)
-        working-directory: halaa_user_flutter
+        working-directory: halaa-user-app-flutter/halaa_user_flutter
         run: |
           flutter create --platforms=android --org com.halla --project-name halaa_user_app .
           flutter pub get
           flutter build web --release --base-href "/Halla/halla-web/"
           flutter build apk --release
-          cp build/app/outputs/flutter-apk/app-release.apk ../Halaa-App-Android.apk
+          cp build/app/outputs/flutter-apk/app-release.apk ../../Halaa-App-Android.apk
 
       - name: Build Halaa Admin App (Web + Android APK)
-        working-directory: halaa_admin_flutter
+        working-directory: halaa-admin-app-flutter/halaa_admin_flutter
         run: |
           flutter create --platforms=android --org com.halla --project-name halaa_admin_app .
           flutter pub get
           flutter build web --release --base-href "/Halla/admin/"
           flutter build apk --release
-          cp build/app/outputs/flutter-apk/app-release.apk ../Halaa-Admin-Android.apk
+          cp build/app/outputs/flutter-apk/app-release.apk ../../Halaa-Admin-Android.apk
 
       - name: Upload Android APK Installers (App & Admin)
         uses: actions/upload-artifact@v4
@@ -61,8 +61,8 @@ jobs:
       - name: Deploy Separate Web Builds to halla-web/ and admin/
         run: |
           rm -rf halla-web/* admin/*
-          cp -r halaa_user_flutter/build/web/* halla-web/
-          cp -r halaa_admin_flutter/build/web/* admin/
+          cp -r halaa-user-app-flutter/halaa_user_flutter/build/web/* halla-web/
+          cp -r halaa-admin-app-flutter/halaa_admin_flutter/build/web/* admin/
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add halla-web/ admin/
@@ -86,25 +86,25 @@ jobs:
           cache: true
 
       - name: Build Halaa User App (iPhone unsigned IPA)
-        working-directory: halaa_user_flutter
+        working-directory: halaa-user-app-flutter/halaa_user_flutter
         run: |
           flutter create --platforms=ios --org com.halla --project-name halaa_user_app .
           flutter pub get
           flutter build ios --release --no-codesign
           mkdir -p Payload
           cp -r build/ios/iphoneos/Runner.app Payload/
-          zip -r ../Halaa-App-iPhone-unsigned.ipa Payload
+          zip -r ../../Halaa-App-iPhone-unsigned.ipa Payload
           rm -rf Payload
 
       - name: Build Halaa Admin App (iPhone unsigned IPA)
-        working-directory: halaa_admin_flutter
+        working-directory: halaa-admin-app-flutter/halaa_admin_flutter
         run: |
           flutter create --platforms=ios --org com.halla --project-name halaa_admin_app .
           flutter pub get
           flutter build ios --release --no-codesign
           mkdir -p Payload
           cp -r build/ios/iphoneos/Runner.app Payload/
-          zip -r ../Halaa-Admin-iPhone-unsigned.ipa Payload
+          zip -r ../../Halaa-Admin-iPhone-unsigned.ipa Payload
           rm -rf Payload
 
       - name: Upload iPhone IPA Installers (App & Admin)
