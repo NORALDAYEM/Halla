@@ -1,7 +1,7 @@
 name: halaa_admin_app
 description: تطبيق إدارة هلاا المستقل — Android / iOS / Web.
 publish_to: 'none'
-version: 3.1.0+1
+version: 3.1.1+2
 
 environment:
   sdk: '>=3.2.0 <4.0.0'
@@ -13,6 +13,7 @@ dependencies:
     sdk: flutter
   http: ^1.2.2
   shared_preferences: ^2.3.2
+  url_launcher: ^6.3.1
 
 dev_dependencies:
   flutter_test:
