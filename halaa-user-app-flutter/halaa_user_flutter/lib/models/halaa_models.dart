@@ -254,7 +254,7 @@ class HalaaConfig {
         disableCopy: true,
         enableGlow: true,
         pullOnlyRefresh: true,
-        serverEndpoint: '',
+        serverEndpoint: 'https://halla.onrender.com',
         coinRatePerUsd: 1000,
         crystalRatePerUsd: 100,
         bgImages: kDefaultGallery,
