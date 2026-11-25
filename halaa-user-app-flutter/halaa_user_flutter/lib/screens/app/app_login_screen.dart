@@ -69,6 +69,50 @@ class AppLoginScreen extends StatelessWidget {
     );
   }
 
+  Future<void> _startSocialOAuth(
+    BuildContext context,
+    String provider,
+    String providerLabel,
+  ) async {
+    final err = await authService.startOAuth(provider);
+    if (!context.mounted) return;
+    if (err != null && err.isNotEmpty) {
+      showHalaaGlassDialog(
+        context: context,
+        title: providerLabel,
+        body: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              err,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 13.5,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF00D4FF),
+                  foregroundColor: const Color(0xFF091B2E),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                child: const Text('حسناً'),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
   void _showPhoneComingSoonDialog(BuildContext context) {
     final phoneCtrl = TextEditingController();
     showHalaaGlassDialog<void>(
@@ -397,10 +441,11 @@ class AppLoginScreen extends StatelessWidget {
                                       ],
                                       textColor: const Color(0xFF111111),
                                       icon: const GmailLogoIcon(size: 28),
-                                      onTap: () => _showProviderComingSoon(
-                                        context,
-                                        'جيميل (Google)',
-                                      ),
+                                      onTap: () => _startSocialOAuth(
+                                      context,
+                                      'google',
+                                      'Google (Gmail)',
+                                    ),
                                     ),
                                     // 4. Facebook (Frosted aqua-sky pill + exact #0866FF Facebook logo)
                                     _pillButton(
@@ -412,8 +457,9 @@ class AppLoginScreen extends StatelessWidget {
                                       ],
                                       textColor: const Color(0xFF111111),
                                       icon: const FacebookLogoIcon(size: 32),
-                                      onTap: () => _showProviderComingSoon(
+                                      onTap: () => _startSocialOAuth(
                                         context,
+                                        'facebook',
                                         'Facebook',
                                       ),
                                     ),
