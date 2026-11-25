@@ -3,9 +3,9 @@
   "short_name": "هلاا",
   "start_url": ".",
   "display": "standalone",
-  "background_color": "#d5e1dd",
-  "theme_color": "#0e7490",
-  "description": "تطبيق هلاا للألعاب والغرف الصوتية",
+  "background_color": "#071b21",
+  "theme_color": "#0f7682",
+  "description": "تطبيق هلاا للغرف الصوتية والألعاب ولوحة الإدارة",
   "orientation": "portrait-primary",
   "prefer_related_applications": false
 }
