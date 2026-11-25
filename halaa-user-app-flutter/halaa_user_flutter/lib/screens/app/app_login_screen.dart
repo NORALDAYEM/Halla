@@ -5,6 +5,7 @@ import '../../services/supabase_auth_service.dart';
 import '../../widgets/halaa_brand_icons.dart';
 import '../../widgets/halaa_popups.dart';
 import '../../widgets/welcome_gallery_bg.dart';
+import '../../widgets/halaa_animated_logo.dart';
 
 /// Standalone Halaa User App Login Screen — Exact previous design, colors,
 /// raised 3D glass transparency, Gmail & Facebook brand icons, and Phone/OAuth
@@ -337,11 +338,7 @@ class AppLoginScreen extends StatelessWidget {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               const SizedBox(height: 22),
-                              Image.asset(
-                                'assets/images/halaa-clear.webp',
-                                height: logoHeight,
-                                fit: BoxFit.contain,
-                              ),
+                             HalaaAnimatedLogo(height: logoHeight),
                               const SizedBox(height: 14),
                               ConstrainedBox(
                                 constraints: BoxConstraints(maxWidth: btnMaxW),
