@@ -1,0 +1,116 @@
+name: Build Halaa Apps (Web + Android APK + iPhone IPA)
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'halaa_user_flutter/**'
+      - 'halaa_admin_flutter/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-web-and-android:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java 17 (for Android APK)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Build Halaa User App (Web + Android APK)
+        working-directory: halaa_user_flutter
+        run: |
+          flutter create --platforms=android --org com.halla --project-name halaa_user_app .
+          flutter pub get
+          flutter build web --release --base-href "/Halla/halla-web/"
+          flutter build apk --release
+          cp build/app/outputs/flutter-apk/app-release.apk ../Halaa-App-Android.apk
+
+      - name: Build Halaa Admin App (Web + Android APK)
+        working-directory: halaa_admin_flutter
+        run: |
+          flutter create --platforms=android --org com.halla --project-name halaa_admin_app .
+          flutter pub get
+          flutter build web --release --base-href "/Halla/admin/"
+          flutter build apk --release
+          cp build/app/outputs/flutter-apk/app-release.apk ../Halaa-Admin-Android.apk
+
+      - name: Upload Android APK Installers (App & Admin)
+        uses: actions/upload-artifact@v4
+        with:
+          name: Halaa-Android-APKs
+          path: |
+            Halaa-App-Android.apk
+            Halaa-Admin-Android.apk
+
+      - name: Deploy Separate Web Builds to halla-web/ and admin/
+        run: |
+          rm -rf halla-web/* admin/*
+          cp -r halaa_user_flutter/build/web/* halla-web/
+          cp -r halaa_admin_flutter/build/web/* admin/
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add halla-web/ admin/
+          if ! git diff --cached --quiet; then
+            git commit -m "Deploy separate Halaa User & Admin Flutter Web apps"
+            git pull --rebase origin main
+            git push origin main
+          fi
+
+  build-iphone-ipa:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Build Halaa User App (iPhone unsigned IPA)
+        working-directory: halaa_user_flutter
+        run: |
+          flutter create --platforms=ios --org com.halla --project-name halaa_user_app .
+          flutter pub get
+          flutter build ios --release --no-codesign
+          mkdir -p Payload
+          cp -r build/ios/iphoneos/Runner.app Payload/
+          zip -r ../Halaa-App-iPhone-unsigned.ipa Payload
+          rm -rf Payload
+
+      - name: Build Halaa Admin App (iPhone unsigned IPA)
+        working-directory: halaa_admin_flutter
+        run: |
+          flutter create --platforms=ios --org com.halla --project-name halaa_admin_app .
+          flutter pub get
+          flutter build ios --release --no-codesign
+          mkdir -p Payload
+          cp -r build/ios/iphoneos/Runner.app Payload/
+          zip -r ../Halaa-Admin-iPhone-unsigned.ipa Payload
+          rm -rf Payload
+
+      - name: Upload iPhone IPA Installers (App & Admin)
+        uses: actions/upload-artifact@v4
+        with:
+          name: Halaa-iPhone-IPAs
+          path: |
+            Halaa-App-iPhone-unsigned.ipa
+            Halaa-Admin-iPhone-unsigned.ipa
