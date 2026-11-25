@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../models/halaa_models.dart';
 import '../../widgets/halaa_popups.dart';
 import '../../widgets/welcome_gallery_bg.dart';
+import '../../widgets/halaa_animated_logo.dart';
 
 /// Standalone Halaa Admin Login Screen — Responsive for Phone, Tablet & Desktop.
 /// Exact match to the approved Admin screenshot:
@@ -126,11 +127,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Image.asset(
-                        'assets/images/halaa-clear.webp',
-                        height: logoH,
-                        fit: BoxFit.contain,
-                      ),
+                      HalaaAnimatedLogo(height: logoH),
                       const SizedBox(height: 4),
                       const Text(
                         'إدارة هلاا',
