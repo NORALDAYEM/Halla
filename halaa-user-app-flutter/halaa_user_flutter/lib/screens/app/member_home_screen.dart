@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+import 'zego_native_room_page.dart';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../models/halaa_models.dart';
@@ -264,6 +266,11 @@ class _MemberHomeScreenState extends State<MemberHomeScreen> {
   }
   Future<void> _openZegoRoom(String roomId, String roomTitle, bool asHost) async {
     final endpoint = widget.config.serverEndpoint.trim().isNotEmpty ? widget.config.serverEndpoint.trim() : 'https://halla.onrender.com';
+final safeUserId = 'user_${DateTime.now().millisecondsSinceEpoch % 100000}';
+    if (!kIsWeb) {
+      await Navigator.of(context).push(MaterialPageRoute(builder: (_) => ZegoNativeRoomPage(roomId: roomId, roomTitle: roomTitle, userId: safeUserId, userName: widget.displayName, isHost: asHost, serverEndpoint: endpoint)));
+      return;
+    }
     final uri = Uri.https('noraldayem.github.io', '/Halla/zego-room.html', {'appID': '400719759', 'roomID': roomId, 'userID': 'user_${DateTime.now().millisecondsSinceEpoch % 100000}', 'userName': widget.displayName, 'role': asHost ? 'Host' : 'Audience', 'title': roomTitle, 'serverEndpoint': endpoint});
     await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
