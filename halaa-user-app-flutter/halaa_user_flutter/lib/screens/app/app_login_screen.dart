@@ -80,7 +80,7 @@ class AppLoginScreen extends StatelessWidget {
       showHalaaGlassDialog(
         context: context,
         title: providerLabel,
-        body: Column(
+        child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
