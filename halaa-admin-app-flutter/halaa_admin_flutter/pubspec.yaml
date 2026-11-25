@@ -1,0 +1,31 @@
+name: halaa_admin_app
+description: تطبيق إدارة هلاا المستقل — Android / iOS / Web.
+publish_to: 'none'
+version: 3.1.0+1
+
+environment:
+  sdk: '>=3.2.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  http: ^1.2.2
+  shared_preferences: ^2.3.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/halaa-clear.webp
+    - assets/images/admin-bg/admin-bg-1.webp
+    - assets/images/admin-bg/admin-bg-2.webp
+    - assets/images/admin-bg/admin-bg-3.webp
+    - assets/images/admin-bg/admin-bg-4.webp
+    - assets/images/admin-bg/admin-bg-5.webp
+    - assets/images/admin-bg/admin-bg-6.webp
