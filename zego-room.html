@@ -34,7 +34,7 @@
     const userID = params.get('userID') || ('halaa_' + Math.floor(10000 + Math.random() * 90000));
     const userName = params.get('userName') || 'عضو هلا';
     const roleParam = (params.get('role') || 'Host').toLowerCase();
-    const tokenEndpoint = params.get('tokenEndpoint') || '';
+    const tokenEndpoint = params.get('tokenEndpoint') || ''; const LS_ENDPOINT_KEY = 'halaa_zego_server_endpoint'; const LS_TEMP_TOKEN_KEY = 'halaa_zego_temp_token'; const urlEndpoint = (params.get('serverEndpoint') || tokenEndpoint || '').trim(); if (urlEndpoint) localStorage.setItem(LS_ENDPOINT_KEY, urlEndpoint); let serverEndpoint = (urlEndpoint || localStorage.getItem(LS_ENDPOINT_KEY) || '').trim();
     const urlToken = params.get('token') || '';
     const title = params.get('title') || ('غرفة هلا: ' + roomID);
 
@@ -63,20 +63,20 @@
         showPreJoinView: true
       });
     }
-
+function normalizeEndpoint(raw) { const ep = (raw || '').trim(); if (!ep) return ''; if (ep.includes('/api/zego-token') || ep.includes('?')) return ep; return ep.replace(/\/+$/, '') + '/api/zego-token'; } async function fetchTokenFromEndpoint(endpoint) { const url = normalizeEndpoint(endpoint); if (!url) return null; const headers = { 'Content-Type': 'application/json' }; const authToken = params.get('authToken') || localStorage.getItem('halaa_auth_token') || ''; if (authToken) headers['Authorization'] = 'Bearer ' + authToken; try { const postRes = await fetch(url, { method: 'POST', headers, body: JSON.stringify({ roomID, userID, userName, role: roleParam }) }); if (postRes.ok) { const data = await postRes.json(); if (data && data.token) return data; } } catch (e) {} try { const sep = url.includes('?') ? '&' : '?'; const u = url + sep + 'roomID=' + encodeURIComponent(roomID) + '&userID=' + encodeURIComponent(userID) + '&userName=' + encodeURIComponent(userName) + '&role=' + encodeURIComponent(roleParam); const getRes = await fetch(u, { headers: authToken ? { 'Authorization': 'Bearer ' + authToken } : {} }); if (getRes.ok) { const data = await getRes.json(); if (data && data.token) return data; } } catch (e) {} return null; }
     function showTokenPrompt(errMsg) {
-      const saved = localStorage.getItem('halaa_zego_temp_token') || '';
+      const saved = localStorage.getItem('halaa_zego_temp_token') || ''; const savedEndpoint = localStorage.getItem(LS_ENDPOINT_KEY) || '';
       document.getElementById('root').innerHTML = `
         <div class="setup-box">
           <h2>تفعيل الاتصال الصوتي (ZEGOCLOUD)</h2>
           <p>الصق <b>الرمز المؤقت (Token)</b> من لوحة تحكم ZEGOCLOUD (أدوات التطوير ← أدوات الرموز المميزة) للدخول الفوري إلى الغرفة <b>${roomID}</b> باسم <b>${userName}</b>.</p>
-          <textarea id="tokInput" rows="3" placeholder="الصق التوكن هنا...">${saved}</textarea>
+          <label for="endpointInput" style="display:block;font-size:12.5px;color:#cbd5e1;margin-bottom:6px;">رابط خادم هلا (serverEndpoint - اختياري للعمل الدائم):</label><input id="endpointInput" type="url" placeholder="https://your-server.com أو .../api/zego-token" value="${savedEndpoint.replace(/"/g, '&quot;')}" style="width:100%;background:#0f172a;color:#e2e8f0;border:1px solid #334155;border-radius:10px;padding:10px;font-size:13px;margin-bottom:10px;" /><textarea id="tokInput" rows="3" placeholder="الصق التوكن هنا...">${saved}</textarea>
           <button id="joinBtn">دخول الغرفة الصوتية الآن</button>
           ${errMsg ? '<div class="err">' + errMsg + '</div>' : ''}
         </div>
       `;
-      document.getElementById('joinBtn').onclick = () => {
-        const val = document.getElementById('tokInput').value.trim();
+      document.getElementById('joinBtn').onclick = async () => {
+        const val = document.getElementById('tokInput').value.trim(); const epVal = document.getElementById('endpointInput').value.trim(); if (epVal) { localStorage.setItem(LS_ENDPOINT_KEY, epVal); serverEndpoint = epVal; const data = await fetchTokenFromEndpoint(epVal); if (data && data.token) { joinWithToken(data.token); return; } if (!val) { showTokenPrompt('تعذر الاتصال بخادم التوكن، تحقق من الرابط أو أدخل رمزاً مؤقتاً.'); return; } } else { localStorage.removeItem(LS_ENDPOINT_KEY); serverEndpoint = ''; }
         if (!val) return;
         localStorage.setItem('halaa_zego_temp_token', val);
         joinWithToken(val);
@@ -84,7 +84,7 @@
     }
 
     (async function boot() {
-      if (urlToken) return joinWithToken(urlToken);
+      if (urlToken) return joinWithToken(urlToken); if (serverEndpoint) { const data = await fetchTokenFromEndpoint(serverEndpoint); if (data && data.token) return joinWithToken(data.token); }
       if (tokenEndpoint) {
         try {
           const u = tokenEndpoint + '?roomId=' + encodeURIComponent(roomID) + '&userId=' + encodeURIComponent(userID);
