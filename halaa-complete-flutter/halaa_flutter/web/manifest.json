@@ -1,0 +1,11 @@
+{
+  "name": "هلاا | ألعاب ودردشة",
+  "short_name": "هلاا",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#061a29",
+  "theme_color": "#0e7490",
+  "description": "تطبيق هلاا للغرف الصوتية والألعاب الجماعية ولوحة الإدارة",
+  "orientation": "portrait-primary",
+  "prefer_related_applications": false
+}
