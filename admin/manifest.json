@@ -1,11 +1,11 @@
 {
-  "name": "هلاا | ألعاب ودردشة",
-  "short_name": "هلاا",
+  "name": "إدارة هلاا | Halaa Admin",
+  "short_name": "إدارة هلاا",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#071b21",
   "theme_color": "#0f7682",
-  "description": "تطبيق هلاا للغرف الصوتية والألعاب ولوحة الإدارة",
+  "description": "لوحة التحكم المستقلة لتطبيق هلاا",
   "orientation": "portrait-primary",
   "prefer_related_applications": false
 }
