@@ -11,7 +11,10 @@ on:
 
 permissions:
   contents: write
-
+concurrency:
+  group: build-halaa-all-platforms-${{ github.ref }}
+  cancel-in-progress: true
+  
 jobs:
   build-web-and-android:
     runs-on: ubuntu-latest
@@ -60,15 +63,22 @@ jobs:
 
       - name: Deploy Separate Web Builds to halla-web/ and admin/
         run: |
+          rm -rf /tmp/halla-web-build /tmp/admin-web-build
+          mkdir -p /tmp/halla-web-build /tmp/admin-web-build
+          cp -r halaa-user-app-flutter/halaa_user_flutter/build/web/. /tmp/halla-web-build/
+          cp -r halaa-admin-app-flutter/halaa_admin_flutter/build/web/. /tmp/admin-web-build/
+          git fetch origin main
+          git reset --hard origin/main
           rm -rf halla-web/* admin/*
-          cp -r halaa-user-app-flutter/halaa_user_flutter/build/web/* halla-web/
-          cp -r halaa-admin-app-flutter/halaa_admin_flutter/build/web/* admin/
+          mkdir -p halla-web admin
+          cp -r /tmp/halla-web-build/. halla-web/
+          cp -r /tmp/admin-web-build/. admin/
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add halla-web/ admin/
           if ! git diff --cached --quiet; then
             git commit -m "Deploy separate Halaa User & Admin Flutter Web apps"
-            git pull --rebase origin main
+           git pull --rebase -X theirs origin main || true
             git push origin main
           fi
 
