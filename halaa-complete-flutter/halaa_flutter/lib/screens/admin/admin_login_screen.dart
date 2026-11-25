@@ -16,14 +16,12 @@ class AdminLoginScreen extends StatefulWidget {
   final HalaaConfig config;
   final ValueChanged<String> onAuthenticated;
   final ValueChanged<SupportTicket> onTicketCreated;
-  final VoidCallback onBackToApp;
 
   const AdminLoginScreen({
     super.key,
     required this.config,
     required this.onAuthenticated,
     required this.onTicketCreated,
-    required this.onBackToApp,
   });
 
   @override
@@ -330,14 +328,6 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                           ),
                         ),
                       ),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  TextButton(
-                    onPressed: widget.onBackToApp,
-                    child: const Text(
-                      'العودة إلى واجهة التطبيق',
-                      style: TextStyle(color: Color(0xFF99F6E4)),
                     ),
                   ),
                 ],

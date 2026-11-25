@@ -10,14 +10,12 @@ class MemberHomeScreen extends StatefulWidget {
   final String displayName;
   final HalaaConfig config;
   final VoidCallback onLogout;
-  final VoidCallback onOpenAdminPortal;
 
   const MemberHomeScreen({
     super.key,
     required this.displayName,
     required this.config,
     required this.onLogout,
-    required this.onOpenAdminPortal,
   });
 
   @override
@@ -109,14 +107,6 @@ class _MemberHomeScreenState extends State<MemberHomeScreen> {
                               );
                             },
                             icon: const Text('🎁', style: TextStyle(fontSize: 18)),
-                          ),
-                          IconButton(
-                            tooltip: 'إدارة هلاا',
-                            onPressed: widget.onOpenAdminPortal,
-                            icon: const Icon(
-                              Icons.admin_panel_settings_outlined,
-                              color: Color(0xFF99F6E4),
-                            ),
                           ),
                           IconButton(
                             tooltip: 'خروج',

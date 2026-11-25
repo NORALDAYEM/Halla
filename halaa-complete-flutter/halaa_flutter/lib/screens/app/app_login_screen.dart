@@ -18,7 +18,6 @@ class AppLoginScreen extends StatelessWidget {
   final ValueChanged<String> onLoggedIn;
   final ValueChanged<AppUserRecord> onRegisteredUser;
   final ValueChanged<SupportTicket> onTicketCreated;
-  final VoidCallback onOpenAdminPortal;
   final SupabaseAuthService authService;
 
   const AppLoginScreen({
@@ -27,7 +26,6 @@ class AppLoginScreen extends StatelessWidget {
     required this.onLoggedIn,
     required this.onRegisteredUser,
     required this.onTicketCreated,
-    required this.onOpenAdminPortal,
     required this.authService,
   });
 
@@ -423,19 +421,6 @@ class AppLoginScreen extends StatelessWidget {
                             fontWeight: FontWeight.w800,
                           ),
                         ),
-                      ),
-                    ),
-                  ),
-                  // Subtle top-right admin portal button
-                  Positioned(
-                    top: 8,
-                    right: 10,
-                    child: IconButton(
-                      tooltip: 'إدارة هلاا',
-                      onPressed: onOpenAdminPortal,
-                      icon: const Icon(
-                        Icons.admin_panel_settings_outlined,
-                        color: Color(0xFF174955),
                       ),
                     ),
                   ),

@@ -21,7 +21,6 @@ class AdminDashboardScreen extends StatefulWidget {
   final HalaaStorage storage;
   final ValueChanged<HalaaConfig> onConfigUpdated;
   final VoidCallback onLogout;
-  final VoidCallback onPreviewApp;
 
   const AdminDashboardScreen({
     super.key,
@@ -30,7 +29,6 @@ class AdminDashboardScreen extends StatefulWidget {
     required this.storage,
     required this.onConfigUpdated,
     required this.onLogout,
-    required this.onPreviewApp,
   });
 
   @override
@@ -167,14 +165,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                             ),
                           ),
                         ],
-                      ),
-                    ),
-                    IconButton(
-                      tooltip: 'معاينة التطبيق',
-                      onPressed: widget.onPreviewApp,
-                      icon: const Icon(
-                        Icons.phone_android_rounded,
-                        color: Color(0xFF99F6E4),
                       ),
                     ),
                     ElevatedButton(
@@ -648,8 +638,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                     return ListTile(
                       contentPadding: EdgeInsets.zero,
                       title: Text('${t.id} — ${t.reason}'),
-                      subtitle: Text('${t.contact}
-${t.details}'),
+                      subtitle: Text('${t.contact} — ${t.details}'),
                       trailing: TextButton(
                         onPressed: () {
                           final next = [..._cfg.tickets];
