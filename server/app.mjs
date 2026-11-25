@@ -106,7 +106,18 @@ createServer(async(req,res)=>{
     }
     if(req.method==='GET' && path==='/api/presence')return json(res,200,await presence());
     if(req.method==='GET' && path==='/api/config') return json(res,200,{authUrl:env.SUPABASE_URL||'',publicKey:env.SUPABASE_PUBLISHABLE_KEY||'',voiceReady:voiceReady||zegoReady,zegoAppId,zegoReady,ad:read('homeAd'),rooms:db.prepare("SELECT value FROM settings WHERE key LIKE 'room:%' ORDER BY rowid DESC LIMIT 200").all().map(row=>{const {id,title,category}=JSON.parse(row.value);return {id,title,category};})});
-    
+    if((req.method==='GET'||req.method==='POST') && path==='/api/zego/token'){
+      if(!zegoReady) return json(res, 503, { error: 'ZEGO not configured' });
+      const sp = new URL(req.url, 'http://localhost').searchParams;
+      const data = req.method === 'POST' ? await body(req) : {};
+      const roomID = (req.method === 'GET' ? (sp.get('roomID') || sp.get('roomId')) : (data.roomID || data.roomId)) || 'halaa_main_room';
+      const userID = (req.method === 'GET' ? (sp.get('userID') || sp.get('userId')) : (data.userID || data.userId)) || `halaa_${Date.now()}`;
+      const role = (req.method === 'GET' ? sp.get('role') : data.role) || 'Host';
+      const appID = zegoAppId;
+      const payload = JSON.stringify({ room_id: roomID, privilege: { 1: 1, 2: role === 'Audience' || role === 'listener' ? 0 : 1 }, stream_id_list: null });
+      const token = generateZegoToken04(zegoAppId, userID, zegoServerSecret, 7200, payload);
+      return json(res, 200, { appID, roomID, userID, role, token });
+    }
     if(req.method==='POST' && path==='/api/zego-token'){
       if(!zegoReady) fail(503,'يرجى ضبط متغير ZEGO_SERVER_SECRET في إعدادات الخادم');
       const user=await identity(req);
