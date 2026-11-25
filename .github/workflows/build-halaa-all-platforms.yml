@@ -39,7 +39,8 @@ jobs:
         working-directory: halaa-user-app-flutter/halaa_user_flutter
         run: |
           flutter create --platforms=android --org com.halla --project-name halaa_user_app .
-          flutter pub get
+            python3 -c 'import pathlib, re; m = pathlib.Path("android/app/src/main/AndroidManifest.xml"); t = m.read_text(); perms = ["RECORD_AUDIO", "MODIFY_AUDIO_SETTINGS", "INTERNET", "ACCESS_NETWORK_STATE", "ACCESS_WIFI_STATE", "BLUETOOTH", "WAKE_LOCK"]; ins = "".join(f"    <uses-permission android:name=\"android.permission.{p}\"/>\n" for p in perms if f"android.permission.{p}" not in t); m.write_text(t.replace("<application", ins + "    <application", 1)) if ins else None; [g.write_text(re.sub(r"minSdk\s*=\s*(?:flutter\.minSdkVersion|\d+)", lambda x: x.group(0) if x.group(0).split("=")[-1].strip().isdigit() and int(x.group(0).split("=")[-1].strip()) >= 21 else "minSdk = 21", re.sub(r"(minSdkVersion|minSdk)\s+(?:flutter\.minSdkVersion|\d+)", lambda x: x.group(0) if x.group(0).split()[-1].isdigit() and int(x.group(0).split()[-1]) >= 21 else f"{x.group(1)} 21", g.read_text()))) for g in [pathlib.Path("android/app/build.gradle.kts"), pathlib.Path("android/app/build.gradle")] if g.exists()]'
+            flutter pub get
           flutter build web --release --base-href "/Halla/halla-web/"
           flutter build apk --release
           cp build/app/outputs/flutter-apk/app-release.apk ../../Halaa-App-Android.apk
