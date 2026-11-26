@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:http/http.dart' as http;
 
+const String kHalaaCentralServerUrl = String.fromEnvironment('HALAA_SERVER_URL', defaultValue: 'https://halla.onrender.com');
+
 /// Central Admin API Client for Halaa Admin App (Sections 4, 5, 11, 23, 34).
 /// - Enforces HTTPS for all non-localhost server URLs
 /// - Uses short-lived Bearer admin access tokens obtained via `/api/v1/auth/admin/login`
@@ -12,7 +14,7 @@ class HalaaCentralAdminApi {
   String? _refreshToken;
   String? _sessionId;
 
-  HalaaCentralAdminApi({required this.serverBaseUrl});
+    HalaaCentralAdminApi({this.serverBaseUrl = kHalaaCentralServerUrl});
 
   bool get isAuthenticated => _accessToken != null && _accessToken!.isNotEmpty;
 
