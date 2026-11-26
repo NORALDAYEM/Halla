@@ -4,6 +4,8 @@ import 'package:http/http.dart' as http;
 import '../remote_config/halaa_remote_config_controller.dart';
 import '../dynamic_theme/halaa_dynamic_theme_controller.dart';
 
+const String kHalaaCentralServerUrl = String.fromEnvironment('HALAA_SERVER_URL', defaultValue: 'https://halla.onrender.com');
+
 /// Real-Time Sync Client for Halaa User App (Sections 20, 21, 22).
 /// - Connects via Server-Sent Events (`/api/v1/sync/stream`) using standard `package:http`
 /// - Reconnects automatically with backoff and pulls missed events via `sinceVersion`
@@ -20,7 +22,7 @@ class HalaaRealtimeSyncClient {
   http.Client? _streamClient;
 
   HalaaRealtimeSyncClient({
-    required this.serverBaseUrl,
+    this.serverBaseUrl = kHalaaCentralServerUrl,
     required this.deviceId,
     required this.configController,
     required this.themeController,
