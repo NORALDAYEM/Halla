@@ -79,8 +79,8 @@ class _HalaaUserAppState extends State<HalaaUserApp> {
       ),
       home: AppUpdateGate(
         appKey: 'user_app',
-        currentVersion: '3.1.3',
-        currentBuild: 4,
+        currentVersion:'3.1.4',
+        currentBuild: 5,
         child: !_ready
           ? const Scaffold(body: Center(child: CircularProgressIndicator()))
           : (_memberUser == null
