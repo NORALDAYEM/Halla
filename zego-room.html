@@ -19,7 +19,7 @@
     .setup-box button:hover { background: #0e747e; }
     .err { color: #fca5a5; font-size: 12.5px; margin-top: 8px; }
   </style>
-  <script src="https://unpkg.com/@zegocloud/zego-uikit-prebuilt/zego-uikit-prebuilt.js"></script><script>if (typeof ZegoUIKitPrebuilt === 'undefined') { document.write('<scr' + 'ipt src="https://' + 'cdn.jsdelivr.net/npm/@zegocloud/zego-uikit-prebuilt/zego-uikit-prebuilt.js"></scr' + 'ipt>'); }</script>
+  <script src="https://unpkg.com/@zegocloud/zego-uikit-prebuilt@2.17.1/zego-uikit-prebuilt.js"></script><script>if (typeof ZegoUIKitPrebuilt === 'undefined') { document.write('<scr' + 'ipt src="https://' + 'cdn.jsdelivr.net/npm/@zegocloud/zego-uikit-prebuilt/zego-uikit-prebuilt.js"></scr' + 'ipt>'); }</script>
 </head>
 <body>
   <div class="topbar">
@@ -33,9 +33,10 @@
     const roomID = params.get('roomID') || 'halaa_main_room';
     const userID = params.get('userID') || ('halaa_' + Math.floor(10000 + Math.random() * 90000));
     const userName = params.get('userName') || 'عضو هلا';
-    const roleParam = (params.get('role') || 'Host').toLowerCase();
+     const roleParam = (params.get('role') || 'Audience').toLowerCase();
     const tokenEndpoint = params.get('tokenEndpoint') || ''; const LS_ENDPOINT_KEY = 'halaa_zego_server_endpoint'; const LS_TEMP_TOKEN_KEY = 'halaa_zego_temp_token'; const urlEndpoint = (params.get('serverEndpoint') || tokenEndpoint || '').trim(); if (urlEndpoint) localStorage.setItem(LS_ENDPOINT_KEY, urlEndpoint); let serverEndpoint = (urlEndpoint || localStorage.getItem(LS_ENDPOINT_KEY) || '').trim();
     const urlToken = params.get('token') || '';
+     if (urlToken && window.history && window.history.replaceState) { params.delete('token'); const q = params.toString(); window.history.replaceState({}, document.title, window.location.pathname + (q ? '?' + q : '') + window.location.hash); }
     const title = params.get('title') || ('غرفة هلا: ' + roomID);
 
     document.getElementById('roomTitle').textContent = title; document.getElementById('settingsBtn').onclick = () => showTokenPrompt('');
@@ -65,7 +66,7 @@
     }
 function normalizeEndpoint(raw) { const ep = (raw || '').trim(); if (!ep) return ''; if (ep.includes('/api/zego/token') || ep.includes('/api/zego-token') || ep.includes('?')) return ep; return ep.replace(/\/+$/, '') + '/api/zego/token'; } async function fetchTokenFromEndpoint(endpoint) { const url = normalizeEndpoint(endpoint); if (!url) return null; const authToken = params.get('authToken') || localStorage.getItem('halaa_auth_token') || ''; const headers = { 'Content-Type': 'application/json' }; if (authToken) headers['Authorization'] = 'Bearer ' + authToken; const getHeaders = authToken ? { 'Authorization': 'Bearer ' + authToken } : {}; const qs = 'roomID=' + encodeURIComponent(roomID) + '&userID=' + encodeURIComponent(userID) + '&userName=' + encodeURIComponent(userName) + '&role=' + encodeURIComponent(roleParam); const primaryGetUrl = url.includes('/api/zego-token') ? url.replace('/api/zego-token', '/api/zego/token') : url; const fallbackUrl = url.includes('/api/zego/token') ? url.replace('/api/zego/token', '/api/zego-token') : url; try { const sep = primaryGetUrl.includes('?') ? '&' : '?'; const getRes1 = await fetch(primaryGetUrl + sep + qs, { headers: getHeaders }); if (getRes1.ok) { const data = await getRes1.json(); if (data && data.token) return data; } } catch (e) {} try { const postRes = await fetch(fallbackUrl, { method: 'POST', headers, body: JSON.stringify({ roomID, userID, userName, role: roleParam }) }); if (postRes.ok) { const data = await postRes.json(); if (data && data.token) return data; } } catch (e) {} try { const sep = fallbackUrl.includes('?') ? '&' : '?'; const getRes2 = await fetch(fallbackUrl + sep + qs, { headers: getHeaders }); if (getRes2.ok) { const data = await getRes2.json(); if (data && data.token) return data; } } catch (e) {} return null; }
     function showTokenPrompt(errMsg) {
-      const saved = localStorage.getItem('halaa_zego_temp_token') || ''; const savedEndpoint = localStorage.getItem(LS_ENDPOINT_KEY) || '';
+        const saved = sessionStorage.getItem('halaa_zego_temp_token') || ''; const savedEndpoint = localStorage.getItem(LS_ENDPOINT_KEY) || '';
       document.getElementById('root').innerHTML = `
         <div class="setup-box">
           <h2>تفعيل الاتصال الصوتي (ZEGOCLOUD)</h2>
@@ -78,7 +79,7 @@ function normalizeEndpoint(raw) { const ep = (raw || '').trim(); if (!ep) return
       document.getElementById('joinBtn').onclick = async () => {
         const val = document.getElementById('tokInput').value.trim(); const epVal = document.getElementById('endpointInput').value.trim(); if (epVal) { localStorage.setItem(LS_ENDPOINT_KEY, epVal); serverEndpoint = epVal; const data = await fetchTokenFromEndpoint(epVal); if (data && data.token) { joinWithToken(data.token, data); return; } if (!val) { showTokenPrompt('تعذر الاتصال بخادم التوكن، تحقق من الرابط أو أدخل رمزاً مؤقتاً.'); return; } } else { localStorage.removeItem(LS_ENDPOINT_KEY); serverEndpoint = ''; }
         if (!val) return;
-        localStorage.setItem('halaa_zego_temp_token', val);
+          sessionStorage.setItem('halaa_zego_temp_token', val);
         joinWithToken(val);
       };
     }
@@ -95,7 +96,7 @@ function normalizeEndpoint(raw) { const ep = (raw || '').trim(); if (!ep) return
           }
         } catch (e) {}
       }
-      const saved = localStorage.getItem('halaa_zego_temp_token');
+      const saved = sessionStorage.getItem('halaa_zego_temp_token');
       if (saved) return joinWithToken(saved);
       showTokenPrompt('');
     })();
