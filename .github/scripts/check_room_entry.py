@@ -46,5 +46,6 @@ def locate(phrase, *, tap=False, scroll=False):
 
 
 locate("وضع الضيف", tap=True)
+locate("الغرف\nعلامة التبويب", tap=True)
 locate("ديوانية نجوم هلا", tap=True, scroll=True)
 locate("الدخول للانضمام إلى الغرفة")
