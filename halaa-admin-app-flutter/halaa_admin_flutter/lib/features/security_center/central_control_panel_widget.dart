@@ -53,6 +53,35 @@ class _CentralControlPanelWidgetState extends State<CentralControlPanelWidget> {
     }
   }
 
+  Future<void> _manageRoom() async {
+    final room = TextEditingController(text: 'r1');
+    final target = TextEditingController();
+    var action = 'listener';
+    final confirmed = await showDialog<bool>(context: context, builder: (context) => StatefulBuilder(
+      builder: (context, update) => AlertDialog(title: const Text('إدارة عضو في غرفة صوتية'),
+        content: Column(mainAxisSize: MainAxisSize.min, children: [
+          TextField(controller: room, decoration: const InputDecoration(labelText:'معرّف الغرفة')),
+          TextField(controller: target, decoration: const InputDecoration(labelText:'معرّف العضو')),
+          DropdownButton<String>(value:action, isExpanded:true, items: const [
+            DropdownMenuItem(value:'listener',child:Text('إيقاف الميكروفون')),
+            DropdownMenuItem(value:'speaker',child:Text('السماح بالميكروفون')),
+            DropdownMenuItem(value:'ban',child:Text('منع الدخول')),
+            DropdownMenuItem(value:'unban',child:Text('رفع المنع')),
+          ], onChanged:(value) => update(() => action=value!)),
+        ]), actions:[TextButton(onPressed:()=>Navigator.pop(context,false),child:const Text('إلغاء')),
+          FilledButton(onPressed:()=>Navigator.pop(context,true),child:const Text('تطبيق'))]),
+    ));
+    if (confirmed == true) {
+      try {
+        await widget.api.manageVoiceRoom(room:room.text.trim(),target:target.text.trim(),action:action);
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('تم حفظ التحكم؛ يتزامن التطبيق خلال 20 ثانية')));
+      } catch (error) {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(error.toString())));
+      }
+    }
+    room.dispose(); target.dispose();
+  }
+
   Future<void> _toggleFeature({
     required String label,
     required Map<String, dynamic> patch,
@@ -143,6 +172,8 @@ class _CentralControlPanelWidgetState extends State<CentralControlPanelWidget> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
+            Card(child: ListTile(leading: const Icon(Icons.mic), title: const Text('إدارة الغرف والميكروفونات'),
+              trailing: const Icon(Icons.chevron_right), onTap: _manageRoom)),
             Card(
               child: ListTile(
                 title: const Text('مركز المزامنة والتحديثات المباشرة'),

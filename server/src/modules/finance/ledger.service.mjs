@@ -13,12 +13,47 @@ function createError(message, statusCode) {
  * - Requires AccessControlService + ApprovalService verification
  */
 export class FinancialLedgerService {
-  constructor({ accessControl, approvalService, auditService }) {
+  constructor({ accessControl, approvalService, auditService, storage }) {
     this.accessControl = accessControl;
     this.approvalService = approvalService;
     this.auditService = auditService;
-    this.entries = [];
-    this.idempotencyCache = new Map(); // idempotencyKey -> transactionGroupResult
+    this.storage = storage;
+    const saved = storage?.load();
+    this.entries = saved?.entries || [];
+    this.idempotencyCache = new Map(saved?.replays || []);
+  }
+
+  commit(entries, key, result) {
+    const nextEntries = [...this.entries, ...entries];
+    const nextCache = new Map(this.idempotencyCache).set(key, result);
+    // Persist the entries and replay result together before exposing a new balance.
+    this.storage?.save({ entries: nextEntries, replays: [...nextCache] });
+    this.entries = nextEntries;
+    this.idempotencyCache = nextCache;
+  }
+
+  sendGift({ senderId, recipientId, giftId, roomId, idempotencyKey }) {
+    const catalog = { rose: { coins: 10, diamonds: 5, effect: 'rose' }, crown: { coins: 100, diamonds: 50, effect: 'crown' } };
+    const gift = Object.hasOwn(catalog,giftId) ? catalog[giftId] : null;
+    if (!gift || !senderId || !recipientId || senderId === recipientId || !roomId ||
+        typeof idempotencyKey !== 'string' || !/^[a-zA-Z0-9_-]{8,100}$/.test(idempotencyKey)) {
+      throw createError('Invalid gift request', 400);
+    }
+    const key = `gift:${senderId}:${idempotencyKey}`;
+    const previous = this.idempotencyCache.get(key);
+    if (previous) {
+      if (previous.recipientId !== recipientId || previous.giftId !== giftId || previous.roomId !== roomId) throw createError('Idempotency conflict',409);
+      return {...previous, idempotentReplay:true};
+    }
+    if (this.getBalance(senderId,'COINS') < gift.coins) throw createError('الرصيد غير كافٍ',409);
+    const transactionGroup = `gift_${crypto.randomUUID()}`, createdAt = new Date().toISOString();
+    const result = { transactionGroup, senderId, recipientId, giftId, roomId, effect:gift.effect, createdAt, idempotentReplay:false };
+    const entries = [
+      [senderId,'COINS','DEBIT',gift.coins], ['SYSTEM_TREASURY','COINS','CREDIT',gift.coins],
+      [recipientId,'DIAMONDS','CREDIT',gift.diamonds], ['SYSTEM_TREASURY','DIAMONDS','DEBIT',gift.diamonds],
+    ].map(([accountId,currency,entryType,amount])=>({id:crypto.randomUUID(),transactionGroup,accountId,currency,entryType,amount,createdAt,reason:`gift:${giftId}`,idempotencyKey:key}));
+    this.commit(entries,key,result);
+    return result;
   }
 
   getBalance(accountId, currency = 'COINS') {
@@ -111,10 +146,8 @@ export class FinancialLedgerService {
       createdAt: now,
     });
 
-    this.entries.push(userEntry, treasuryEntry);
-    if (approval) this.approvalService.markExecuted(approval.id);
 
-    const afterBalance = this.getBalance(targetUserId, currency);
+    const afterBalance = Number((beforeBalance + (op === 'CREDIT' ? numericAmount : -numericAmount)).toFixed(2));
 
     this.auditService.record({
       actorId: actor.id,
@@ -140,7 +173,8 @@ export class FinancialLedgerService {
       afterBalance,
       idempotentReplay: false,
     };
-    this.idempotencyCache.set(idempotencyKey, result);
+    this.commit([userEntry, treasuryEntry], idempotencyKey, result);
+    if (approval) this.approvalService.markExecuted(approval.id);
     return result;
   }
 }

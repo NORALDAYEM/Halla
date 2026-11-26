@@ -22,6 +22,29 @@ class AuthResult {
 /// - Facebook OAuth (`provider=facebook`)
 /// - Email Login / Signup / Password Recovery
 class SupabaseAuthService {
+  String? _accessToken;
+  String? _refreshToken;
+  DateTime _expiresAt = DateTime.fromMillisecondsSinceEpoch(0);
+  Future<String>? _refreshing;
+  void clearSession() { _accessToken = null; _refreshToken = null; }
+  void _acceptSession(Map<String, dynamic> data) {
+    _accessToken = data['access_token'] as String?;
+    _refreshToken = data['refresh_token'] as String?;
+    _expiresAt = DateTime.now().add(Duration(seconds: (data['expires_in'] as num?)?.toInt() ?? 3600));
+  }
+  Future<String> accessToken() async {
+    if (_accessToken == null) throw Exception('سجّل الدخول بالبريد الإلكتروني للانضمام إلى الغرف');
+    if (DateTime.now().isBefore(_expiresAt.subtract(const Duration(minutes: 1)))) return _accessToken!;
+    return _refreshing ??= _renewSession().whenComplete(() => _refreshing = null);
+  }
+  Future<String> _renewSession() async {
+    final response = await http.post(Uri.parse('$endpoint/auth/v1/token?grant_type=refresh_token'),
+      headers: _headers, body: jsonEncode({'refresh_token': _refreshToken})).timeout(const Duration(seconds: 10));
+    if (response.statusCode != 200) { clearSession(); throw Exception('انتهت الجلسة، سجّل الدخول مجدداً'); }
+    _acceptSession(jsonDecode(response.body) as Map<String, dynamic>);
+    return _accessToken!;
+  }
+
   static const String endpoint =String.fromEnvironment('SUPABASE_URL', defaultValue:  'https://uwjrboviicypyhregpoo.supabase.co');
   static const String publicKey = String.fromEnvironment('SUPABASE_ANON_KEY', defaultValue: 'sb_publishable_QbUKNVMYDRK63NjB26tCtw_jzOaEXdR');
 
@@ -124,6 +147,7 @@ class SupabaseAuthService {
           if (name.isEmpty) {
             name = email.isNotEmpty ? email.split('@').first : 'مستخدم هلاا';
           }
+          _acceptSession({'access_token': accessToken, 'refresh_token': fragParams['refresh_token'], 'expires_in': int.tryParse(fragParams['expires_in'] ?? '') ?? 3600});
           return AuthResult(ok: true, displayName: name, email: email);
         }
       }
@@ -143,6 +167,7 @@ class SupabaseAuthService {
           .timeout(const Duration(seconds: 10));
       final data = jsonDecode(utf8.decode(resp.bodyBytes));
       if (resp.statusCode == 200 && data is Map<String, dynamic>) {
+        _acceptSession(data);
         final user = data['user'];
         String name = email.split('@').first;
         if (user is Map<String, dynamic>) {

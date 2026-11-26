@@ -1,16 +1,19 @@
 import 'dart:async';
+import '../screens/rooms/halaa_live_room_screen.dart';
 import 'dart:convert';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 class HalaaRoomsShowcaseTab extends StatefulWidget {
-  const HalaaRoomsShowcaseTab({super.key, this.serverEndpoint = ''});
+  const HalaaRoomsShowcaseTab({super.key, this.serverEndpoint = '', this.accessToken});
   final String serverEndpoint;
+  final Future<String> Function()? accessToken;
   @override
   State<HalaaRoomsShowcaseTab> createState() => _HalaaRoomsShowcaseTabState();
 }
 class _RoomItem {
   const _RoomItem({
+    this.id = '',
     required this.name,
     required this.description,
     required this.countryFlag,
@@ -24,6 +27,7 @@ class _RoomItem {
     required this.icon,
   });
 
+  final String id;
   final String name;
   final String description;
   final String countryFlag;
@@ -144,6 +148,24 @@ class _HalaaRoomsShowcaseTabState extends State<HalaaRoomsShowcaseTab> with Sing
   late final AnimationController _waveController;
   Timer? _presenceTimer;
   Map<String, int> _presenceCounts = {};
+  List<_RoomItem> _customRooms = [];
+  Future<void> _fetchRoomCatalog() async {
+    final base = widget.serverEndpoint.trim().replaceAll(RegExp(r'/+$'), '');
+    if (base.isEmpty) return;
+    try {
+      final response = await http.get(Uri.parse('$base/api/config')).timeout(const Duration(seconds: 8));
+      if (response.statusCode != 200) return;
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      final rooms = (data['rooms'] as List<dynamic>? ?? []).map((raw) {
+        final room = raw as Map<String, dynamic>;
+        return _RoomItem(id: room['id'] as String, name: room['title'] as String,
+          description: room['category'] as String, countryFlag: '🌐', categoryTag: room['category'] as String,
+          filterCategory: 'ترفيه', subTab: 1, onlineCount: 0, badges: const [],
+          imageAsset: 'assets/images/welcome-gallery/headphones.webp', accentColor: const Color(0xFF14B8A6), icon: Icons.mic);
+      }).toList();
+      if (mounted) setState(() => _customRooms = rooms);
+    } catch (_) { /* Preserve the original room catalog when offline. */ }
+  }
     @override
   void initState() {
     super.initState();
@@ -152,6 +174,7 @@ class _HalaaRoomsShowcaseTabState extends State<HalaaRoomsShowcaseTab> with Sing
       duration: const Duration(milliseconds: 1100),
     )..repeat();
     _fetchPresence();
+    _fetchRoomCatalog();
     _presenceTimer = Timer.periodic(
       const Duration(seconds: 15),
       (_) => _fetchPresence(),
@@ -250,7 +273,7 @@ class _HalaaRoomsShowcaseTabState extends State<HalaaRoomsShowcaseTab> with Sing
   }
 
   List<_RoomItem> get _filteredRooms {
-    return _rooms.where((room) {
+    return [..._rooms, ..._customRooms].where((room) {
       final matchesCategory = _selectedCategory == 'الجميع' ||
           room.filterCategory == _selectedCategory;
       final matchesSubTab =
@@ -794,7 +817,10 @@ class _HalaaRoomsShowcaseTabState extends State<HalaaRoomsShowcaseTab> with Sing
   Widget _buildRoomCard(ColorScheme cs, _RoomItem room) {
     return InkWell(
       borderRadius: BorderRadius.circular(18),
-      onTap: _showComingSoonDialog,
+      onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => HalaaLiveRoomScreen(
+        roomId: room.id.isNotEmpty ? room.id : 'r${_rooms.indexOf(room) + 1}', title: room.name,
+        serverEndpoint: widget.serverEndpoint, accessToken: widget.accessToken,
+      ))),
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(

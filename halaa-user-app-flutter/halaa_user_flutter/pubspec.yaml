@@ -11,6 +11,8 @@ dependencies:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
+  zego_uikit_prebuilt_live_audio_room: 3.16.12
+  zego_uikit: 2.29.4
   http: ^1.2.2
   shared_preferences: ^2.3.2
   url_launcher: ^6.3.1

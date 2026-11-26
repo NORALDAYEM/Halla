@@ -111,7 +111,7 @@ class HalaaRemoteConfigController extends ChangeNotifier {
       final incomingVersion = (cfg['version'] as num?)?.toInt() ?? 0;
       final value = cfg['value'];
       if (value is Map<String, dynamic>) {
-        return applyRemotePayload(incomingVersion: incomingVersion, value: value);
+        return await applyRemotePayload(incomingVersion: incomingVersion, value: value);
       }
     } catch (_) {
       // Keep last known good config on network failure

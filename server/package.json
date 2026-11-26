@@ -7,7 +7,7 @@
   },
   "scripts": {
     "start": "node app.mjs",
-    "test": "node --test app.test.mjs"
+    "test": "node --test app.test.mjs src/central-admin.test.mjs src/gifts.test.mjs"
   },
   "dependencies": {
     "livekit-server-sdk": "2.15.0"
