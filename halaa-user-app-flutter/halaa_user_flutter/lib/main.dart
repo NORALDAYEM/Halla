@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'models/halaa_models.dart';
@@ -11,8 +13,9 @@ import 'core/dynamic_theme/halaa_dynamic_theme_controller.dart';
 import 'core/realtime_sync/halaa_realtime_sync_client.dart';
 import 'core/remote_config/halaa_remote_config_controller.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Supabase.initialize(url: SupabaseAuthService.endpoint, anonKey: SupabaseAuthService.publicKey);
   runApp(const HalaaUserApp());
 }
 
@@ -29,6 +32,8 @@ class _HalaaUserAppState extends State<HalaaUserApp> {
   HalaaConfig _cfg = HalaaConfig.defaults();
   String? _memberUser;
   bool _ready = false;
+  bool _recovering = false;
+  StreamSubscription<AuthState>? _accountEvents;
   final _remoteConfigController = HalaaRemoteConfigController(
     serverBaseUrl: kHalaaCentralServerUrl,
   );
@@ -42,6 +47,16 @@ class _HalaaUserAppState extends State<HalaaUserApp> {
     super.initState();
     _dynamicThemeController.addListener(_remoteChanged);
     _remoteConfigController.addListener(_remoteChanged);
+    _accountEvents = _auth.auth.onAuthStateChange.listen((state) {
+      if (!mounted) return;
+      if (state.event == AuthChangeEvent.passwordRecovery) {
+        setState(() => _recovering = true);
+      }
+      final name = _auth.displayName;
+      if (name != null || state.event == AuthChangeEvent.signedOut) {
+        setState(() => _memberUser = name);
+      }
+    }, onError: (Object error) { if (mounted && _auth.auth.currentSession == null) setState(() => _memberUser = null); });
     _bootstrap();
     _realtimeSyncClient = HalaaRealtimeSyncClient(
       serverBaseUrl: kHalaaCentralServerUrl,
@@ -57,18 +72,15 @@ class _HalaaUserAppState extends State<HalaaUserApp> {
   void dispose() {
     _dynamicThemeController.removeListener(_remoteChanged);
     _remoteConfigController.removeListener(_remoteChanged);
+    _accountEvents?.cancel();
     _realtimeSyncClient.stop();
     super.dispose();
   }
 
   Future<void> _bootstrap() async {
     final c = await _storage.loadConfig();
-    var m = await _storage.getMemberUser();
-    final oauthReturn = await _auth.checkOAuthReturn();
-    if (oauthReturn != null && oauthReturn.ok && oauthReturn.displayName != null) {
-      m = oauthReturn.displayName;
-      await _storage.setMemberUser(m);
-    }
+    final saved = await _storage.getMemberUser();
+    final m = _auth.displayName ?? (saved == 'وضع الضيف' ? saved : null);
     if (!mounted) return;
     setState(() {
       _cfg = c;
@@ -112,6 +124,7 @@ class _HalaaUserAppState extends State<HalaaUserApp> {
         currentBuild: 6,
         child: !_ready
           ? const Scaffold(body: Center(child: CircularProgressIndicator()))
+          : _recovering ? _PasswordRecovery(auth: _auth, onDone: () => setState(() => _recovering = false))
           : (_memberUser == null
               ? AppLoginScreen(
                   config: _cfg,
@@ -121,9 +134,6 @@ class _HalaaUserAppState extends State<HalaaUserApp> {
                     if (!mounted) return;
                     setState(() => _memberUser = u);
                   },
-                  onRegisteredUser: (rec) => _updateConfig(
-                    _cfg.copyWith(appUsers: [rec, ..._cfg.appUsers]),
-                  ),
                   onTicketCreated: (t) => _updateConfig(
                     _cfg.copyWith(tickets: [t, ..._cfg.tickets]),
                   ),
@@ -134,7 +144,7 @@ class _HalaaUserAppState extends State<HalaaUserApp> {
                   displayName: _memberUser!,
                   config: _cfg,
                   onLogout: () async {
-                    _auth.clearSession();
+                    if (_auth.auth.currentSession != null) await _auth.auth.signOut(scope: SignOutScope.local);
                     await _storage.setMemberUser(null);
                     if (!mounted) return;
                     setState(() => _memberUser = null);
@@ -162,4 +172,33 @@ class _SilentScrollBehavior extends MaterialScrollBehavior {
   ScrollPhysics getScrollPhysics(BuildContext context) {
     return const ClampingScrollPhysics();
   }
+}
+
+class _PasswordRecovery extends StatefulWidget {
+  const _PasswordRecovery({required this.auth, required this.onDone});
+  final SupabaseAuthService auth;
+  final VoidCallback onDone;
+  @override
+  State<_PasswordRecovery> createState() => _PasswordRecoveryState();
+}
+
+class _PasswordRecoveryState extends State<_PasswordRecovery> {
+  String password = '', message = '';
+  bool busy = false;
+  @override
+  Widget build(BuildContext context) => Scaffold(appBar: AppBar(title: const Text('تعيين كلمة مرور جديدة')),
+    body: SafeArea(child: ListView(padding: const EdgeInsets.all(24), children: [
+      TextField(obscureText: true, autofocus: true, autofillHints: const [AutofillHints.newPassword],
+        decoration: const InputDecoration(labelText: 'كلمة المرور الجديدة'), onChanged: (v) => password = v),
+      Text(message),
+      FilledButton(onPressed: busy ? null : () async {
+        setState(() => busy = true);
+        try {
+          await widget.auth.auth.updateUser(UserAttributes(password: password));
+          if (mounted) widget.onDone();
+        } catch (_) {
+          if (mounted) setState(() { busy = false; message = 'تعذّر حفظ كلمة المرور. تحقّق من صلاحية الرابط وقوة كلمة المرور.'; });
+        }
+      }, child: const Text('حفظ كلمة المرور')),
+    ])));
 }

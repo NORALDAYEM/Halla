@@ -5,7 +5,7 @@
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <application
-        android:label="halaa_user_app"
+        android:label="هلا"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
@@ -28,6 +28,13 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+            <meta-data android:name="flutter_deeplinking_enabled" android:value="false"/>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="com.halla.voiceclubs" android:host="auth" android:path="/callback"/>
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.
