@@ -43,6 +43,43 @@ jobs:
         env:
           RELEASE_INPUTS: ${{ toJSON(inputs) }}
         run: python3 .github/scripts/announce_update.py
+      - name: Verify Android APK can upgrade the existing public package
+        if: inputs.platform != 'ios' && startsWith(inputs.android_url, 'https://github.com/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          APP: ${{ inputs.app }}
+          EXPECTED_BUILD: ${{ inputs.build }}
+          EXPECTED_VERSION: ${{ inputs.version }}
+          APK_URL: ${{ inputs.android_url }}
+        run: |
+          set -euo pipefail
+          apk="${APK_URL##*/}"
+          tools_dir=$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -1)
+          work=$(mktemp -d)
+          gh release download latest --pattern "$apk" --dir "$work"
+          curl --fail --location --silent --show-error "$APK_URL" -o "$work/candidate.apk"
+          cert() { "$tools_dir/apksigner" verify --print-certs "$1" | awk '/Signer #1 certificate SHA-256 digest:/ {print $NF}'; }
+          previous=$(cert "$work/$apk")
+          candidate=$(cert "$work/candidate.apk")
+          [[ -n "$previous" && "$previous" == "$candidate" ]] || { echo "::error::APK signing certificates differ"; exit 1; }
+          for file in "$work/$apk" "$work/candidate.apk"; do
+            "$tools_dir/aapt" dump badging "$file" > "$file.badging"
+          done
+          python3 - "$work/$apk.badging" "$work/candidate.apk.badging" <<'PY'
+          import os, re, sys
+          def metadata(path):
+              with open(path) as stream:
+                  line = next(line for line in stream if line.startswith("package:"))
+              return dict(re.findall(r"(\w+)='([^']*)'", line))
+          old, new = (metadata(path) for path in sys.argv[1:])
+          expected = "com.halla.halaa_" + os.environ["APP"]
+          if old["name"] != expected or new["name"] != expected:
+              raise SystemExit("Unexpected Android application ID")
+          if new["versionCode"] != os.environ["EXPECTED_BUILD"] or new["versionName"] != os.environ["EXPECTED_VERSION"]:
+              raise SystemExit("APK version does not match announcement")
+          if int(new["versionCode"]) < int(old["versionCode"]):
+              raise SystemExit("APK is older than the installed distribution")
+          PY
       - name: Publish notification
         run: |
           git config user.name 'github-actions[bot]'
