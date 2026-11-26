@@ -1,7 +1,7 @@
 {
   "user_app": {
-    "latest_version": "3.1.6",
-    "latest_build": 7,
+    "latest_version": "3.1.7",
+    "latest_build": 8,
     "min_required_build": 0,
     "force_update": false,
     "update_type": "minor",
@@ -11,21 +11,21 @@
       "announcement": "",
       "rooms_notice": "سجّل الدخول إلى هلا، ثم اختر الغرفة التي تريد الانضمام إليها."
     },
-    "title": "غرف هلا الصوتية متاحة لأندرويد",
-    "message": "إذا كانت الغرفة تعرض «قريبًا»، افتح صفحة التثبيت واختر «عندي هلا القديم». ثم افتح «هلا الغرف» وسجّل دخولك.",
+    "title": "تحديث هلا للغرف الصوتية",
+    "message": "يفتح هذا الإصدار الغرف من صفحة الألعاب ومن قائمة الغرف. افتح صفحة التثبيت واختر الحزمة الموجودة على هاتفك.",
     "download_url": "https://noraldayem.github.io/Halla/mobile-update.html?app=user_app",
     "platforms": {
       "android": {
-        "latest_build": 7,
-        "latest_version": "3.1.6",
+        "latest_build": 8,
+        "latest_version": "3.1.7",
         "min_required_build": 0,
         "force_update": false,
         "update_type": "minor",
-        "title": "غرف هلا الصوتية متاحة لأندرويد",
-        "message": "نزّل «هلا الغرف» بجانب تطبيقك الحالي، ثم افتحه وسجّل الدخول إلى حسابك.",
-        "download_url": "https://github.com/NORALDAYEM/Halla/releases/download/android-3.1.6-7/Halaa-Rooms-Android.apk",
-        "fresh_install_url": "https://github.com/NORALDAYEM/Halla/releases/download/android-3.1.6-7/Halaa-App-Android.apk",
-        "rooms_download_url": "https://github.com/NORALDAYEM/Halla/releases/download/android-3.1.6-7/Halaa-Rooms-Android.apk"
+        "title": "تحديث هلا للغرف الصوتية",
+        "message": "حدّث تطبيقك لفتح الغرفة مباشرة من بطاقة النشاط أو من قائمة الغرف.",
+        "download_url": "https://github.com/NORALDAYEM/Halla/releases/download/android-3.1.7-8/Halaa-Rooms-Android.apk",
+        "fresh_install_url": "https://github.com/NORALDAYEM/Halla/releases/download/android-3.1.7-8/Halaa-App-Android.apk",
+        "rooms_download_url": "https://github.com/NORALDAYEM/Halla/releases/download/android-3.1.7-8/Halaa-Rooms-Android.apk"
       }
     }
   },

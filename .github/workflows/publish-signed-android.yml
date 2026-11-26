@@ -16,7 +16,7 @@ concurrency:
   group: halaa-production-android-release
   cancel-in-progress: false
 env:
-  BUILD_RUN: ${{ inputs.build_run || '45846980882' }}
+  BUILD_RUN: ${{ inputs.build_run || '45851243373' }}
 jobs:
   sign:
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/release/android-rooms-3.1.6'
@@ -98,6 +98,7 @@ jobs:
           target: google_apis
           arch: x86_64
           profile: pixel_6
+          ram-size: 3072M
           script: |
             adb install Halaa-App-Android.apk
             adb shell am start -W -n com.halla.halaa_user_app/.MainActivity
@@ -109,8 +110,6 @@ jobs:
             adb shell pm path com.halla.halaa_user_app
             adb shell pm path com.halla.halaa_user_app.rooms
             adb install -r Halaa-Rooms-Android.apk
-            adb shell wm size 1080x2200
-            adb shell wm density 360
             adb shell am start -W -n com.halla.halaa_user_app.rooms/com.halla.halaa_user_app.MainActivity
             sleep 8
             adb shell pidof com.halla.halaa_user_app.rooms || (adb logcat -b crash -d -t 100 && false)

@@ -25,8 +25,8 @@
       const release = releases[key];
       const hosts = key === 'ios' ? ['apps.apple.com','testflight.apple.com'] : ['github.com','play.google.com'];
       if (key === 'android' && release.fresh_install_url) {
-        addLink(release.download_url, 'عندي هلا القديم · تثبيت «هلا الغرف» بجانبه', hosts);
-        addLink(release.fresh_install_url, 'تثبيت هلا لأول مرة · أندرويد ' + release.latest_version, hosts);
+        addLink(release.download_url, 'عندي هلا القديم أو «هلا الغرف» · تنزيل «هلا الغرف»', hosts);
+        addLink(release.fresh_install_url, 'تثبيت هلا لأول مرة أو تحديث «هلا» 3.1.6 · أندرويد ' + release.latest_version, hosts);
       } else {
         addLink(release.download_url, label + ' · ' + release.latest_version, hosts);
       }
