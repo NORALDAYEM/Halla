@@ -16,6 +16,16 @@ allprojects {
     }
 }
 
+// ZEGO's library modules declare API 31, below their resolved AndroidX requirements.
+subprojects {
+    if (name.startsWith("zego_")) {
+        plugins.withId("com.android.library") {
+            extensions.getByType<com.android.build.api.variant.LibraryAndroidComponentsExtension>()
+                .finalizeDsl { android -> android.compileSdk = 37 }
+        }
+    }
+}
+
 val newBuildDir: Directory =
     rootProject.layout.buildDirectory
         .dir("../../build")
