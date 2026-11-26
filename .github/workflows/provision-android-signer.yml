@@ -1,0 +1,28 @@
+name: Verify Android signing backup in IDrive
+on:
+  workflow_dispatch:
+  push:
+    branches: [release/android-rooms-3.1.6]
+    paths: ['.github/workflows/provision-android-signer.yml']
+permissions:
+  contents: read
+concurrency:
+  group: halaa-production-android-signer
+  cancel-in-progress: false
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Create or restore the encrypted backup and check its certificate
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.IDRIVE_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.IDRIVE_SECRET_KEY }}
+          IDRIVE_ENDPOINT: ${{ secrets.IDRIVE_ENDPOINT || 'https://s3.us-west-4.idrivee2.com' }}
+          IDRIVE_BUCKET: ${{ secrets.IDRIVE_BUCKET || 'halla' }}
+          AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+          AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
+          HALAA_ANDROID_STORE_PASSWORD: ${{ secrets.HALAA_ANDROID_STORE_PASSWORD }}
+        run: python3 .github/scripts/android_signer.py provision
