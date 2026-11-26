@@ -4,6 +4,7 @@ import '../../models/halaa_models.dart';
 import '../../theme/halaa_themes.dart';
 import '../../widgets/welcome_gallery_bg.dart';
 import '../../widgets/halaa_rooms_showcase_tab.dart';
+import '../../widgets/halaa_games_showcase_tab.dart';
 
 /// Post-login member screen (`halla-web/member.html`) unified with the exact
 /// same `.welcome-gallery` rotating background and 4 real-photo game cards.
@@ -171,96 +172,7 @@ class _MemberHomeScreenState extends State<MemberHomeScreen> {
   }
 
   Widget _gamesTab(HalaaThemePreset theme) {
-    const games = [
-      (
-        'الشطرنج',
-        'assets/images/welcome-gallery/chessboard.webp',
-        'لعب مباشر ودردشة صوتية'
-      ),
-      (
-        'الليدو',
-        'assets/images/welcome-gallery/ludo-friends.webp',
-        'تحديات جماعية وبطولات'
-      ),
-      (
-        'البلياردو',
-        'assets/images/welcome-gallery/pool-table.webp',
-        '8-Ball وفيزياء واقعية'
-      ),
-      (
-        'الضومينو',
-        'assets/images/welcome-gallery/game-table.webp',
-        'جولات سريعة مع الأصدقاء'
-      ),
-    ];
-
-    return GridView.builder(
-      padding: const EdgeInsets.all(14),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        mainAxisSpacing: 12,
-        crossAxisSpacing: 12,
-        childAspectRatio: 0.85,
-      ),
-      itemCount: games.length,
-      itemBuilder: (ctx, i) {
-        final g = games[i];
-        return InkWell(
-          onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('جاري تشغيل لعبة ${g.$1}...')),
-            );
-          },
-          borderRadius: BorderRadius.circular(20),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: const Color.fromRGBO(10, 30, 38, 0.62),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: const Color.fromRGBO(255, 255, 255, 0.28),
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Expanded(
-                      child: Image.asset(g.$2, fit: BoxFit.cover),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(10),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            g.$1,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w800,
-                              fontSize: 15,
-                            ),
-                          ),
-                          Text(
-                            g.$3,
-                            style: const TextStyle(
-                              color: Color(0xFF99F6E4),
-                              fontSize: 11.5,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-    );
+      return const HalaaGamesShowcaseTab();
   }
   
   Widget _roomsTab() {
