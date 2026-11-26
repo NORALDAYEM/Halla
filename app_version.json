@@ -1,18 +1,18 @@
 {
   "user_app": {
-    "latest_version": "3.1.1",
-    "latest_build": 2,
-    "min_required_build": 2,
-    "force_update": false,
+    "latest_version": "3.1.2",
+    "latest_build": 3,
+    "min_required_build": 3,
+    "force_update": false, "update_type": "minor", "remote_config_version": 1, "live_config": { "server_endpoint": "https://halla.onrender.com", "announcement": "", "rooms_notice": "يتم العمل قريباً بعد تركيب نظام الغرف" },
     "title": "تحديث جديد متوفر لتطبيق هلا",
     "message": "يتوفر إصدار جديد يتضمن تحسينات وتعديلات مهمة. يرجى التحديث الآن للاستمرار بأفضل أداء.",
     "download_url": "https://github.com/NORALDAYEM/Halla/releases/latest"
   },
   "admin_app": {
-    "latest_version": "3.1.1",
-    "latest_build": 2,
-    "min_required_build": 2,
-    "force_update": false,
+    "latest_version": "3.1.2",
+    "latest_build": 3,
+    "min_required_build": 3,
+    "force_update": false, "update_type": "minor", "remote_config_version": 1, "live_config": { "server_endpoint": "https://halla.onrender.com", "announcement": "", "rooms_notice": "يتم العمل قريباً بعد تركيب نظام الغرف" },
     "title": "تحديث جديد متوفر للوحة إدارة هلا",
     "message": "يتوفر إصدار جديد للوحة الإدارة يتضمن تعديلات مهمة. يرجى التحديث الآن للاستمرار بأفضل أداء.",
     "download_url": "https://github.com/NORALDAYEM/Halla/releases/latest"
