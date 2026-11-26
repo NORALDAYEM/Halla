@@ -21,6 +21,12 @@ def locate(phrase, *, tap=False, scroll=False):
         except (subprocess.SubprocessError, ET.ParseError):
             time.sleep(1)
             continue
+        if any("Pixel Launcher isn't responding" in node.get("text", "") for node in root.iter("node")):
+            # On a busy runner the launcher may time out during APK replacement.
+            DEVICE(text="Close app").click(timeout=2)
+            adb("shell", "am", "start", "-W", "-n",
+                "com.halla.halaa_user_app.rooms/com.halla.halaa_user_app.MainActivity")
+            continue
         last_labels = []
         for node in root.iter("node"):
             label = (node.get("content-desc", "") + " " + node.get("text", "")).strip()
