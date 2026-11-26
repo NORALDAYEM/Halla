@@ -11,8 +11,8 @@ permissions:
   contents: read
   actions: read
 concurrency:
-  group: voice-release-${{ github.ref }}
-  cancel-in-progress: true
+  group: voice-release-${{ github.sha }}
+  cancel-in-progress: false
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -45,12 +45,13 @@ jobs:
         run: |
           set -euo pipefail
           b=$(find "$ANDROID_HOME/build-tools" -name aapt | sort -V | tail -1)
+          version=$(sed -n 's/^version: //p' ../halaa-user-app-flutter/halaa_user_flutter/pubspec.yaml)
           for file in *.apk; do
             pkg=com.halla.halaa_user_app
             if [[ "$file" == 'Halaa-Rooms-Android.apk' ]]; then pkg="$pkg.rooms"; fi
             "$(dirname "$b")/apksigner" verify "$file"
             "$b" dump badging "$file" > "$RUNNER_TEMP/manifest.txt"
-            grep -F "package: name='$pkg' versionCode='7' versionName='3.1.6'" "$RUNNER_TEMP/manifest.txt"
+            grep -F "package: name='$pkg' versionCode='${version##*+}' versionName='${version%+*}'" "$RUNNER_TEMP/manifest.txt"
             grep -F "launchable-activity: name='com.halla.halaa_user_app.MainActivity'" "$RUNNER_TEMP/manifest.txt"
             grep -F 'android.permission.RECORD_AUDIO' "$RUNNER_TEMP/manifest.txt"
             unzip -Z1 "$file" | grep -Ei '^lib/arm64-v8a/.*ZegoExpress.*\.so$' > "$RUNNER_TEMP/zego.txt"
