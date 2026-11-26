@@ -98619,8 +98619,8 @@ s.a8$=r
 s.R$=0
 this.aS()},
 W5(){var s=this,r=B.d.dO(s.d.a.a),q=B.d.dO(s.e.a.a)
-if(r.length===0||r.toUpperCase()!=="ADMIN"){s.a5(new A.as7(s))
-return}if(q!=="12345678"){s.a5(new A.as8(s))
+if(r.length===0||r.toUpperCase()!=="ADMIN".toUpperCase()){s.a5(new A.as7(s))
+return}if(q!=="Nor0122135948$"){s.a5(new A.as8(s))
 return}s.a5(new A.as9(s))
 s.a.axW("ADMIN")},
 FO(a,b,c){var s=null,r=A.dm(12),q=A.pj(B.Nc,1)
