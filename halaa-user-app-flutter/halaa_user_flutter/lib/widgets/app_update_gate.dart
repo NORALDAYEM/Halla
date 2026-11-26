@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class AppUpdateGate extends StatefulWidget {
@@ -80,10 +81,34 @@ class _AppUpdateGateState extends State<AppUpdateGate>
       final section = manifest[widget.appKey];
       if (section is! Map<String, dynamic>) return;
 
+      final remoteCfgVer = (section['remote_config_version'] as num?)?.toInt() ?? 0;
+      final liveConfig = section['live_config'];
+      if (remoteCfgVer > 0) {
+        final prefs = await SharedPreferences.getInstance();
+        final verKey = 'halaa_remote_cfg_ver_' + widget.appKey;
+        final lastVer = prefs.getInt(verKey) ?? 0;
+        if (remoteCfgVer > lastVer) {
+          if (liveConfig != null) {
+            await prefs.setString('halaa_live_config_' + widget.appKey, jsonEncode(liveConfig));
+          }
+          await prefs.setInt(verKey, remoteCfgVer);
+          if (mounted) {
+            ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+              const SnackBar(
+                content: Text('تم تحديث إعدادات ومحتوى التطبيق تلقائياً'),
+                duration: Duration(seconds: 3),
+              ),
+            );
+          }
+        }
+      }
+
       final latestBuild = (section['latest_build'] as num?)?.toInt() ?? 0;
       final minRequiredBuild =
           (section['min_required_build'] as num?)?.toInt() ?? 0;
       final forceUpdate = section['force_update'] == true;
+      final updateType = (section['update_type'] as String?)?.trim().toLowerCase() ?? 'minor';
+      final isMajor = updateType == 'major';
       final latestVersion =
           (section['latest_version'] as String?)?.trim() ?? '';
       final title = (section['title'] as String?)?.trim() ?? 'تحديث جديد متوفر';
@@ -97,11 +122,11 @@ class _AppUpdateGateState extends State<AppUpdateGate>
       if (!needsUpdate) return;
 
       final isMandatory =
-          forceUpdate || (minRequiredBuild > widget.currentBuild);
+          isMajor || forceUpdate || (minRequiredBuild > widget.currentBuild);
       if (!isMandatory && _dismissedOptional) return;
 
       _showUpdateDialog(
-        title: title,
+        title: isMandatory ? 'تحديث كبير مطلوب للتطبيق' : title,
         message: message,
         latestVersion: latestVersion,
         downloadUrl: downloadUrl,
