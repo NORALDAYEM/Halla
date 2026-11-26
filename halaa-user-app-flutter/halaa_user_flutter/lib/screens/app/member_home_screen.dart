@@ -5,6 +5,7 @@ import '../../theme/halaa_themes.dart';
 import '../../widgets/welcome_gallery_bg.dart';
 import '../../widgets/halaa_rooms_showcase_tab.dart';
 import '../../widgets/halaa_games_showcase_tab.dart';
+import '../../widgets/halaa_profile_page.dart';
 
 /// Post-login member screen (`halla-web/member.html`) unified with the exact
 /// same `.welcome-gallery` rotating background and 4 real-photo game cards.
@@ -226,36 +227,9 @@ class _MemberHomeScreenState extends State<MemberHomeScreen> {
   }
 
   Widget _profileTab(HalaaThemePreset theme) {
-    return ListView(
-      padding: const EdgeInsets.all(14),
-      children: [
-        Container(
-          padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(
-            color: const Color.fromRGBO(10, 30, 38, 0.74),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Column(
-            children: [
-              Image.asset('assets/images/halaa-clear.webp', height: 84),
-              const SizedBox(height: 10),
-              Text(
-                widget.displayName,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              const SizedBox(height: 6),
-              const Text(
-                'العملات الذهبية: 0 • الكريستال: 0',
-                style: TextStyle(color: Color(0xFF99F6E4)),
-              ),
-            ],
-          ),
-        ),
-      ],
+    return HalaaProfilePage(
+      displayName: widget.displayName,
+      onLogout: widget.onLogout,
     );
   }
 }
