@@ -7,6 +7,9 @@ import 'services/halaa_storage.dart';
 import 'services/supabase_auth_service.dart';
 import 'theme/halaa_themes.dart';
 import 'widgets/app_update_gate.dart';
+import 'core/dynamic_theme/halaa_dynamic_theme_controller.dart';
+import 'core/realtime_sync/halaa_realtime_sync_client.dart';
+import 'core/remote_config/halaa_remote_config_controller.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,11 +29,25 @@ class _HalaaUserAppState extends State<HalaaUserApp> {
   HalaaConfig _cfg = HalaaConfig.defaults();
   String? _memberUser;
   bool _ready = false;
+  final _remoteConfigController = HalaaRemoteConfigController(
+    serverBaseUrl: kHalaaCentralServerUrl,
+  );
+  final _dynamicThemeController = HalaaDynamicThemeController(
+    serverBaseUrl: kHalaaCentralServerUrl,
+  );
+  late final HalaaRealtimeSyncClient _realtimeSyncClient;
 
   @override
   void initState() {
     super.initState();
     _bootstrap();
+    _realtimeSyncClient = HalaaRealtimeSyncClient(
+      serverBaseUrl: kHalaaCentralServerUrl,
+      deviceId: 'halaa-user-${DateTime.now().millisecondsSinceEpoch}',
+      configController: _remoteConfigController,
+      themeController: _dynamicThemeController,
+    );
+    _realtimeSyncClient.start();
   }
 
   Future<void> _bootstrap() async {
