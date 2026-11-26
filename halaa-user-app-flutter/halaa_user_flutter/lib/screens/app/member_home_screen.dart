@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../models/halaa_models.dart';
 import '../../theme/halaa_themes.dart';
 import '../../widgets/welcome_gallery_bg.dart';
+import '../../widgets/halaa_rooms_showcase_tab.dart';
 
 /// Post-login member screen (`halla-web/member.html`) unified with the exact
 /// same `.welcome-gallery` rotating background and 4 real-photo game cards.
@@ -263,57 +264,7 @@ class _MemberHomeScreenState extends State<MemberHomeScreen> {
   }
   
   Widget _roomsTab() {
-    return ListView(
-      padding: const EdgeInsets.all(14),
-      children: [
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: const Color.fromRGBO(10, 30, 38, 0.72),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: const Color.fromRGBO(255, 255, 255, 0.26)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'نشاطات الغرف الصوتية (${widget.config.micSeats} مقاعد مايك)',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 15,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                children: List.generate(widget.config.micSeats, (i) {
-                  return Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const CircleAvatar(
-                        radius: 22,
-                        backgroundColor: Color(0xFF0F7682),
-                        child: Icon(Icons.mic_none_rounded, color: Colors.white),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'مايك ${i + 1}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 11.5,
-                        ),
-                      ),
-                    ],
-                       );
-           }),
-              ),
-            ],
-          ),
-        ),
-            ],
-    );
+      return const HalaaRoomsShowcaseTab();
   }
 
   Widget _momentsTab() {
