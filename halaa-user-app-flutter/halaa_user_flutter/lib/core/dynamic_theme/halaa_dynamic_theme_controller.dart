@@ -142,7 +142,7 @@ class HalaaDynamicThemeController extends ChangeNotifier {
       final body = jsonDecode(res.body) as Map<String, dynamic>;
       final theme = body['theme'];
       if (theme is Map<String, dynamic>) {
-        return applyRemoteTheme(theme);
+        return await applyRemoteTheme(theme);
       }
     } catch (_) {}
     return false;

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -24,6 +25,7 @@ class AppUpdateGate extends StatefulWidget {
 
 class _AppUpdateGateState extends State<AppUpdateGate>
     with WidgetsBindingObserver {
+  Timer? _pollTimer;
   bool _checking = false;
   bool _dialogOpen = false;
   bool _dismissedOptional = false;
@@ -32,11 +34,13 @@ class _AppUpdateGateState extends State<AppUpdateGate>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _pollTimer = Timer.periodic(const Duration(minutes: 5), (_) => _checkForUpdate());
     WidgetsBinding.instance.addPostFrameCallback((_) => _checkForUpdate());
   }
 
   @override
   void dispose() {
+    _pollTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -138,7 +142,7 @@ duration: Duration(seconds: 3),
 
   Future<void> _openDownload(String url) async {
     final uri = Uri.tryParse(url);
-    if (uri == null) return;
+    if (uri == null || uri.scheme != 'https' || !['github.com', 'noraldayem.github.io', 'apps.apple.com', 'play.google.com'].contains(uri.host)) return;
     await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 

@@ -46,7 +46,7 @@ export function createCentralAdminSystem(options = {}) {
   const accessControl = new AccessControlService({ auditService });
   const adminAuth = new AdminAuthService({ tokenSecret: options.tokenSecret, auditService });
   const approvalService = new ApprovalService({ auditService });
-  const ledgerService = new FinancialLedgerService({ accessControl, approvalService, auditService });
+  const ledgerService = new FinancialLedgerService({ accessControl, approvalService, auditService, storage: options.ledgerStorage });
   const controlSync = new CentralControlSyncService({ accessControl, auditService });
 
   // Bootstrap SUPER_OWNER from environment variables only (never hardcoded)
@@ -179,6 +179,15 @@ export function createCentralAdminSystem(options = {}) {
 
       // -------------------- Protected /api/v1/admin/* & /api/v1/security/* --------------------
       const { actor, session } = authenticateAdminRequest(req);
+
+      if (method === 'POST' && pathname === '/api/v1/admin/voice/rooms') {
+        const data = await readJsonBody(req);
+        accessControl.authorize({actor,session,action:'rooms.manage',scope:{type:'ROOM',resourceId:data.room}});
+        if (!options.manageVoiceRoom) { sendJson(res,503,{error:'Voice room manager unavailable'}); return true; }
+        const result = options.manageVoiceRoom(data);
+        auditService.record({actorId:actor.id,sessionId:session.id,action:'rooms.manage',resourceType:'ROOM',targetId:data.room,afterValue:data,result:'SUCCESS'});
+        sendJson(res,200,{ok:true,...result}); return true;
+      }
 
       if (method === 'GET' && pathname === '/api/v1/admin/roles') {
         accessControl.authorize({ actor, session, action: 'dashboard.read' });
@@ -342,7 +351,7 @@ export function createCentralAdminSystem(options = {}) {
       sendJson(res, 404, { ok: false, error: 'Admin API endpoint not found' });
       return true;
     } catch (err) {
-      const code = err?.statusCode || 500;
+      const code = err?.statusCode || err?.status || 500;
       sendJson(res, code, { ok: false, error: err?.message || 'Internal Server Error' });
       return true;
     }

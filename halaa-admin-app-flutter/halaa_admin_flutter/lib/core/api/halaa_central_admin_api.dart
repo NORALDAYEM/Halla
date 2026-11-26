@@ -62,6 +62,8 @@ class HalaaCentralAdminApi {
   Future<Map<String, dynamic>> fetchPermissions() => _get('/api/v1/admin/permissions');
   Future<Map<String, dynamic>> fetchConfig() => _get('/api/v1/admin/config');
   Future<Map<String, dynamic>> fetchAuditLogs() => _get('/api/v1/admin/audit/logs');
+  Future<Map<String, dynamic>> manageVoiceRoom({required String room, required String target, required String action}) =>
+    _send('POST', '/api/v1/admin/voice/rooms', {'room':room,'target':target,'action':action});
 
   Future<Map<String, dynamic>> updateConfig({
     required Map<String, dynamic> patch,

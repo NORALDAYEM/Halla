@@ -1,0 +1,65 @@
+name: Review ZEGO integration (no publishing)
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'halaa-user-app-flutter/**'
+      - 'halaa-admin-app-flutter/**'
+      - 'server/**'
+      - '.github/workflows/review-zego.yml'
+permissions:
+  contents: read
+jobs:
+  flutter-review:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [user, admin]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.50.1'
+          channel: stable
+          cache: true
+      - name: Analyze and build review artifacts
+        shell: bash
+        working-directory: halaa-${{ matrix.app }}-app-flutter/halaa_${{ matrix.app }}_flutter
+        run: |
+          if [ ! -d android ]; then flutter create --platforms=android --org com.halla --project-name halaa_${{ matrix.app }}_app .; rm -f test/widget_test.dart; fi
+          flutter pub get
+          flutter analyze --no-fatal-infos --no-fatal-warnings
+          flutter build web --release
+          for delay in 0 45 120; do
+            sleep "$delay"
+            log="$RUNNER_TEMP/android-${{ matrix.app }}.log"
+            if flutter build apk --debug 2>&1 | tee "$log"; then exit 0; fi
+            grep -Eq '429|Too Many Requests' "$log" || exit 1
+          done
+          exit 1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: halaa-${{ matrix.app }}-review
+          path: |
+            halaa-${{ matrix.app }}-app-flutter/halaa_${{ matrix.app }}_flutter/build/app/outputs/flutter-apk/app-debug.apk
+            halaa-${{ matrix.app }}-app-flutter/halaa_${{ matrix.app }}_flutter/build/web
+  ios-review:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.50.1'
+          channel: stable
+          cache: true
+      - name: Compile unsigned iOS review build
+        working-directory: halaa-user-app-flutter/halaa_user_flutter
+        run: |
+          flutter pub get
+          flutter build ios --release --no-codesign

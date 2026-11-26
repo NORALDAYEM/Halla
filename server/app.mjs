@@ -5,9 +5,9 @@ import { DatabaseSync } from 'node:sqlite';
 import { AccessToken, RoomServiceClient, TrackSource } from 'livekit-server-sdk';
 import { createCentralAdminSystem } from './src/central-admin-router.mjs';
 const env = process.env;
-const zegoAppId = Number(env.ZEGO_APP_ID || 400719759);
+const zegoAppId = Number(env.ZEGO_APP_ID || 828861219);
 const zegoServerSecret = (env.ZEGO_SERVER_SECRET || '').trim();
-const zegoReady = Boolean(zegoAppId && zegoServerSecret.length === 32);
+const zegoReady = Boolean(Number.isSafeInteger(zegoAppId) && zegoAppId > 0 && Buffer.byteLength(zegoServerSecret) === 32);
 
 export function generateZegoToken04(appId, userId, secret, effectiveTimeInSeconds = 3600, payload = '') {
   if (!appId || typeof appId !== 'number') fail(500, 'ZEGO_APP_ID غير صالح');
@@ -17,7 +17,7 @@ export function generateZegoToken04(appId, userId, secret, effectiveTimeInSecond
   const tokenInfo = {
     app_id: appId,
     user_id: userId,
-    nonce: Math.floor(Math.random() * 2147483647),
+    nonce: crypto.randomInt(2147483647),
     ctime: createTime,
     expire: createTime + effectiveTimeInSeconds,
     payload: payload || ''
@@ -76,7 +76,10 @@ function roomRole(user,room) {
   if (user.app_metadata?.halaa_admin === true || read('room:'+room)?.owner===user.id) return 'owner';
   const assigned = user.app_metadata?.halaa_rooms?.[room];
   if (assigned==='owner'||assigned==='moderator') return assigned;
-  return read('role:'+room+':'+user.id) || assigned || 'listener';
+  const override=read('role:'+room+':'+user.id);
+  if(override==='listener'||override==='owner'||override==='moderator') return override;
+  const seats=read('seats:'+room)||{};
+  return Object.values(seats).some(s=>s.userID===user.id&&s.expires>Date.now())?'speaker':'listener';
 }
 function grant(role) {
   return {canSubscribe:true,canPublish:['owner','moderator','speaker'].includes(role),canPublishSources:[TrackSource.MICROPHONE],canPublishData:true};
@@ -88,11 +91,25 @@ export function validAd(a) {
     && Number.isInteger(a.imageIndex) && a.imageIndex>=0 && a.imageIndex<4
     && ['start','end'].every(k=>a[k]===null || Number.isFinite(a[k])) && (a.start===null || a.end===null || a.start<a.end);
 }
-const centralAdmin = createCentralAdminSystem();
+const validRoom = room => typeof room === 'string' && (roomIds.has(room) || Boolean(read('room:'+room)));
+const centralAdmin = createCentralAdminSystem({
+  ledgerStorage:{load:()=>read('finance:ledger'),save:value=>write('finance:ledger',value)},
+  manageVoiceRoom(data) {
+    if(!validRoom(data.room)) fail(404,'الغرفة غير موجودة');
+    const target=data.target;
+    if(typeof target!=='string'||target.length>128||!target) fail(400,'اختر مستخدماً');
+    if(!['speaker','listener','ban','unban'].includes(data.action)) fail(400,'عملية غير مدعومة');
+    if(['owner','moderator'].includes(read('role:'+data.room+':'+target)) || read('room:'+data.room)?.owner===target) fail(403,'لا يمكن تعديل رتبة إدارية');
+    if(data.action==='ban'||data.action==='unban') write('zego-ban:'+data.room+':'+target,data.action==='ban');
+    else write('role:'+data.room+':'+target,data.action);
+    return {room:data.room,target,action:data.action};
+  },
+});
 createServer(async(req,res)=>{
   try {
     if (await centralAdmin.handleRequest(req, res)) return;
     const path=new URL(req.url,'http://localhost').pathname;
+    if(req.method==='GET' && ['/health','/healthz'].includes(path)) return json(res,200,{ok:true,service:'halaa-room-service',voice:{provider:'zego',configured:zegoReady},authConfigured:authReady});
     if(path.startsWith('/api/') && req.headers.origin==='https://noraldayem.github.io'){
       res.setHeader('Access-Control-Allow-Origin',req.headers.origin);
       res.setHeader('Vary','Origin');
@@ -108,28 +125,57 @@ createServer(async(req,res)=>{
     }
     if(req.method==='GET' && path==='/api/presence')return json(res,200,await presence());
     if(req.method==='GET' && path==='/api/config') return json(res,200,{authUrl:env.SUPABASE_URL||'',publicKey:env.SUPABASE_PUBLISHABLE_KEY||'',voiceReady:voiceReady||zegoReady,zegoAppId,zegoReady,ad:read('homeAd'),rooms:db.prepare("SELECT value FROM settings WHERE key LIKE 'room:%' ORDER BY rowid DESC LIMIT 200").all().map(row=>{const {id,title,category}=JSON.parse(row.value);return {id,title,category};})});
-    if((req.method==='GET'||req.method==='POST') && path==='/api/zego/token'){
-      if(!zegoReady) return json(res, 503, { error: 'ZEGO not configured' });
-      const sp = new URL(req.url, 'http://localhost').searchParams;
-      const data = req.method === 'POST' ? await body(req) : {};
-      const roomID = (req.method === 'GET' ? (sp.get('roomID') || sp.get('roomId')) : (data.roomID || data.roomId)) || 'halaa_main_room';
-      const userID = (req.method === 'GET' ? (sp.get('userID') || sp.get('userId')) : (data.userID || data.userId)) || `halaa_${Date.now()}`;
-      const role = (req.method === 'GET' ? sp.get('role') : data.role) || 'Host';
-      const appID = zegoAppId;
-      const payload = JSON.stringify({ room_id: roomID, privilege: { 1: 1, 2: role === 'Audience' || role === 'listener' ? 0 : 1 }, stream_id_list: null });
-      const token = generateZegoToken04(zegoAppId, userID, zegoServerSecret, 7200, payload);
-      return json(res, 200, { appID, roomID, userID, role, token });
-    }
-    if(req.method==='POST' && path==='/api/zego-token'){
+    if(req.method==='GET' && path==='/api/zego/token') return json(res,405,{error:'Use authenticated POST'});
+    if(req.method==='POST' && ['/api/zego-token','/api/zego/token'].includes(path)){
       if(!zegoReady) fail(503,'يرجى ضبط متغير ZEGO_SERVER_SECRET في إعدادات الخادم');
       const user=await identity(req);
+      if(centralAdmin.controlSync.getCurrentConfig().value.features.voiceRooms===false) fail(503,'الغرف متوقفة مؤقتاً للصيانة');
       const data=await body(req);
       const room=data.room ?? (typeof data.roomID==='string' ? data.roomID.replace(/^halaa_/,'') : '');
       if(typeof room!=='string'||!room||(!roomIds.has(room)&&!read('room:'+room))) fail(404,'الغرفة غير موجودة');
       const roomID='halaa_'+room, userID=user.id, role=roomRole(user,room);
+      if(read('zego-ban:'+room+':'+userID)) fail(403,'تم منع الدخول لهذه الغرفة');
+      const seats=read('seats:'+room)||{};
+      for(const seat of Object.values(seats)) if(seat.userID===userID&&seat.expires>Date.now()) seat.expires=Date.now()+60000;
+      write('seats:'+room,seats);
+      write('member:'+userID,{id:userID});
       const payload=JSON.stringify({room_id:roomID,privilege:{1:1,2:grant(role).canPublish?1:0},stream_id_list:null});
-      const token=generateZegoToken04(zegoAppId,userID,zegoServerSecret,7200,payload);
-      return json(res,200,{appID:zegoAppId,roomID,userID,role,token});
+      const token=generateZegoToken04(zegoAppId,userID,zegoServerSecret,900,payload);
+      return json(res,200,{appID:zegoAppId,roomID,userID,role,token,expiresIn:900,userName:String(user.user_metadata?.nickname || user.user_metadata?.display_name || user.email?.split('@')[0] || 'عضو').slice(0,60)});
+    }
+    if(req.method==='POST' && path==='/api/seat') {
+      const user=await identity(req),data=await body(req);
+      if(!validRoom(data.room)) fail(404,'الغرفة غير موجودة');
+      if(read('zego-ban:'+data.room+':'+user.id)) fail(403,'الدخول ممنوع');
+      if(!['take','release'].includes(data.action)) fail(400,'عملية غير مدعومة');
+      const seats=read('seats:'+data.room)||{};
+      for(const [index,seat] of Object.entries(seats)) if(seat.expires<=Date.now()||seat.userID===user.id) delete seats[index];
+      if(data.action==='take') {
+        if(!Number.isInteger(data.index)||data.index<0||data.index>8) fail(400,'المقعد غير صالح');
+        if(data.index===0&&roomRole(user,data.room)!=='owner') fail(403,'مقعد المضيف محجوز');
+        if(seats[data.index]) fail(409,'المقعد مشغول');
+        if(read('role:'+data.room+':'+user.id)==='listener') fail(403,'الميكروفون مقفل من الإدارة');
+        seats[data.index]={userID:user.id,expires:Date.now()+60000};
+      }
+      write('seats:'+data.room,seats);
+      return json(res,200,{ok:true});
+    }
+    if(req.method==='GET' && path==='/api/wallet') {
+      const user=await identity(req);
+      return json(res,200,{coins:centralAdmin.ledgerService.getBalance(user.id,'COINS'),diamonds:centralAdmin.ledgerService.getBalance(user.id,'DIAMONDS')});
+    }
+    if(path==='/api/gifts' && (req.method==='POST'||req.method==='GET')) {
+      const user=await identity(req);
+      const data=req.method==='POST'?await body(req):Object.fromEntries(new URL(req.url,'http://localhost').searchParams);
+      if(!validRoom(data.room)) fail(404,'الغرفة غير موجودة');
+      if(read('zego-ban:'+data.room+':'+user.id)) fail(403,'الدخول ممنوع');
+      if(req.method==='GET') {
+        const gifts=[...centralAdmin.ledgerService.idempotencyCache.values()].filter(g=>g.roomId===data.room&&g.giftId).slice(-50);
+        return json(res,200,{gifts});
+      }
+      if(centralAdmin.controlSync.getCurrentConfig().value.features.gifts===false) fail(503,'الهدايا متوقفة مؤقتاً');
+      if(typeof data.recipientId!=='string'||!read('member:'+data.recipientId)) fail(404,'المستلم غير موجود');
+      return json(res,200,centralAdmin.ledgerService.sendGift({senderId:user.id,recipientId:data.recipientId,giftId:data.giftId,roomId:data.room,idempotencyKey:data.idempotencyKey}));
     }
     if(req.method!=='POST' || !['/api/ad','/api/voice','/api/moderate','/api/rooms'].includes(path)) return json(res,404,{});
     const user=await identity(req), data=await body(req);
@@ -166,5 +212,5 @@ createServer(async(req,res)=>{
     const token=new AccessToken(env.LIVEKIT_API_KEY,env.LIVEKIT_API_SECRET,{identity:user.id,name:String(user.user_metadata?.display_name||'عضو').slice(0,60),ttl:'5m',metadata:JSON.stringify({role})});
     token.addGrant({roomJoin:true,room,...grant(role),canUpdateOwnMetadata:false});
     return json(res,200,{url:env.LIVEKIT_URL,token:await token.toJwt(),role});
-  } catch(e){return json(res,e.status||503,{error:e.status?e.message:'تعذر إتمام الاتصال بالخدمة'});}
-}).listen(Number(env.PORT||3000));
+  } catch(e){return json(res,e.status||e.statusCode||503,{error:(e.status||e.statusCode)?e.message:'تعذر إتمام الاتصال بالخدمة'});}
+}).listen(Number(env.PORT||3000),'0.0.0.0');

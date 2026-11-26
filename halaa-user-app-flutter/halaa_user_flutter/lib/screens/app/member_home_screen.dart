@@ -1,4 +1,5 @@
 import 'dart:ui';
+import '../../services/supabase_auth_service.dart';
 import 'package:flutter/material.dart';
 import '../../models/halaa_models.dart';
 import '../../theme/halaa_themes.dart';
@@ -10,12 +11,16 @@ import '../../widgets/halaa_profile_page.dart';
 /// Post-login member screen (`halla-web/member.html`) unified with the exact
 /// same `.welcome-gallery` rotating background and 4 real-photo game cards.
 class MemberHomeScreen extends StatefulWidget {
+  final SupabaseAuthService authService;
+  final bool voiceRoomsEnabled;
   final String displayName;
   final HalaaConfig config;
   final VoidCallback onLogout;
 
   const MemberHomeScreen({
     super.key,
+    required this.authService,
+    this.voiceRoomsEnabled = true,
     required this.displayName,
     required this.config,
     required this.onLogout,
@@ -177,7 +182,8 @@ class _MemberHomeScreenState extends State<MemberHomeScreen> {
   }
   
   Widget _roomsTab() {
-      return HalaaRoomsShowcaseTab(serverEndpoint: widget.config.serverEndpoint);
+      if (!widget.voiceRoomsEnabled) return const Center(child: Text('الغرف متوقفة مؤقتاً للصيانة'));
+      return HalaaRoomsShowcaseTab(serverEndpoint: widget.config.serverEndpoint, accessToken: widget.authService.accessToken);
   }
 
   Widget _momentsTab() {

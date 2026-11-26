@@ -40,6 +40,8 @@ class _HalaaUserAppState extends State<HalaaUserApp> {
   @override
   void initState() {
     super.initState();
+    _dynamicThemeController.addListener(_remoteChanged);
+    _remoteConfigController.addListener(_remoteChanged);
     _bootstrap();
     _realtimeSyncClient = HalaaRealtimeSyncClient(
       serverBaseUrl: kHalaaCentralServerUrl,
@@ -48,6 +50,15 @@ class _HalaaUserAppState extends State<HalaaUserApp> {
       themeController: _dynamicThemeController,
     );
     _realtimeSyncClient.start();
+  }
+
+  void _remoteChanged() { if (mounted) setState(() {}); }
+  @override
+  void dispose() {
+    _dynamicThemeController.removeListener(_remoteChanged);
+    _remoteConfigController.removeListener(_remoteChanged);
+    _realtimeSyncClient.stop();
+    super.dispose();
   }
 
   Future<void> _bootstrap() async {
@@ -75,6 +86,7 @@ class _HalaaUserAppState extends State<HalaaUserApp> {
   @override
   Widget build(BuildContext context) {
     final preset = findThemePreset(_cfg.activeTheme);
+    final remoteTheme = _dynamicThemeController.current;
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       scrollBehavior: const _SilentScrollBehavior(),
@@ -90,7 +102,7 @@ class _HalaaUserAppState extends State<HalaaUserApp> {
         brightness: Brightness.dark,
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: preset.primary,
+          seedColor: remoteTheme.version > 1 ? remoteTheme.primary : preset.primary,
           brightness: Brightness.dark,
         ),
       ),
@@ -117,9 +129,12 @@ class _HalaaUserAppState extends State<HalaaUserApp> {
                   ),
                 )
               : MemberHomeScreen(
+                  voiceRoomsEnabled: _remoteConfigController.isFeatureEnabled('voiceRooms'),
+                  authService: _auth,
                   displayName: _memberUser!,
                   config: _cfg,
                   onLogout: () async {
+                    _auth.clearSession();
                     await _storage.setMemberUser(null);
                     if (!mounted) return;
                     setState(() => _memberUser = null);
