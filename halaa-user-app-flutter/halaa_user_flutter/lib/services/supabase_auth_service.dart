@@ -22,8 +22,8 @@ class AuthResult {
 /// - Facebook OAuth (`provider=facebook`)
 /// - Email Login / Signup / Password Recovery
 class SupabaseAuthService {
-  static const String endpoint = 'https://uwjrboviicypyhregpoo.supabase.co';
-  static const String publicKey = 'sb_publishable_QbUKNVMYDRK63NjB26tCtw_jzOaEXdR';
+  static const String endpoint =String.fromEnvironment('SUPABASE_URL', defaultValue:  'https://uwjrboviicypyhregpoo.supabase.co');
+  static const String publicKey = String.fromEnvironment('SUPABASE_ANON_KEY', defaultValue: 'sb_publishable_QbUKNVMYDRK63NjB26tCtw_jzOaEXdR');
 
   Map<String, String> get _headers => {
         'apikey': publicKey,
