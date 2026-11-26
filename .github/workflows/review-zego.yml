@@ -60,7 +60,7 @@ jobs:
           echo no | "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd -n halla-test -k "$image" --force
           "$ANDROID_HOME/emulator/emulator" @halla-test -no-window -no-audio -no-snapshot -no-boot-anim -gpu swiftshader_indirect > "$RUNNER_TEMP/emulator.log" 2>&1 &
           trap 'adb emu kill || true' EXIT
-          adb wait-for-device
+          if ! timeout 240 adb wait-for-device; then cat "$RUNNER_TEMP/emulator.log"; exit 1; fi
           until adb shell getprop sys.boot_completed | grep -q 1; do sleep 2; done
           adb install build/app/outputs/flutter-apk/app-debug.apk
           adb shell am start -W -n com.halla.halaa_user_app/.MainActivity | tee "$RUNNER_TEMP/app-start.txt"

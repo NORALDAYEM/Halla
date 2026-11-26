@@ -68,60 +68,19 @@ class AppLoginScreen extends StatelessWidget {
     }
   }
 
-  void _showPhoneComingSoonDialog(BuildContext context) {
-    final phoneCtrl = TextEditingController();
+  void _showPhoneOptions(BuildContext context) {
     showHalaaGlassDialog<void>(
-      context: context,
-      title: 'التسجيل برقم الهاتف',
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: const Color.fromRGBO(245, 189, 32, 0.22),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFAD831C)),
-            ),
-            child: const Text(
-              'التسجيل برقم الهاتف غير مفعّل حالياً — قريباً',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Color(0xFFFDE68A),
-                fontWeight: FontWeight.w800,
-                fontSize: 13.5,
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: phoneCtrl,
-            enabled: false,
-            textDirection: TextDirection.ltr,
-            decoration: InputDecoration(
-              labelText: 'رقم الهاتف (+966 5X XXX XXXX)',
-              filled: true,
-              fillColor: const Color.fromRGBO(255, 255, 255, 0.14),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF0F7682),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: const Text('إغلاق'),
-          ),
-        ],
-      ),
+      context: context, title: 'الدخول برقم الهاتف',
+      child: Builder(builder: (dialogContext) => Column(mainAxisSize: MainAxisSize.min, children: [
+        const Text('تسجيل الدخول برقم الهاتف غير متاح حالياً. يمكنك استخدام بريدك الإلكتروني.',
+          textAlign: TextAlign.center),
+        const SizedBox(height: 16),
+        FilledButton.icon(icon: const Icon(Icons.email_outlined), label: const Text('الدخول بالبريد'),
+          onPressed: () {
+            Navigator.pop(dialogContext);
+            showEmailAccessPopup(context: context, isSignup: false, authService: authService);
+          }),
+      ])),
     );
   }
 
@@ -396,7 +355,7 @@ class AppLoginScreen extends StatelessWidget {
                                       onTap: () => _startSocialOAuth(
                                       context,
                                       'google',
-                                      'Google (Gmail)',
+                                      'Google',
                                     ),
                                     ),
                                     // 4. Facebook (Frosted aqua-sky pill + exact #0866FF Facebook logo)
@@ -485,7 +444,7 @@ class AppLoginScreen extends StatelessWidget {
                                           icon: const PhoneOptionIcon(size: 30),
                                           circleSize: circleSize,
                                           onTap: () =>
-                                              _showPhoneComingSoonDialog(context),
+                                              _showPhoneOptions(context),
                                         ),
                                         const SizedBox(width: 28),
                                         _bottomOption(
