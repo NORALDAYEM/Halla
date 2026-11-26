@@ -1,0 +1,104 @@
+name: Publish verified Halaa Android voice rooms
+on:
+  push:
+    branches: [release/android-voice-3.1.5]
+    paths: ['.github/workflows/publish-voice-315.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: publish-voice-315
+  cancel-in-progress: false
+jobs:
+  user-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify source build and select only the user APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          repo="$GITHUB_REPOSITORY"
+          run=45841807033
+          gh api "repos/$repo/actions/runs/$run" --jq '[.head_sha,.head_branch,.event] | join(" ")' | grep -Fx 'ac38aba8d2e5e863920dcc8af20eb82f23969cf6 main push'
+          gh api "repos/$repo/actions/runs/$run/jobs" --jq '.jobs[] | select(.name=="build-web-and-android") | .conclusion' | grep -Fx success
+          gh run download "$run" --repo "$repo" --name Halaa-Android-APKs --dir "$RUNNER_TEMP/source"
+          cp "$RUNNER_TEMP/source/Halaa-App-Android.apk" .
+          b=$(find "$ANDROID_HOME/build-tools" -name aapt | sort -V | tail -1)
+          "$(dirname "$b")/apksigner" verify Halaa-App-Android.apk
+          "$b" dump badging Halaa-App-Android.apk > manifest.txt
+          grep -F "package: name='com.halla.halaa_user_app' versionCode='6' versionName='3.1.5'" manifest.txt
+          grep -F android.permission.RECORD_AUDIO manifest.txt
+          unzip -Z1 Halaa-App-Android.apk | grep -E 'lib/arm64-v8a/.*zego' > zego-libraries.txt
+          test -s zego-libraries.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: verified-user
+          path: Halaa-App-Android.apk
+  companion:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.50.1'
+          cache: true
+      - name: Build a separate installation for phones with the legacy APK
+        working-directory: halaa-user-app-flutter/halaa_user_flutter
+        run: |
+          set -euo pipefail
+          flutter create --platforms=android --org com.halla --project-name halaa_user_app .
+          python3 - <<'PY'
+          from pathlib import Path
+          def replace_one(path, before, after):
+              p = Path(path)
+              text = p.read_text()
+              if text.count(before) != 1: raise ValueError(path)
+              p.write_text(text.replace(before, after))
+          replace_one('android/app/build.gradle.kts', 'applicationId = "com.halla.halaa_user_app"', 'applicationId = "com.halla.halaa_user_app.rooms"')
+          manifest = 'android/app/src/main/AndroidManifest.xml'
+          replace_one(manifest, 'android:name=".MainActivity"', 'android:name="com.halla.halaa_user_app.MainActivity"')
+          replace_one(manifest, 'android:label="هلا"', 'android:label="هلا الغرف"')
+          PY
+          flutter pub get
+          flutter build apk --release
+          cp build/app/outputs/flutter-apk/app-release.apk "$GITHUB_WORKSPACE/Halaa-Rooms-Android.apk"
+          apk="$GITHUB_WORKSPACE/Halaa-Rooms-Android.apk"
+          aapt=$(find "$ANDROID_HOME/build-tools" -name aapt | sort -V | tail -1)
+          "$(dirname "$aapt")/apksigner" verify "$apk"
+          "$aapt" dump badging "$apk" > "$RUNNER_TEMP/badging"
+          grep -F "package: name='com.halla.halaa_user_app.rooms' versionCode='6' versionName='3.1.5'" "$RUNNER_TEMP/badging"
+          grep -F "launchable-activity: name='com.halla.halaa_user_app.MainActivity'" "$RUNNER_TEMP/badging"
+          grep -F android.permission.RECORD_AUDIO "$RUNNER_TEMP/badging"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rooms-side-by-side
+          path: Halaa-Rooms-Android.apk
+  publish:
+    needs: [user-apk, companion]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: verified-user
+      - uses: actions/download-artifact@v4
+        with:
+          name: rooms-side-by-side
+      - name: Publish a versioned release after checking both assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag=android-3.1.5-6
+          cmp -s Halaa-App-Android.apk Halaa-Rooms-Android.apk && exit 1
+          for apk in Halaa-App-Android.apk Halaa-Rooms-Android.apk; do test -s "$apk"; done
+          gh release create "$tag" Halaa-App-Android.apk Halaa-Rooms-Android.apk --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --latest --title 'هلا 3.1.5 | الغرف الصوتية لأندرويد' --notes 'لهاتف عليه نسخة هلا القديمة، ثبّت Halaa-Rooms-Android.apk بجانبها ثم افتح «هلا الغرف» وسجل الدخول. للتثبيت الأول اختر Halaa-App-Android.apk. لا يلزم حذف النسخة القديمة. تطبيق المستخدم فقط.'
