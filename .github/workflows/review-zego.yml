@@ -46,27 +46,27 @@ jobs:
             grep -Eq '429|Too Many Requests' "$log" || exit 1
           done
           exit 1
-      - name: Launch user app on Android emulator
+      - name: Enable Android emulator acceleration
         if: matrix.app == 'user'
-        working-directory: halaa-user-app-flutter/halaa_user_flutter
-        timeout-minutes: 15
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
-          export PATH="$ANDROID_HOME/platform-tools:$PATH"
-          image='system-images;android-35;google_apis;x86_64'
-          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'platform-tools' 'emulator' "$image"
-          echo no | "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd -n halla-test -k "$image" --force
-          "$ANDROID_HOME/emulator/emulator" @halla-test -no-window -no-audio -no-snapshot -no-boot-anim -gpu swiftshader_indirect > "$RUNNER_TEMP/emulator.log" 2>&1 &
-          trap 'adb emu kill || true' EXIT
-          if ! timeout 240 adb wait-for-device; then cat "$RUNNER_TEMP/emulator.log"; exit 1; fi
-          until adb shell getprop sys.boot_completed | grep -q 1; do sleep 2; done
-          adb install build/app/outputs/flutter-apk/app-debug.apk
-          adb shell am start -W -n com.halla.halaa_user_app/.MainActivity | tee "$RUNNER_TEMP/app-start.txt"
-          grep -q 'Status: ok' "$RUNNER_TEMP/app-start.txt"
-          sleep 8
-          adb shell pidof com.halla.halaa_user_app
+      - name: Launch user app on Android emulator
+        if: matrix.app == 'user'
+        timeout-minutes: 15
+        uses: ReactiveCircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          working-directory: halaa-user-app-flutter/halaa_user_flutter
+          script: |
+            adb install build/app/outputs/flutter-apk/app-debug.apk
+            adb shell am start -W -n com.halla.halaa_user_app/.MainActivity
+            sleep 8
+            adb shell pidof com.halla.halaa_user_app || (adb logcat -b crash -d -t 100 && false)
       - uses: actions/upload-artifact@v4
         with:
           name: halaa-${{ matrix.app }}-review
