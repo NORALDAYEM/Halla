@@ -3,6 +3,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/halaa_models.dart';
+import '../services/supabase_auth_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show AuthException;
 
 /// Translucent frosted-glass dialog that automatically adapts to the active page theme.
 Future<T?> showHalaaGlassDialog<T>({
@@ -144,7 +146,7 @@ InputDecoration _glassFieldDeco(String label, Color primary) => InputDecoration(
 Future<void> showEmailAccessPopup({
   required BuildContext context,
   required bool isSignup,
-  required void Function(AppUserRecord user) onSuccess,
+  required SupabaseAuthService authService,
 }) {
   final nickCtrl = TextEditingController();
   final emailCtrl = TextEditingController();
@@ -153,6 +155,7 @@ Future<void> showEmailAccessPopup({
   String gender = '';
   String country = 'السعودية';
   String? errorMsg;
+  bool busy = false;
 
   const countries = [
     'السعودية',
@@ -267,9 +270,9 @@ Future<void> showEmailAccessPopup({
             ],
             const SizedBox(height: 14),
             ElevatedButton(
-              onPressed: () {
+              onPressed: busy ? null : () async {
                 final email = emailCtrl.text.trim();
-                final pass = passCtrl.text.trim();
+                final pass = passCtrl.text;
                 final nick = nickCtrl.text.trim();
                 if (isSignup && nick.isEmpty) {
                   setState(() => errorMsg = 'اسم المستخدم غير صحيح');
@@ -285,19 +288,31 @@ Future<void> showEmailAccessPopup({
                   setState(() => errorMsg = 'كلمة المرور غير صحيحة');
                   return;
                 }
-                if (isSignup && pass != confirmCtrl.text.trim()) {
+                if (isSignup && pass != confirmCtrl.text) {
                   setState(() => errorMsg = 'تأكيد كلمة المرور غير مطابق');
                   return;
                 }
-                Navigator.of(ctx).pop();
-                onSuccess(
-                  AppUserRecord(
-                    nickname: isSignup ? nick : email.split('@').first,
-                    email: email,
-                    gender: gender.isEmpty ? 'غير محدد' : gender,
-                    country: country,
-                  ),
-                );
+                setState(() { busy = true; errorMsg = null; });
+                try {
+                  if (isSignup) {
+                    final result = await authService.auth.signUp(email: email, password: pass,
+                      emailRedirectTo: authService.redirect,
+                      data: {'nickname': nick, 'gender': gender, 'country': country});
+                    if (result.session == null && ctx.mounted) {
+                      ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(content: Text('تحقّق من بريدك لتأكيد الحساب ثم سجّل الدخول.')));
+                    }
+                  } else {
+                    await authService.auth.signInWithPassword(email: email, password: pass);
+                  }
+                  if (ctx.mounted) Navigator.of(ctx).pop();
+                } on AuthException catch (e) {
+                  if (ctx.mounted) setState(() => errorMsg = e.code == 'email_not_confirmed'
+                      ? 'أكّد بريدك الإلكتروني أولاً.' : isSignup ? 'تعذّر إنشاء الحساب. راجع البريد وقوة كلمة المرور.' : 'تحقّق من البريد الإلكتروني وكلمة المرور.');
+                } catch (_) {
+                  if (ctx.mounted) setState(() => errorMsg = 'تعذّر الاتصال. أعد المحاولة.');
+                } finally {
+                  if (ctx.mounted) setState(() => busy = false);
+                }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: isSignup
@@ -310,7 +325,7 @@ Future<void> showEmailAccessPopup({
                 ),
               ),
               child: Text(
-                isSignup ? 'إنشاء الحساب' : 'تسجيل الدخول',
+                busy ? 'جارٍ التحقق…' : isSignup ? 'إنشاء الحساب' : 'تسجيل الدخول',
                 style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
               ),
             ),
@@ -322,60 +337,29 @@ Future<void> showEmailAccessPopup({
 }
 
 /// 2. Reset Password Popup (#reset-options)
-Future<void> showResetPasswordPopup(
-  BuildContext context, {
-  bool darkMode = false,
-}) {
-  final primary = Theme.of(context).colorScheme.primary;
-  return showHalaaGlassDialog<void>(
-    context: context,
-    darkMode: darkMode,
-    title: 'استعادة كلمة المرور',
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const Text(
-          'كيف تريد استعادة حسابك؟',
-          style: TextStyle(fontSize: 14, color: Color(0xFFE0F2FE)),
-        ),
-        const SizedBox(height: 12),
-        ElevatedButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('تم إرسال رابط استعادة كلمة المرور إلى بريدك الإلكتروني.'),
-              ),
-            );
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: primary,
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          ),
-          child: const Text('إرسال رابط إلى بريدي الإلكتروني'),
-        ),
-        const SizedBox(height: 8),
-        OutlinedButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('استعادة كلمة المرور برقم الهاتف غير مفعّلة حالياً — قريباً.'),
-              ),
-            );
-          },
-          style: OutlinedButton.styleFrom(
-            foregroundColor: Colors.white,
-            side: const BorderSide(color: Color.fromRGBO(255, 255, 255, 0.38)),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          ),
-          child: const Text('إرسال رمز إلى رقم هاتفي (قريباً)'),
-        ),
-      ],
-    ),
-  );
+Future<void> showResetPasswordPopup(BuildContext context, {required SupabaseAuthService authService}) async {
+  String email = '';
+  String? feedback;
+  bool busy = false;
+  await showHalaaGlassDialog<void>(context: context, title: 'استعادة كلمة المرور',
+    child: StatefulBuilder(builder: (ctx, update) => Column(mainAxisSize: MainAxisSize.min, children: [
+      TextField(keyboardType: TextInputType.emailAddress, textDirection: TextDirection.ltr,
+        decoration: const InputDecoration(labelText: 'البريد الإلكتروني'), onChanged: (v) => email = v.trim()),
+      if (feedback != null) Text(feedback!),
+      FilledButton(onPressed: busy ? null : () async {
+        if (!email.contains('@')) { update(() => feedback = 'أدخل بريدك الإلكتروني'); return; }
+        update(() => busy = true);
+        try {
+          await authService.auth.resetPasswordForEmail(email, redirectTo: authService.redirect);
+          if (ctx.mounted) {
+            ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(content: Text('إذا كان البريد مسجلاً، ستصلك رسالة استعادة.')));
+            Navigator.pop(ctx);
+          }
+        } catch (_) {
+          if (ctx.mounted) update(() { busy = false; feedback = 'تعذّر إرسال الطلب. حاول مجدداً.'; });
+        }
+      }, child: Text(busy ? 'جارٍ الإرسال…' : 'إرسال رابط الاستعادة')),
+    ])));
 }
 
 /// 3. Service Terms Popup (#service-terms) — Verbatim 7 sections

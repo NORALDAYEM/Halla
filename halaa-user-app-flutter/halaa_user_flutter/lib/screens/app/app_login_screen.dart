@@ -13,7 +13,6 @@ import '../../widgets/halaa_animated_logo.dart';
 class AppLoginScreen extends StatelessWidget {
   final HalaaConfig config;
   final ValueChanged<String> onLoggedIn;
-  final ValueChanged<AppUserRecord> onRegisteredUser;
   final ValueChanged<SupportTicket> onTicketCreated;
   final SupabaseAuthService authService;
 
@@ -21,53 +20,9 @@ class AppLoginScreen extends StatelessWidget {
     super.key,
     required this.config,
     required this.onLoggedIn,
-    required this.onRegisteredUser,
     required this.onTicketCreated,
     required this.authService,
   });
-
-  void _showProviderComingSoon(BuildContext context, String providerLabel) {
-    showHalaaGlassDialog<void>(
-      context: context,
-      title: 'الدخول عبر $providerLabel',
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: const Color.fromRGBO(255, 255, 255, 0.14),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: const Color(0xFF9ACFD0)),
-            ),
-            child: Text(
-              'تسجيل الدخول عبر $providerLabel غير مفعّل حالياً — قريباً.\nيمكنك الدخول الآن عبر البريد الإلكتروني أو وضع الضيف.',
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-                height: 1.65,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF0F7682),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: const Text('حسناً'),
-          ),
-        ],
-      ),
-    );
-  }
 
   Future<void> _startSocialOAuth(
     BuildContext context,
@@ -405,7 +360,7 @@ class AppLoginScreen extends StatelessWidget {
                                       onTap: () => showEmailAccessPopup(
                                         context: context,
                                         isSignup: false,
-                                        onSuccess: (u) => onLoggedIn(u.nickname),
+                                        authService: authService,
                                       ),
                                     ),
                                     // 2. تسجيل (Amber/orange translucent pill)
@@ -425,15 +380,12 @@ class AppLoginScreen extends StatelessWidget {
                                       onTap: () => showEmailAccessPopup(
                                         context: context,
                                         isSignup: true,
-                                        onSuccess: (u) {
-                                          onRegisteredUser(u);
-                                          onLoggedIn(u.nickname);
-                                        },
+                                        authService: authService,
                                       ),
                                     ),
                                     // 3. جيميل (Frosted white-sky pill + exact 5-color Gmail M logo)
                                     _pillButton(
-                                      label: 'جيميل',
+                                      label: 'المتابعة باستخدام Google',
                                       height: btnHeight,
                                       gradientColors: const [
                                         Color(0xB8FFFFFF),
@@ -449,7 +401,7 @@ class AppLoginScreen extends StatelessWidget {
                                     ),
                                     // 4. Facebook (Frosted aqua-sky pill + exact #0866FF Facebook logo)
                                     _pillButton(
-                                      label: 'Facebook',
+                                      label: 'المتابعة باستخدام Facebook',
                                       height: btnHeight,
                                       gradientColors: const [
                                         Color(0xBAEDFFFA),
@@ -465,7 +417,7 @@ class AppLoginScreen extends StatelessWidget {
                                     ),
                                     TextButton(
                                       onPressed: () =>
-                                          showResetPasswordPopup(context),
+                                          showResetPasswordPopup(context, authService: authService),
                                       child: const Text(
                                         'نسيت كلمة المرور؟',
                                         style: TextStyle(
