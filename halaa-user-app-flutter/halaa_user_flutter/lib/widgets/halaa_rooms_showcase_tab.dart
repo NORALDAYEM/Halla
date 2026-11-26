@@ -287,66 +287,6 @@ class _HalaaRoomsShowcaseTabState extends State<HalaaRoomsShowcaseTab> with Sing
     }).toList();
   }
 
-  void _showComingSoonDialog() {
-    final cs = Theme.of(context).colorScheme;
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => Directionality(
-        textDirection: TextDirection.rtl,
-        child: AlertDialog(
-          backgroundColor: cs.surface,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: BorderSide(color: cs.primary.withOpacity(0.45), width: 1.2),
-          ),
-          icon: Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                colors: [
-                  cs.primary.withOpacity(0.28),
-                  cs.secondary.withOpacity(0.18),
-                ],
-              ),
-              border: Border.all(color: cs.primary.withOpacity(0.5)),
-            ),
-            child: Icon(Icons.meeting_room_rounded, color: cs.primary, size: 28),
-          ),
-          content: Text(
-            'يتم العمل قريباً بعد تركيب نظام الغرف',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: cs.onSurface,
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              height: 1.5,
-            ),
-          ),
-          actionsAlignment: MainAxisAlignment.center,
-          actions: [
-            FilledButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              style: FilledButton.styleFrom(
-                backgroundColor: cs.primary,
-                foregroundColor: cs.onPrimary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 10),
-              ),
-              child: const Text(
-                'حسناً',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;

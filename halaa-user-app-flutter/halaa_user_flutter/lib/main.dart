@@ -120,8 +120,8 @@ class _HalaaUserAppState extends State<HalaaUserApp> {
       ),
       home: AppUpdateGate(
         appKey: 'user_app',
-        currentVersion: '3.1.5',
-        currentBuild: 6,
+        currentVersion: '3.1.6',
+        currentBuild: 7,
         child: !_ready
           ? const Scaffold(body: Center(child: CircularProgressIndicator()))
           : _recovering ? _PasswordRecovery(auth: _auth, onDone: () => setState(() => _recovering = false))
