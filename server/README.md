@@ -1,4 +1,5 @@
 # Halaa Voice Server (ZEGOCLOUD + LiveKit)
+خادم الصوتيات لتطبيق هلا لإصدار رموز المصادقة وإدارة الغرف الصوتية عبر ZEGOCLOUD و LiveKit.
 
 ## إعداد السيرفر الصوتي عبر ZEGOCLOUD (AppID: 828861219)
 1. افتح لوحة تحكم **ZEGOCLOUD Console** للمشروع `828861219` وأدخل مفتاح **ServerSecret** مباشرة في إعدادات الخادم دون مشاركته.
