@@ -1,7 +1,11 @@
+import 'dart:async';
+import 'dart:convert';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 class HalaaRoomsShowcaseTab extends StatefulWidget {
-  const HalaaRoomsShowcaseTab({super.key});
-
+  const HalaaRoomsShowcaseTab({super.key, this.serverEndpoint = ''});
+  final String serverEndpoint;
   @override
   State<HalaaRoomsShowcaseTab> createState() => _HalaaRoomsShowcaseTabState();
 }
@@ -33,7 +37,7 @@ class _RoomItem {
   final IconData icon;
 }
 
-class _HalaaRoomsShowcaseTabState extends State<HalaaRoomsShowcaseTab> {
+class _HalaaRoomsShowcaseTabState extends State<HalaaRoomsShowcaseTab> with SingleTickerProviderStateMixin {
   int _selectedSubTab = 1; // «موصى بها» نشط افتراضياً
   int _bannerPage = 0;
   String _selectedCategory = 'الجميع';
@@ -137,11 +141,111 @@ class _HalaaRoomsShowcaseTabState extends State<HalaaRoomsShowcaseTab> {
       icon: Icons.sports_esports_rounded,
     ),
   ];
+  late final AnimationController _waveController;
+  Timer? _presenceTimer;
+  Map<String, int> _presenceCounts = {};
+    @override
+  void initState() {
+    super.initState();
+    _waveController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1100),
+    )..repeat();
+    _fetchPresence();
+    _presenceTimer = Timer.periodic(
+      const Duration(seconds: 15),
+      (_) => _fetchPresence(),
+    );
+  }
 
+  Future<void> _fetchPresence() async {
+    final base = widget.serverEndpoint.trim().replaceAll(RegExp(r'/+$'), '');
+    if (base.isEmpty) return;
+    try {
+      final uri = Uri.parse('$base/api/presence');
+      final response = await http.get(uri).timeout(const Duration(seconds: 8));
+      if (response.statusCode != 200) return;
+      final decoded = jsonDecode(response.body);
+      final Map<String, int> counts = {};
+      void addEntry(String key, dynamic val) {
+        if (val is int) {
+          counts[key] = val;
+        } else if (val is num) {
+          counts[key] = val.toInt();
+        } else if (val is List) {
+          counts[key] = val.length;
+        } else if (val is Map) {
+          final c = val['count'] ?? val['onlineCount'] ?? val['users'] ?? val['members'];
+          if (c is num) {
+            counts[key] = c.toInt();
+          } else if (c is List) {
+            counts[key] = c.length;
+          }
+        }
+      }
+      if (decoded is Map) {
+        final raw = decoded['rooms'] ?? decoded['presence'] ?? decoded;
+        if (raw is Map) {
+          raw.forEach((k, v) => addEntry(k.toString(), v));
+        } else if (raw is List) {
+          for (final item in raw) {
+            if (item is Map) {
+              final name = (item['name'] ?? item['room'] ?? item['roomName'] ?? item['id'] ?? '').toString();
+              if (name.isNotEmpty) addEntry(name, item);
+            }
+          }
+        }
+      } else if (decoded is List) {
+        for (final item in decoded) {
+          if (item is Map) {
+            final name = (item['name'] ?? item['room'] ?? item['roomName'] ?? item['id'] ?? '').toString();
+            if (name.isNotEmpty) addEntry(name, item);
+          }
+        }
+      }
+      if (!mounted) return;
+      setState(() {
+        _presenceCounts = counts;
+      });
+    } catch (_) {}
+  }
+
+  int _onlineCountFor(_RoomItem room) => _presenceCounts[room.name] ?? 0;
+
+  Widget _buildAnimatedSoundWave(Color color) {
+    return AnimatedBuilder(
+      animation: _waveController,
+      builder: (context, _) {
+        final t = _waveController.value * 2 * math.pi;
+        return SizedBox(
+          height: 14,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: List.generate(4, (i) {
+              final height = 4.0 + 9.0 * ((math.sin(t + i * 0.9) + 1) / 2);
+              return Container(
+                width: 2.5,
+                height: height,
+                margin: const EdgeInsets.symmetric(horizontal: 1),
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              );
+            }),
+          ),
+        );
+      },
+    );
+  }
+  
   @override
   void dispose() {
     _searchController.dispose();
-    _bannerController.dispose();
+    _bannerController.dispose()
+    _waveController.dispose();
+    _presenceTimer?.cancel();;
     super.dispose();
   }
 
@@ -230,17 +334,29 @@ class _HalaaRoomsShowcaseTabState extends State<HalaaRoomsShowcaseTab> {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(14, 10, 14, 24),
         children: [
-          _buildTopBar(cs),
+                   Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0xB3071B21),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.white.withAlpha(42)),
+            ),
+            child: Column(
+              children: [
+                _buildTopBar(cs),
           if (_showSearch) ...[
             const SizedBox(height: 10),
             _buildSearchField(cs),
           ],
+              ],
+            ),
+          ),
           const SizedBox(height: 12),
           _buildEventBanner(cs),
           const SizedBox(height: 12),
           _buildRankingCards(cs),
           const SizedBox(height: 14),
-          _buildCategoriesBar(cs),
+          Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8), decoration: BoxDecoration(color: const Color(0xB3071B21), borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.white.withAlpha(42))), child: _buildCategoriesBar(cs)),
           const SizedBox(height: 12),
           if (rooms.isEmpty)
             _buildEmptyState(cs)
@@ -277,8 +393,8 @@ class _HalaaRoomsShowcaseTabState extends State<HalaaRoomsShowcaseTab> {
                           _subTabs[index],
                           style: TextStyle(
                             color: isSelected
-                                ? cs.onSurface
-                                : cs.onSurface.withOpacity(0.62),
+                                ? Colors.white
+                                : Colors.white.withAlpha(200),
                             fontSize: isSelected ? 16 : 14,
                             fontWeight:
                                 isSelected ? FontWeight.bold : FontWeight.w500,
@@ -818,14 +934,10 @@ class _HalaaRoomsShowcaseTabState extends State<HalaaRoomsShowcaseTab> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
-                          Icons.graphic_eq_rounded,
-                          color: cs.primary,
-                          size: 14,
-                        ),
+                        if (_onlineCountFor(room) > 0) ...[Container(width: 7, height: 7, decoration: const BoxDecoration(color: Color(0xFF22C55E), shape: BoxShape.circle)), const SizedBox(width: 4)], _buildAnimatedSoundWave(cs.primary),
                         const SizedBox(width: 4),
                         Text(
-                          '${room.onlineCount}',
+                          '${_onlineCountFor(room)}',
                           style: TextStyle(
                             color: cs.onSurface,
                             fontSize: 11.5,
