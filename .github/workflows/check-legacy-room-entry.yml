@@ -30,6 +30,17 @@ jobs:
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
+      - name: Retain a crash trace if Flutter exits on the emulator
+        run: |
+          cat > "$RUNNER_TEMP/check-process" <<'SH'
+          #!/usr/bin/env bash
+          if ! adb shell pidof "$1"; then
+            adb logcat -b crash -d -t 300
+            adb logcat -d -s flutter:E AndroidRuntime:E DEBUG:E linker:E | tail -150
+            exit 1
+          fi
+          SH
+          chmod +x "$RUNNER_TEMP/check-process"
       - name: Open a room as a guest with both APKs installed
         uses: ReactiveCircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d
         with:
@@ -45,4 +56,6 @@ jobs:
             adb shell wm size 1080x2200
             adb shell wm density 360
             adb shell am start -W -n com.halla.halaa_user_app.rooms/com.halla.halaa_user_app.MainActivity
+            sleep 8
+            "$RUNNER_TEMP/check-process" com.halla.halaa_user_app.rooms
             python3 .github/scripts/check_room_entry.py
