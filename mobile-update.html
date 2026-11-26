@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>تحديث هلا</title><style>body{max-width:32rem;margin:12vh auto;padding:1.5rem;font:1.1rem system-ui;color:#102d39}a{display:block;margin:1rem 0;color:#056c64}</style>
+<h1>تحديث هلا</h1><p id="state" role="status">جارٍ تحميل روابط الإصدار…</p><main></main>
+<script>
+(async () => {
+  const app = new URLSearchParams(location.search).get('app') === 'admin_app' ? 'admin_app' : 'user_app';
+  const status = document.getElementById('state');
+  try {
+    const response = await fetch('app_version.json', {cache:'no-store'});
+    if (!response.ok) throw Error();
+    const releases = (await response.json())[app].platforms || {};
+    for (const [key,label] of [['android','تحميل تحديث Android'],['ios','فتح تحديث iPhone']]) {
+      if (!releases[key]) continue;
+      const url = new URL(releases[key].download_url);
+      const hosts = key === 'ios' ? ['apps.apple.com','testflight.apple.com'] : ['github.com','play.google.com'];
+      if (url.protocol !== 'https:' || !hosts.includes(url.hostname)) continue;
+      const link = document.createElement('a');
+      link.href = url.href;
+      link.textContent = label + ' · ' + releases[key].latest_version;
+      document.querySelector('main').append(link);
+    }
+    status.textContent = document.querySelector('main a') ? 'اختر نظام جهازك' : 'لا يتوفر تحديث منشور حالياً';
+  } catch { status.textContent = 'تعذّر تحميل روابط التحديث. أعد فتح الصفحة.'; }
+})();
+</script></html>

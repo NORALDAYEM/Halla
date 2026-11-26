@@ -14,3 +14,5 @@ jobs:
         working-directory: server
       - run: npm test
         working-directory: server
+      - name: Check mobile update announcements
+        run: python3 .github/scripts/test_announce_update.py
