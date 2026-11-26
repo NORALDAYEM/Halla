@@ -243,7 +243,7 @@ class _HalaaRoomsShowcaseTabState extends State<HalaaRoomsShowcaseTab> with Sing
   @override
   void dispose() {
     _searchController.dispose();
-    _bannerController.dispose()
+    _bannerController.dispose();
     _waveController.dispose();
     _presenceTimer?.cancel();;
     super.dispose();
