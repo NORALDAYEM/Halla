@@ -6,7 +6,7 @@ allprojects {
 }
 
 // ZIM 3.3 still invokes the removed Groovy jcenter() DSL during evaluation.
-project(":zego_zim") {
+allprojects {
     for (handler in listOf(buildscript.repositories, repositories)) {
         (handler as org.gradle.api.plugins.ExtensionAware).extensions.extraProperties
             .set("jcenter", object : groovy.lang.Closure<Any>(handler) {
