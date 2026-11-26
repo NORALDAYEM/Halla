@@ -1,11 +1,8 @@
-import 'package:flutter/foundation.dart';
-import 'zego_native_room_page.dart';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../models/halaa_models.dart';
 import '../../theme/halaa_themes.dart';
 import '../../widgets/welcome_gallery_bg.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 /// Post-login member screen (`halla-web/member.html`) unified with the exact
 /// same `.welcome-gallery` rotating background and 4 real-photo game cards.
@@ -264,16 +261,6 @@ class _MemberHomeScreenState extends State<MemberHomeScreen> {
       },
     );
   }
-  Future<void> _openZegoRoom(String roomId, String roomTitle, bool asHost) async {
-    final endpoint = widget.config.serverEndpoint.trim().isNotEmpty ? widget.config.serverEndpoint.trim() : 'https://halla.onrender.com';
-final safeUserId = 'user_${DateTime.now().millisecondsSinceEpoch % 100000}';
-    if (!kIsWeb) {
-      await Navigator.of(context).push(MaterialPageRoute(builder: (_) => ZegoNativeRoomPage(roomId: roomId, roomTitle: roomTitle, userId: safeUserId, userName: widget.displayName, isHost: asHost, serverEndpoint: endpoint)));
-      return;
-    }
-    final uri = Uri.https('noraldayem.github.io', '/Halla/zego-room.html', {'appID': '400719759', 'roomID': roomId, 'userID': 'user_${DateTime.now().millisecondsSinceEpoch % 100000}', 'userName': widget.displayName, 'role': asHost ? 'Host' : 'Audience', 'title': roomTitle, 'serverEndpoint': endpoint});
-    await launchUrl(uri, mode: LaunchMode.externalApplication);
-  }
   
   Widget _roomsTab() {
     return ListView(
@@ -302,7 +289,7 @@ final safeUserId = 'user_${DateTime.now().millisecondsSinceEpoch % 100000}';
                 spacing: 12,
                 runSpacing: 12,
                 children: List.generate(widget.config.micSeats, (i) {
-                  return InkWell(borderRadius: BorderRadius.circular(14), onTap: () => _openZegoRoom('halaa_main_room', 'الغرفة الرئيسية — هلا', true), child: Column(
+                  return Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const CircleAvatar(
@@ -319,14 +306,13 @@ final safeUserId = 'user_${DateTime.now().millisecondsSinceEpoch % 100000}';
                         ),
                       ),
                     ],
-                  ));
-                }),
+                       );
+           }),
               ),
             ],
           ),
         ),
-      const SizedBox(height: 14), ...[{'id': 'halaa_main_room', 'title': 'الغرفة الرئيسية — هلا'}, {'id': 'halaa_games_voice', 'title': 'غرفة الألعاب والتحديات'}, {'id': 'halaa_vip_1', 'title': 'ديوانية السهر VIP'}, {'id': 'halaa_music', 'title': 'غرفة الموسيقى والطرب'}].map((room) => Container(margin: const EdgeInsets.only(bottom: 12), padding: const EdgeInsets.all(14), decoration: BoxDecoration(color: const Color.fromRGBO(10, 30, 38, 0.72), borderRadius: BorderRadius.circular(18), border: Border.all(color: const Color.fromRGBO(255, 255, 255, 0.22))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(room['title']!, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 15)), const SizedBox(height: 10), Row(children: [Expanded(child: ElevatedButton.icon(onPressed: () => _openZegoRoom(room['id']!, room['title']!, true), icon: const Icon(Icons.mic_rounded, size: 18), label: const Text('صعود للمايك'))), const SizedBox(width: 8), Expanded(child: OutlinedButton.icon(onPressed: () => _openZegoRoom(room['id']!, room['title']!, false), icon: const Icon(Icons.headphones_rounded, size: 18), label: const Text('استماع')))])]))), ],
-      
+            ],
     );
   }
 
