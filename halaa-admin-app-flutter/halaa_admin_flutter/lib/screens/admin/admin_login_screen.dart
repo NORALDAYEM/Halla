@@ -33,9 +33,8 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
   bool _obscure = true;
   String? _error;
 
-  static const _validUser = 'ADMIN';
-  static const _validPass = '12345678';
-
+static const _validUser = String.fromEnvironment('HALAA_ADMIN_USER');
+  static const _validPass = String.fromEnvironment('HALAA_ADMIN_PASS');
   @override
   void dispose() {
     _userCtrl.dispose();
@@ -44,10 +43,11 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
   }
 
   void _submit() {
-    final user = _userCtrl.text.trim();
+        if (_validUser.isEmpty || _validPass.isEmpty) { setState(() => _error = 'لم يتم ضبط بيانات دخول الإدارة أثناء البناء'); return; }
+        final user = _userCtrl.text.trim();
     final pass = _passCtrl.text.trim();
-    if (user.isEmpty || user.toUpperCase() != _validUser) {
-      setState(() => _error = 'اسم المستخدم غير صحيح');
+        if (user.isEmpty || user.toUpperCase() != _validUser.toUpperCase()) {
+          setState(() => _error = 'اسم المستخدم غير صحيح');
       return;
     }
     if (pass != _validPass) {

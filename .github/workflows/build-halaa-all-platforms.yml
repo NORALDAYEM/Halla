@@ -14,7 +14,7 @@ permissions:
 concurrency:
   group: build-halaa-all-platforms-${{ github.ref }}
   cancel-in-progress: true
-  
+
 jobs:
   build-web-and-android:
     runs-on: ubuntu-latest
@@ -41,20 +41,23 @@ jobs:
           flutter create --platforms=android --org com.halla --project-name halaa_user_app .
           python3 -c 'p="android/app/src/main/AndroidManifest.xml"; s=open(p).read(); ins="".join("    <uses-permission android:name=\""+x+"\"/>\n" for x in ["android.permission.INTERNET","android.permission.ACCESS_NETWORK_STATE"] if x not in s); open(p,"w").write(s.replace("<application", ins+"<application", 1))'
           if [ -f "assets/images/app-icon.png" ]; then mkdir -p android/app/src/main/res/mipmap-mdpi android/app/src/main/res/mipmap-hdpi android/app/src/main/res/mipmap-xhdpi android/app/src/main/res/mipmap-xxhdpi android/app/src/main/res/mipmap-xxxhdpi web/icons && convert assets/images/app-icon.png -resize 48x48 android/app/src/main/res/mipmap-mdpi/ic_launcher.png && convert assets/images/app-icon.png -resize 72x72 android/app/src/main/res/mipmap-hdpi/ic_launcher.png && convert assets/images/app-icon.png -resize 96x96 android/app/src/main/res/mipmap-xhdpi/ic_launcher.png && convert assets/images/app-icon.png -resize 144x144 android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png && convert assets/images/app-icon.png -resize 192x192 android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png && convert assets/images/app-icon.png -resize 64x64 web/favicon.png && convert assets/images/app-icon.png -resize 192x192 web/icons/Icon-192.png && convert assets/images/app-icon.png -resize 512x512 web/icons/Icon-512.png; fi
-            flutter pub get
-          flutter build web --release --base-href "/Halla/halla-web/"
+          flutter pub get
+          flutter build web --release --base-href "/Halla/halaa-web/"
           flutter build apk --release
           cp build/app/outputs/flutter-apk/app-release.apk ../../Halaa-App-Android.apk
 
       - name: Build Halaa Admin App (Web + Android APK)
         working-directory: halaa-admin-app-flutter/halaa_admin_flutter
+        env:
+          HALAA_ADMIN_USER: ${{ secrets.HALAA_ADMIN_USER }}
+          HALAA_ADMIN_PASS: ${{ secrets.HALAA_ADMIN_PASS }}
         run: |
           flutter create --platforms=android --org com.halla --project-name halaa_admin_app .
           python3 -c 'p="android/app/src/main/AndroidManifest.xml"; s=open(p).read(); ins="".join("    <uses-permission android:name=\""+x+"\"/>\n" for x in ["android.permission.INTERNET","android.permission.ACCESS_NETWORK_STATE"] if x not in s); open(p,"w").write(s.replace("<application", ins+"<application", 1))'
           if [ -f "assets/images/admin-app-icon.png" ]; then mkdir -p android/app/src/main/res/mipmap-mdpi android/app/src/main/res/mipmap-hdpi android/app/src/main/res/mipmap-xhdpi android/app/src/main/res/mipmap-xxhdpi android/app/src/main/res/mipmap-xxxhdpi web/icons && convert assets/images/admin-app-icon.png -resize 48x48 android/app/src/main/res/mipmap-mdpi/ic_launcher.png && convert assets/images/admin-app-icon.png -resize 72x72 android/app/src/main/res/mipmap-hdpi/ic_launcher.png && convert assets/images/admin-app-icon.png -resize 96x96 android/app/src/main/res/mipmap-xhdpi/ic_launcher.png && convert assets/images/admin-app-icon.png -resize 144x144 android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png && convert assets/images/admin-app-icon.png -resize 192x192 android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png && convert assets/images/admin-app-icon.png -resize 64x64 web/favicon.png && convert assets/images/admin-app-icon.png -resize 192x192 web/icons/Icon-192.png && convert assets/images/admin-app-icon.png -resize 512x512 web/icons/Icon-512.png; fi
           flutter pub get
-          flutter build web --release --base-href "/Halla/admin/"
-          flutter build apk --release
+          flutter build web --release --base-href "/Halla/admin/" --dart-define=HALAA_ADMIN_USER="${HALAA_ADMIN_USER}" --dart-define=HALAA_ADMIN_PASS="${HALAA_ADMIN_PASS}"
+          flutter build apk --release --dart-define=HALAA_ADMIN_USER="${HALAA_ADMIN_USER}" --dart-define=HALAA_ADMIN_PASS="${HALAA_ADMIN_PASS}"
           cp build/app/outputs/flutter-apk/app-release.apk ../../Halaa-Admin-Android.apk
 
       - name: Upload Android APK Installers (App & Admin)
@@ -64,13 +67,14 @@ jobs:
           path: |
             Halaa-App-Android.apk
             Halaa-Admin-Android.apk
+
       - name: Publish Public APK Release (latest)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release view latest || gh release create latest --title "Halaa Latest APKs" --notes "Automatic build release"
           gh release upload latest Halaa-App-Android.apk Halaa-Admin-Android.apk --clobber
-      - name: Deploy Separate Web Builds to halla-web/ and admin/
+      - name: Deploy Separate Web Builds to halaa-web/ and admin/
         run: |
           rm -rf /tmp/halla-web-build /tmp/admin-web-build
           mkdir -p /tmp/halla-web-build /tmp/admin-web-build
@@ -79,16 +83,16 @@ jobs:
           git fetch origin main
           git reset --hard origin/main
           python3 -c "import json,re,os; rv=lambda p: (lambda m: (m.group(1), int(m.group(2) or 1)) if m else None)(re.search(r'^version:\s*([^\s+#]+)(?:\+(\d+))?', open(p).read(), re.M)); d=json.load(open('app_version.json')); u=rv('halaa-user-app-flutter/halaa_user_flutter/pubspec.yaml'); a=rv('halaa-admin-app-flutter/halaa_admin_flutter/pubspec.yaml'); base=os.environ['GITHUB_SERVER_URL']+'/'+os.environ['GITHUB_REPOSITORY']+'/releases/download/latest/'; u and d['user_app'].update({'latest_version':u[0],'latest_build':u[1],'min_required_build':u[1],'download_url':base+'Halaa-App-Android.apk'}); a and d['admin_app'].update({'latest_version':a[0],'latest_build':a[1],'min_required_build':a[1],'download_url':base+'Halaa-Admin-Android.apk'}); open('app_version.json','w').write(json.dumps(d,indent=2,ensure_ascii=False)+'\n')"
-          rm -rf halla-web/* admin/*
-          mkdir -p halla-web admin
-          cp -r /tmp/halla-web-build/. halla-web/
+          rm -rf halaa-web/* admin/*
+          mkdir -p halaa-web admin
+          cp -r /tmp/halla-web-build/. halaa-web/
           cp -r /tmp/admin-web-build/. admin/
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add halla-web/ admin/ app_version.json
+          git add halaa-web/ admin/ app_version.json
           if ! git diff --cached --quiet; then
             git commit -m "Deploy separate Halaa User & Admin Flutter Web apps"
-           git pull --rebase -X theirs origin main || true
+            git pull --rebase -X theirs origin main || true
             git push origin main
           fi
 
@@ -118,10 +122,13 @@ jobs:
 
       - name: Build Halaa Admin App (iPhone unsigned IPA)
         working-directory: halaa-admin-app-flutter/halaa_admin_flutter
+        env:
+          HALAA_ADMIN_USER: ${{ secrets.HALAA_ADMIN_USER }}
+          HALAA_ADMIN_PASS: ${{ secrets.HALAA_ADMIN_PASS }}
         run: |
           flutter create --platforms=ios --org com.halla --project-name halaa_admin_app .
           flutter pub get
-          flutter build ios --release --no-codesign
+          flutter build ios --release --no-codesign --dart-define=HALAA_ADMIN_USER="${HALAA_ADMIN_USER}" --dart-define=HALAA_ADMIN_PASS="${HALAA_ADMIN_PASS}"
           mkdir -p Payload
           cp -r build/ios/iphoneos/Runner.app Payload/
           zip -r ../../Halaa-Admin-iPhone-unsigned.ipa Payload
