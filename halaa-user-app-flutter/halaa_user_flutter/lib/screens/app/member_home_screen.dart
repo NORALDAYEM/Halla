@@ -264,7 +264,7 @@ class _MemberHomeScreenState extends State<MemberHomeScreen> {
   }
   
   Widget _roomsTab() {
-      return const HalaaRoomsShowcaseTab();
+      return HalaaRoomsShowcaseTab(serverEndpoint: widget.config.serverEndpoint);
   }
 
   Widget _momentsTab() {
