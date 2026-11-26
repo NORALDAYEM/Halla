@@ -1,7 +1,7 @@
 name: halaa_admin_app
 description: تطبيق إدارة هلاا المستقل — Android / iOS / Web.
 publish_to: 'none'
-version: 3.1.1+2
+version: 3.1.2+3
 
 environment:
   sdk: '>=3.2.0 <4.0.0'
