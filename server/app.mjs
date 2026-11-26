@@ -128,17 +128,17 @@ createServer(async(req,res)=>{
     if(req.method==='GET' && path==='/api/zego/token') return json(res,405,{error:'Use authenticated POST'});
     if(req.method==='POST' && ['/api/zego-token','/api/zego/token'].includes(path)){
       if(!zegoReady) fail(503,'يرجى ضبط متغير ZEGO_SERVER_SECRET في إعدادات الخادم');
-      const user=await identity(req);
+      const hasAuth=(req.headers.authorization||'').startsWith('Bearer ');const user=hasAuth?await identity(req):{id:'guest_'+crypto.randomBytes(6).toString('hex'),user_metadata:{nickname:'ضيف هلا'},isGuest:true};
       if(centralAdmin.controlSync.getCurrentConfig().value.features.voiceRooms===false) fail(503,'الغرف متوقفة مؤقتاً للصيانة');
       const data=await body(req);
       const room=data.room ?? (typeof data.roomID==='string' ? data.roomID.replace(/^halaa_/,'') : '');
       if(typeof room!=='string'||!room||(!roomIds.has(room)&&!read('room:'+room))) fail(404,'الغرفة غير موجودة');
       const roomID='halaa_'+room, userID=user.id, role=roomRole(user,room);
       if(read('zego-ban:'+room+':'+userID)) fail(403,'تم منع الدخول لهذه الغرفة');
-      const seats=read('seats:'+room)||{};
+     if(!user.isGuest){ const seats=read('seats:'+room)||{};
       for(const seat of Object.values(seats)) if(seat.userID===userID&&seat.expires>Date.now()) seat.expires=Date.now()+60000;
       write('seats:'+room,seats);
-      write('member:'+userID,{id:userID});
+      write('member:'+userID,{id:userID})};
       const payload=JSON.stringify({room_id:roomID,privilege:{1:1,2:grant(role).canPublish?1:0},stream_id_list:null});
       const token=generateZegoToken04(zegoAppId,userID,zegoServerSecret,900,payload);
       return json(res,200,{appID:zegoAppId,roomID,userID,role,token,expiresIn:900,userName:String(user.user_metadata?.nickname || user.user_metadata?.display_name || user.email?.split('@')[0] || 'عضو').slice(0,60)});
