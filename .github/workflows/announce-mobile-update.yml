@@ -1,0 +1,53 @@
+name: Announce mobile update
+on:
+  workflow_dispatch:
+    inputs:
+      app:
+        type: choice
+        options: [user_app, admin_app]
+        required: true
+      platform:
+        type: choice
+        options: [android, ios, both]
+        required: true
+      version:
+        description: Published version
+        required: true
+      build:
+        description: Published build number
+        required: true
+      android_url:
+        description: Versioned Halla Android release APK or Google Play link
+      ios_url:
+        description: App Store or TestFlight link
+      message:
+        description: Message displayed in Halaa
+        required: true
+      mandatory:
+        type: boolean
+        default: false
+permissions:
+  contents: write
+concurrency:
+  group: halla-mobile-announcements
+  cancel-in-progress: false
+jobs:
+  announce:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Validate release and update manifest
+        env:
+          RELEASE_INPUTS: ${{ toJSON(inputs) }}
+        run: python3 .github/scripts/announce_update.py
+      - name: Publish notification
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add app_version.json
+          git diff --cached --quiet && exit 0
+          git commit -m "Announce published mobile update"
+          git push origin HEAD:main

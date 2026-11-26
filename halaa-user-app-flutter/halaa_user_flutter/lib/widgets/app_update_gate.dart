@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -28,7 +30,8 @@ class _AppUpdateGateState extends State<AppUpdateGate>
   Timer? _pollTimer;
   bool _checking = false;
   bool _dialogOpen = false;
-  bool _dismissedOptional = false;
+  int? _dismissedBuild;
+  late final Future<PackageInfo> _installed = PackageInfo.fromPlatform();
 
   @override
   void initState() {
@@ -107,32 +110,43 @@ class _AppUpdateGateState extends State<AppUpdateGate>
         }
       }
 
-      final latestBuild = (section['latest_build'] as num?)?.toInt() ?? 0;
+      if (kIsWeb || ![TargetPlatform.android, TargetPlatform.iOS].contains(defaultTargetPlatform)) return;
+      final platform = defaultTargetPlatform == TargetPlatform.iOS ? 'ios' : 'android';
+      final platformSections = section['platforms'];
+      final entry = platformSections is Map ? platformSections[platform] : null;
+      final release = entry is Map ? entry : section;
+      final installed = await _installed;
+      if (!mounted) return;
+      final installedBuild = int.tryParse(installed.buildNumber) ?? widget.currentBuild;
+      final latestBuild = (release['latest_build'] as num?)?.toInt() ?? 0;
       final minRequiredBuild =
-          (section['min_required_build'] as num?)?.toInt() ?? 0;
-      final forceUpdate = section['force_update'] == true;
-      final updateType = (section['update_type'] as String?)?.trim().toLowerCase() ?? 'minor';
+          (release['min_required_build'] as num?)?.toInt() ?? 0;
+      final forceUpdate = release['force_update'] == true;
+      final updateType = (release['update_type'] as String?)?.trim().toLowerCase() ?? 'minor';
       final isMajor = updateType == 'major';
       final latestVersion =
-          (section['latest_version'] as String?)?.trim() ?? '';
-      final title = (section['title'] as String?)?.trim() ?? 'تحديث جديد متوفر';
-      final message = (section['message'] as String?)?.trim() ??
+          (release['latest_version'] as String?)?.trim() ?? '';
+      final title = (release['title'] as String?)?.trim() ?? 'تحديث جديد متوفر';
+      final message = (release['message'] as String?)?.trim() ??
           'يرجى تحديث التطبيق للحصول على آخر التعديلات والتحسينات.';
-      final downloadUrl = (section['download_url'] as String?)?.trim() ??
+      final downloadUrl = (release['download_url'] as String?)?.trim() ??
           'https://github.com/NORALDAYEM/Halla/releases/latest';
 
-      final needsUpdate = latestBuild > widget.currentBuild ||
-          minRequiredBuild > widget.currentBuild;
+      if (!_validDownload(downloadUrl, platform)) return;
+      final needsUpdate = latestBuild > installedBuild ||
+          minRequiredBuild > installedBuild;
       if (!needsUpdate) return;
 
       final isMandatory =
-          isMajor || forceUpdate || (minRequiredBuild > widget.currentBuild);
-      if (!isMandatory && _dismissedOptional) return;
+          isMajor || forceUpdate || (minRequiredBuild > installedBuild);
+      if (!isMandatory && _dismissedBuild == latestBuild) return;
 
       _showUpdateDialog(
         title: isMandatory ? 'تحديث كبير مطلوب للتطبيق' : title,
         message: message,
         latestVersion: latestVersion,
+        installedVersion: installed.version,
+        build: latestBuild,
         downloadUrl: downloadUrl,
         isMandatory: isMandatory,
       );
@@ -141,9 +155,17 @@ class _AppUpdateGateState extends State<AppUpdateGate>
     }
   }
 
+  bool _validDownload(String url, String platform) {
+    final uri = Uri.tryParse(url);
+    if (uri == null || uri.scheme != 'https' || uri.userInfo.isNotEmpty) return false;
+    if (platform == 'ios') return ['apps.apple.com', 'testflight.apple.com'].contains(uri.host);
+    return uri.host == 'play.google.com' ||
+        (uri.host == 'github.com' && uri.path.startsWith('/NORALDAYEM/Halla/releases/download/') && uri.path.endsWith('.apk'));
+  }
+
   Future<void> _openDownload(String url) async {
     final uri = Uri.tryParse(url);
-    if (uri == null || uri.scheme != 'https' || !['github.com', 'noraldayem.github.io', 'apps.apple.com', 'play.google.com'].contains(uri.host)) return;
+    if (uri == null || uri.scheme != 'https' || !['github.com', 'noraldayem.github.io', 'apps.apple.com', 'testflight.apple.com', 'play.google.com'].contains(uri.host)) return;
     await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
@@ -151,6 +173,8 @@ class _AppUpdateGateState extends State<AppUpdateGate>
     required String title,
     required String message,
     required String latestVersion,
+    required String installedVersion,
+    required int build,
     required String downloadUrl,
     required bool isMandatory,
   }) {
@@ -192,7 +216,7 @@ class _AppUpdateGateState extends State<AppUpdateGate>
                 if (latestVersion.isNotEmpty) ...[
                   const SizedBox(height: 12),
                   Text(
-                    'الإصدار الحالي: ${widget.currentVersion}  •  الإصدار الجديد: $latestVersion',
+                    'الإصدار الحالي: ${installedVersion}  •  الإصدار الجديد: $latestVersion',
                     style: const TextStyle(fontSize: 12, color: Colors.white70),
                   ),
                 ],
@@ -202,7 +226,7 @@ class _AppUpdateGateState extends State<AppUpdateGate>
               if (!isMandatory)
                 TextButton(
                   onPressed: () {
-                    _dismissedOptional = true;
+                    _dismissedBuild = build;
                     Navigator.of(ctx).pop();
                   },
                   child: const Text('لاحقاً'),

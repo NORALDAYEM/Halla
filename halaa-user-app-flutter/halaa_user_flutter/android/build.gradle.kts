@@ -5,6 +5,17 @@ allprojects {
     }
 }
 
+// ZIM 3.3 still invokes the removed Groovy jcenter() DSL during evaluation.
+project(":zego_zim") {
+    for (handler in listOf(buildscript.repositories, repositories)) {
+        (handler as org.gradle.api.plugins.ExtensionAware).extensions.extraProperties
+            .set("jcenter", object : groovy.lang.Closure<Any>(handler) {
+                @Suppress("unused")
+                fun doCall(): Any = handler.mavenCentral()
+            })
+    }
+}
+
 val newBuildDir: Directory =
     rootProject.layout.buildDirectory
         .dir("../../build")
