@@ -1,0 +1,48 @@
+name: Check room entry beside the legacy Android app
+on:
+  push:
+    branches: [release/android-voice-3.1.5]
+    paths: ['.github/workflows/check-legacy-room-entry.yml', '.github/scripts/check_room_entry.py']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  room-entry:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Download the legacy package and the room installer from the release build
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download latest --pattern 'Halaa-App-Android.apk' --repo "$GITHUB_REPOSITORY"
+          for attempt in $(seq 1 80); do
+            if gh run download 45844665174 --repo "$GITHUB_REPOSITORY" --name rooms-side-by-side; then break; fi
+            sleep 10
+          done
+          test -s Halaa-Rooms-Android.apk
+      - name: Allow hardware acceleration
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Open a room as a guest with both APKs installed
+        uses: ReactiveCircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          script: |
+            adb install Halaa-App-Android.apk
+            adb install Halaa-Rooms-Android.apk
+            adb shell pm path com.halla.halaa_user_app
+            adb shell pm path com.halla.halaa_user_app.rooms
+            adb shell wm size 1080x2200
+            adb shell wm density 360
+            adb shell am start -W -n com.halla.halaa_user_app.rooms/com.halla.halaa_user_app.MainActivity
+            python3 .github/scripts/check_room_entry.py
