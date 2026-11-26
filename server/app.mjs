@@ -3,7 +3,7 @@ import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { DatabaseSync } from 'node:sqlite';
 import { AccessToken, RoomServiceClient, TrackSource } from 'livekit-server-sdk';
-
+import { createCentralAdminSystem } from './src/central-admin-router.mjs';
 const env = process.env;
 const zegoAppId = Number(env.ZEGO_APP_ID || 400719759);
 const zegoServerSecret = (env.ZEGO_SERVER_SECRET || '').trim();
@@ -88,8 +88,10 @@ export function validAd(a) {
     && Number.isInteger(a.imageIndex) && a.imageIndex>=0 && a.imageIndex<4
     && ['start','end'].every(k=>a[k]===null || Number.isFinite(a[k])) && (a.start===null || a.end===null || a.start<a.end);
 }
+const centralAdmin = createCentralAdminSystem();
 createServer(async(req,res)=>{
   try {
+    if (await centralAdmin.handleRequest(req, res)) return;
     const path=new URL(req.url,'http://localhost').pathname;
     if(path.startsWith('/api/') && req.headers.origin==='https://noraldayem.github.io'){
       res.setHeader('Access-Control-Allow-Origin',req.headers.origin);
