@@ -72,8 +72,8 @@ class _HalaaAdminStandaloneAppState extends State<HalaaAdminStandaloneApp> {
       ),
       home: AppUpdateGate(
         appKey: 'admin_app',
-        currentVersion: '3.1.1',
-        currentBuild: 2,
+        currentVersion: '3.1.2',
+        currentBuild: 3,
         child: !_ready
           ? const Scaffold(body: Center(child: CircularProgressIndicator()))
           : (_adminUser == null
