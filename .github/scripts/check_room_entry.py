@@ -3,6 +3,11 @@ import subprocess
 import time
 import xml.etree.ElementTree as ET
 
+import uiautomator2 as u2
+
+DEVICE = u2.connect()
+DEVICE.jsonrpc.setConfigurator({"waitForIdleTimeout": 0, "waitForSelectorTimeout": 0})
+
 
 def adb(*args):
     return subprocess.check_output(["adb", *args], text=True, timeout=20)
@@ -12,8 +17,7 @@ def locate(phrase, *, tap=False, scroll=False):
     last_labels = []
     for attempt in range(18):
         try:
-            adb("shell", "uiautomator", "dump", "/sdcard/halaa-view.xml")
-            root = ET.fromstring(adb("exec-out", "cat", "/sdcard/halaa-view.xml"))
+            root = ET.fromstring(DEVICE.dump_hierarchy())
         except (subprocess.SubprocessError, ET.ParseError):
             time.sleep(1)
             continue

@@ -82,9 +82,14 @@ def sign(store, expected, source, destination):
         before, after = source / name, destination / name
         command(signer, "sign", "--ks", str(store), "--ks-key-alias", ALIAS, "--ks-pass",
                 "env:HALAA_STOREPASS", "--key-pass", "env:HALAA_STOREPASS", "--out", str(after), str(before))
-        info = command(signer, "verify", "--print-certs", str(after), capture_output=True, text=True).stdout
-        if f"Signer #1 certificate SHA-256 digest: {expected}" not in info:
-            raise ValueError("Unexpected APK signer")
+        info = command(signer, "verify", "--print-certs", "--print-certs-pem",
+                       str(after), capture_output=True, text=True).stdout
+        certs = re.findall(r"-----BEGIN CERTIFICATE-----\s*(.*?)\s*-----END CERTIFICATE-----",
+                           info, re.DOTALL)
+        hashes = {hashlib.sha256(base64.b64decode(pem)).hexdigest() for pem in certs}
+        if hashes != {expected}:
+            print(info, flush=True)  # apksigner public certificate information
+            raise ValueError("APK certificate verification failed")
         with ZipFile(before) as original, ZipFile(after) as signed:
             def payload(archive):
                 return {i.filename: (i.CRC, i.file_size) for i in archive.infolist()

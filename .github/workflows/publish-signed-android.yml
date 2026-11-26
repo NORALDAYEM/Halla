@@ -70,13 +70,57 @@ jobs:
         with:
           name: signed-android-installers
           path: signed/*.apk
-  publish:
+  signed-room-test:
     needs: sign
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: signed-android-installers
+      - name: Prepare the legacy APK and hardware acceleration
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p legacy
+          gh release download latest --pattern 'Halaa-App-Android.apk' --dir legacy
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - run: python3 -m pip install uiautomator2==3.7.1
+      - name: Check startup, coexistence, and the user interface after tapping a room
+        uses: ReactiveCircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          script: |
+            adb install Halaa-App-Android.apk
+            adb shell am start -W -n com.halla.halaa_user_app/.MainActivity
+            sleep 8
+            adb shell pidof com.halla.halaa_user_app || (adb logcat -b crash -d -t 100 && false)
+            adb uninstall com.halla.halaa_user_app
+            adb install legacy/Halaa-App-Android.apk
+            adb install Halaa-Rooms-Android.apk
+            adb shell pm path com.halla.halaa_user_app
+            adb shell pm path com.halla.halaa_user_app.rooms
+            adb install -r Halaa-Rooms-Android.apk
+            adb shell wm size 1080x2200
+            adb shell wm density 360
+            adb shell am start -W -n com.halla.halaa_user_app.rooms/com.halla.halaa_user_app.MainActivity
+            sleep 8
+            adb shell pidof com.halla.halaa_user_app.rooms || (adb logcat -b crash -d -t 100 && false)
+            python3 .github/scripts/check_room_entry.py
+  downloadable:
+    needs: sign
+    runs-on: ubuntu-latest
     permissions:
-      actions: read
       contents: write
+      actions: read
     env:
       GH_TOKEN: ${{ github.token }}
       TAG: ${{ needs.sign.outputs.tag }}
@@ -84,25 +128,26 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: signed-android-installers
-      - name: Require successful installation and room navigation
-        run: |
-          set -euo pipefail
-          for attempt in $(seq 1 65); do
-            state=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$BUILD_RUN/jobs" --jq '.jobs[] | select(.name=="verify-room") | (.conclusion // .status)')
-            case "$state" in success) break ;; completed|failure|cancelled|skipped|timed_out) exit 1 ;; esac
-            sleep 12
-          done
-          test "$state" = success
-      - name: Publish immutable APKs and verify the public download bytes
+      - name: Make the signed installers available for device testing
         run: |
           set -euo pipefail
           repo="$GITHUB_REPOSITORY"
           if ! gh release view "$TAG" --repo "$repo" >/dev/null 2>&1; then
-            gh release create "$TAG" Halaa-App-Android.apk Halaa-Rooms-Android.apk --repo "$repo" --target "$GITHUB_SHA" --latest --title "غرف هلا الصوتية · ${TAG#android-}" --notes 'عند وجود نسخة قديمة، نزّل Halaa-Rooms-Android.apk ثم افتح «هلا الغرف» وسجّل الدخول بحسابك. للتثبيت لأول مرة نزّل Halaa-App-Android.apk.'
+            gh release create "$TAG" Halaa-App-Android.apk Halaa-Rooms-Android.apk --repo "$repo" --target "$GITHUB_SHA" --prerelease --latest=false --title "غرف هلا الصوتية · ${TAG#android-}" --notes 'عند وجود نسخة قديمة، نزّل Halaa-Rooms-Android.apk ثم افتح «هلا الغرف» وسجّل الدخول. للتثبيت لأول مرة نزّل Halaa-App-Android.apk.'
           fi
           mkdir downloaded
           for file in Halaa-App-Android.apk Halaa-Rooms-Android.apk; do
             curl --retry 3 --fail --location --silent --show-error "https://github.com/$repo/releases/download/$TAG/$file" -o "downloaded/$file"
             cmp "$file" "downloaded/$file"
-            sha256sum "$file"
           done
+  adopt:
+    needs: [sign, downloadable, signed-room-test]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TAG: ${{ needs.sign.outputs.tag }}
+    steps:
+      - name: Mark the tested public release as current
+        run: gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --prerelease=false --latest
