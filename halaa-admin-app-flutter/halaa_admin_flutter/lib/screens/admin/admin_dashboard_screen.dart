@@ -4,6 +4,8 @@ import '../../models/halaa_models.dart';
 import '../../services/halaa_storage.dart';
 import '../../theme/halaa_themes.dart';
 import '../../widgets/welcome_gallery_bg.dart';
+import '../../core/api/halaa_central_admin_api.dart';
+import '../../features/security_center/central_control_panel_widget.dart';
 
 /// Exact 9-tab Admin Dashboard matching `admin/index.html`:
 /// 1. 🎨 الثيمات والتصميم
@@ -37,6 +39,7 @@ class AdminDashboardScreen extends StatefulWidget {
 
 class _AdminDashboardScreenState extends State<AdminDashboardScreen>
     with SingleTickerProviderStateMixin {
+  final HalaaCentralAdminApi _centralApi = HalaaCentralAdminApi();
   late TabController _tabs;
   late HalaaConfig _cfg;
   late TextEditingController _serverCtrl;
@@ -122,7 +125,68 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
       ),
     );
   }
-
+  Future<void> _openCentralControlPanel() async {
+    if (!_centralApi.isAuthenticated) {
+      final userCtrl = TextEditingController();
+final passCtrl = TextEditingController();
+final totpCtrl = TextEditingController();
+String? errorText;
+bool loading = false;
+final ok = await showDialog<bool>(
+context: context,
+builder: (ctx) => StatefulBuilder(
+builder: (ctx, setDialogState) => AlertDialog(
+title: const Text('تسجيل الدخول للخادم المركزي'),
+content: SingleChildScrollView(
+child: Column(
+mainAxisSize: MainAxisSize.min,
+children: [
+TextField(controller: userCtrl, decoration: const InputDecoration(labelText: 'اسم المستخدم')),
+const SizedBox(height: 8),
+TextField(controller: passCtrl, obscureText: true, decoration: const InputDecoration(labelText: 'كلمة المرور')),
+const SizedBox(height: 8),
+TextField(controller: totpCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'رمز TOTP')),
+if (errorText != null) ...[
+const SizedBox(height: 8),
+Text(errorText!, style: const TextStyle(color: Colors.red)),
+],
+],
+),
+),
+actions: [
+TextButton(onPressed: loading ? null : () => Navigator.of(ctx).pop(false), child: const Text('إلغاء')),
+ElevatedButton(
+onPressed: loading ? null : () async {
+setDialogState(() { loading = true; errorText = null; });
+try {
+await _centralApi.login(username: userCtrl.text.trim(), password: passCtrl.text, totpCode: totpCtrl.text.trim());
+if (ctx.mounted) Navigator.of(ctx).pop(true);
+} catch (e) {
+setDialogState(() { loading = false; errorText = e.toString(); });
+}
+},
+child: loading ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Text('دخول'),
+),
+],
+),
+),
+);
+userCtrl.dispose();
+passCtrl.dispose();
+totpCtrl.dispose();
+if (ok != true || !_centralApi.isAuthenticated) return;
+}
+if (!mounted) return;
+Navigator.of(context).push(
+MaterialPageRoute(
+builder: (_) => Scaffold(
+appBar: AppBar(title: const Text('مركز التحكم المركزي والأمان')),
+body: CentralControlPanelWidget(api: _centralApi),
+),
+),
+);
+  }
+  
   @override
   Widget build(BuildContext context) {
     final theme = findThemePreset(_cfg.activeTheme);
@@ -177,6 +241,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                       ),
                       child: Text(_saving ? '...' : 'حفظ وتطبيق'),
                     ),
+IconButton(
+tooltip: 'مركز التحكم المركزي والأمان',
+onPressed: _openCentralControlPanel,
+icon: const Icon(Icons.security_rounded, color: Colors.white),
+),
                     IconButton(
                       tooltip: 'خروج',
                       onPressed: widget.onLogout,
