@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 class HalaaGamesShowcaseTab extends StatelessWidget {
-  const HalaaGamesShowcaseTab({super.key});
+  const HalaaGamesShowcaseTab({super.key, required this.openRoom, required this.showRooms});
+  final void Function(String id, String title) openRoom;
+  final VoidCallback showRooms;
 
   static const Color _bgDark = Color(0xFF071B21);
   static const Color _surfaceDark = Color(0xFF0C2730);
@@ -10,25 +12,29 @@ class HalaaGamesShowcaseTab extends StatelessWidget {
 
   static const List<_GameCardData> _games = [
     _GameCardData(
-      titleAr: 'لعبة بلياردو',
+      titleAr: 'غرفة بلياردو',
+      roomId: 'r3',
       titleEn: 'BILLIARDS',
       imagePath: 'assets/images/welcome-gallery/pool-table.webp',
       tintColor: Color(0xFF0E7490),
     ),
     _GameCardData(
-      titleAr: 'لعبة شطرنج',
+      titleAr: 'غرفة شطرنج',
+      roomId: 'r2',
       titleEn: 'CHESS',
       imagePath: 'assets/images/welcome-gallery/chessboard.webp',
       tintColor: Color(0xFF115E59),
     ),
     _GameCardData(
-      titleAr: 'لعبة ليدو',
+      titleAr: 'غرفة ليدو',
+      roomId: 'r1',
       titleEn: 'LUDO',
       imagePath: 'assets/images/welcome-gallery/ludo-friends.webp',
       tintColor: Color(0xFF0F766E),
     ),
     _GameCardData(
-      titleAr: 'لعبة ضمينو',
+      titleAr: 'غرفة ضمينو',
+      roomId: 'r6',
       titleEn: 'DOMINO',
       imagePath: 'assets/images/welcome-gallery/game-table.webp',
       tintColor: Color(0xFF155E75),
@@ -38,109 +44,33 @@ class HalaaGamesShowcaseTab extends StatelessWidget {
   static const List<_RoomActivityData> _activities = [
     _RoomActivityData(
       category: 'بلياردو',
+      roomId: 'r3',
       title: 'تحدي البلياردو السريع',
       roomName: 'غرفة نجوم البلياردو',
       imagePath: 'assets/images/welcome-gallery/pool-friends.webp',
     ),
     _RoomActivityData(
       category: 'شطرنج',
+      roomId: 'r2',
       title: 'بطولة الشطرنج المسائية',
       roomName: 'مجلس الشطرنج الملكي',
       imagePath: 'assets/images/welcome-gallery/chess-pieces.webp',
     ),
     _RoomActivityData(
       category: 'صوتية',
+      roomId: 'r1',
       title: 'جلسة سوالف وألعاب',
       roomName: 'ديوانية هلا الصوتية',
       imagePath: 'assets/images/welcome-gallery/headphones.webp',
     ),
     _RoomActivityData(
       category: 'ضمينو',
+      roomId: 'r6',
       title: 'دوري الضمينو المباشر',
       roomName: 'ساحة الألعاب الجماعية',
       imagePath: 'assets/images/welcome-gallery/game-table.webp',
     ),
   ];
-
-  void _showComingSoonDialog(BuildContext context, String title) {
-    showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        return Directionality(
-          textDirection: TextDirection.rtl,
-          child: AlertDialog(
-            backgroundColor: _surfaceDark,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-              side: BorderSide(
-                color: _accentTeal.withValues(alpha: 0.45),
-                width: 1.2,
-              ),
-            ),
-            title: Row(
-              children: [
-                Container(
-                  width: 34,
-                  height: 34,
-                  decoration: BoxDecoration(
-                    color: _accentTeal.withValues(alpha: 0.16),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(
-                    Icons.sports_esports_rounded,
-                    color: _accentTeal,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 17,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            content: const Text(
-              'يتم الفتح قريباً',
-              style: TextStyle(
-                color: Color(0xFFD6ECEF),
-                fontSize: 15,
-                height: 1.5,
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(dialogContext).pop(),
-                style: TextButton.styleFrom(
-                  backgroundColor: _accentTeal,
-                  foregroundColor: _bgDark,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 10,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: const Text(
-                  'حسناً',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 14,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -192,7 +122,7 @@ class HalaaGamesShowcaseTab extends StatelessWidget {
               final game = _games[index];
               return _GameTile(
                 game: game,
-                onTap: () => _showComingSoonDialog(context, game.titleAr),
+                onTap: () => openRoom(game.roomId, game.titleAr),
               );
             },
           ),
@@ -228,8 +158,7 @@ class HalaaGamesShowcaseTab extends StatelessWidget {
                   ],
                 ),
                 TextButton(
-                  onPressed: () =>
-                      _showComingSoonDialog(context, 'نشاطات الغرفة'),
+                  onPressed: showRooms,
                   style: TextButton.styleFrom(
                     foregroundColor: _accentTeal,
                     padding: const EdgeInsets.symmetric(
@@ -265,7 +194,7 @@ class HalaaGamesShowcaseTab extends StatelessWidget {
               final activity = _activities[index];
               return _RoomActivityTile(
                 activity: activity,
-                onTap: () => _showComingSoonDialog(context, activity.title),
+                onTap: () => openRoom(activity.roomId, activity.roomName),
               );
             },
           ),
@@ -276,12 +205,14 @@ class HalaaGamesShowcaseTab extends StatelessWidget {
 }
 
 class _GameCardData {
+  final String roomId;
   final String titleAr;
   final String titleEn;
   final String imagePath;
   final Color tintColor;
 
   const _GameCardData({
+    required this.roomId,
     required this.titleAr,
     required this.titleEn,
     required this.imagePath,
@@ -290,12 +221,14 @@ class _GameCardData {
 }
 
 class _RoomActivityData {
+  final String roomId;
   final String category;
   final String title;
   final String roomName;
   final String imagePath;
 
   const _RoomActivityData({
+    required this.roomId,
     required this.category,
     required this.title,
     required this.roomName,

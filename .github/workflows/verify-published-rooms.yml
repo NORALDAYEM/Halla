@@ -1,9 +1,6 @@
 name: Verify published Android APKs on device
 on:
   workflow_dispatch:
-  push:
-    branches: [release/android-rooms-3.1.6]
-    paths: ['.github/scripts/check_room_entry.py', '.github/workflows/verify-published-rooms.yml']
 permissions:
   contents: read
   actions: read
@@ -20,7 +17,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          gh release download android-3.1.6-7 --pattern '*.apk'
+          gh release download android-3.1.7-8 --pattern '*.apk'
           mkdir legacy
           gh release download latest --pattern 'Halaa-App-Android.apk' --dir legacy
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -53,4 +50,4 @@ jobs:
       - name: Promote the tested public APKs
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release edit android-3.1.6-7 --repo "$GITHUB_REPOSITORY" --prerelease=false --latest
+        run: gh release edit android-3.1.7-8 --repo "$GITHUB_REPOSITORY" --prerelease=false --latest

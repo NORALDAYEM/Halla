@@ -46,6 +46,11 @@ def locate(phrase, *, tap=False, scroll=False):
 
 
 locate("وضع الضيف", tap=True)
-locate("الغرف\nعلامة التبويب", tap=True)
+locate("ديوانية هلا الصوتية", tap=True, scroll=True)
+locate("الدخول للانضمام إلى الغرفة")
+adb("shell", "input", "keyevent", "4")
+locate("أكثر", tap=True, scroll=True)
 locate("ديوانية نجوم هلا", tap=True, scroll=True)
 locate("الدخول للانضمام إلى الغرفة")
+locate("تسجيل الدخول", tap=True)
+locate("وضع الضيف")

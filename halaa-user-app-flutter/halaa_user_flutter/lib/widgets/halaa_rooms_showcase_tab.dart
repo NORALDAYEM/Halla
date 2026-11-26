@@ -1,13 +1,12 @@
 import 'dart:async';
-import '../screens/rooms/halaa_live_room_screen.dart';
 import 'dart:convert';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 class HalaaRoomsShowcaseTab extends StatefulWidget {
-  const HalaaRoomsShowcaseTab({super.key, this.serverEndpoint = '', this.accessToken});
+  const HalaaRoomsShowcaseTab({super.key, required this.serverEndpoint, required this.openRoom});
   final String serverEndpoint;
-  final Future<String> Function()? accessToken;
+  final void Function(String id, String title) openRoom;
   @override
   State<HalaaRoomsShowcaseTab> createState() => _HalaaRoomsShowcaseTabState();
 }
@@ -67,6 +66,7 @@ class _HalaaRoomsShowcaseTabState extends State<HalaaRoomsShowcaseTab> with Sing
 
   static const List<_RoomItem> _rooms = [
     _RoomItem(
+      id: 'r1',
       name: 'ديوانية نجوم هلا',
       description: 'سوالف مسائية وتحديات تفاعلية مع الجوائز',
       countryFlag: '🇸🇦',
@@ -80,6 +80,7 @@ class _HalaaRoomsShowcaseTabState extends State<HalaaRoomsShowcaseTab> with Sing
       icon: Icons.casino_rounded,
     ),
     _RoomItem(
+      id: 'r2',
       name: 'مجلس الأحبة',
       description: 'تعارف راقٍ وأجواء هادئة للجميع',
       countryFlag: '🇸🇦',
@@ -93,6 +94,7 @@ class _HalaaRoomsShowcaseTabState extends State<HalaaRoomsShowcaseTab> with Sing
       icon: Icons.favorite_rounded,
     ),
     _RoomItem(
+      id: 'r3',
       name: 'تحدي الذكاء السريع',
       description: 'أسئلة ثقافية وسرعة بديهة كل ليلة',
       countryFlag: '🇦🇪',
@@ -106,6 +108,7 @@ class _HalaaRoomsShowcaseTabState extends State<HalaaRoomsShowcaseTab> with Sing
       icon: Icons.quiz_rounded,
     ),
     _RoomItem(
+      id: 'r4',
       name: 'سهرة الرياض',
       description: 'دردشة مفتوحة وضحك ومشاركات صوتية',
       countryFlag: '🇸🇦',
@@ -119,6 +122,7 @@ class _HalaaRoomsShowcaseTabState extends State<HalaaRoomsShowcaseTab> with Sing
       icon: Icons.mic_rounded,
     ),
     _RoomItem(
+      id: 'r5',
       name: 'غرفتي الخاصة',
       description: 'استضافة الأصدقاء المفضلين والألعاب الجماعية',
       countryFlag: '🇸🇦',
@@ -132,6 +136,7 @@ class _HalaaRoomsShowcaseTabState extends State<HalaaRoomsShowcaseTab> with Sing
       icon: Icons.groups_rounded,
     ),
     _RoomItem(
+      id: 'r6',
       name: 'بطولة البلوت والترفيه',
       description: 'جولات حماسية وتصفيات أسبوعية مباشرة',
       countryFlag: '🇰🇼',
@@ -757,10 +762,7 @@ class _HalaaRoomsShowcaseTabState extends State<HalaaRoomsShowcaseTab> with Sing
   Widget _buildRoomCard(ColorScheme cs, _RoomItem room) {
     return InkWell(
       borderRadius: BorderRadius.circular(18),
-      onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => HalaaLiveRoomScreen(
-        roomId: room.id.isNotEmpty ? room.id : 'r${_rooms.indexOf(room) + 1}', title: room.name,
-        serverEndpoint: widget.serverEndpoint, accessToken: widget.accessToken,
-      ))),
+      onTap: () => widget.openRoom(room.id, room.name),
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
