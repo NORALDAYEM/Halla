@@ -1,0 +1,43 @@
+name: Check public production voice and sign-in readiness
+on:
+  push:
+    branches: [release/android-voice-3.1.5]
+    paths: ['.github/workflows/read-halla-services.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  live-service:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Check only public configuration and guest behavior
+        run: |
+          python3 - <<'PY'
+          import json
+          from urllib.request import Request, urlopen
+          from urllib.error import HTTPError
+
+          base = 'https://halla.onrender.com'
+          def get(url, headers=None):
+              with urlopen(Request(url, headers=headers or {}), timeout=60) as r:
+                  return json.load(r)
+
+          health = get(base+'/health')
+          config = get(base+'/api/config')
+          assert health['ok'] and health['authConfigured'] and config['zegoReady']
+          assert config['zegoAppId'] == 828861219
+          print('ZEGO and room authentication configured')
+          auth = 'https://uwjrboviicypyhregpoo.supabase.co'
+          assert config['authUrl'].rstrip('/') == auth
+          settings = get(auth+'/auth/v1/settings', {'apikey': config['publicKey']})
+          for provider in ('email','google','facebook','phone'):
+              print('Provider', provider, bool(settings.get('external', {}).get(provider)))
+          print('Registration enabled', not settings.get('disable_signup', False))
+          request = Request(base+'/api/zego-token',data=b'{"room":"r1"}',headers={'Content-Type':'application/json'})
+          try:
+              with urlopen(request, timeout=30) as res: raise RuntimeError('Unexpected guest status: '+str(res.status))
+          except HTTPError as exc:
+              assert exc.code == 401, exc.code
+          print('Guest access requires sign-in')
+          PY
