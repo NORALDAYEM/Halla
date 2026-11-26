@@ -91,14 +91,14 @@ class _HalaaLiveRoomScreenState extends State<HalaaLiveRoomScreen> {
   }
   Future<Map<String, dynamic>> _loadSession() async {
     final auth = widget.accessToken;
-    if (auth == null) throw Exception('سجّل الدخول للانضمام إلى الغرفة');
+    final token = auth == null ? '' : (await auth()).trim(); final isGuest = token.isEmpty;
     final base = Uri.parse(widget.serverEndpoint);
     if (base.scheme != 'https' || base.host != 'halla.onrender.com') {
       throw Exception('عنوان خادم الغرف غير معتمد');
     }
     final response = await http.post(base.resolve('/api/zego-token'),
-      headers: {'Authorization': 'Bearer ${await auth()}', 'Content-Type': 'application/json'},
-      body: jsonEncode({'room': widget.roomId})).timeout(const Duration(seconds: 20));
+      headers: {'Content-Type': 'application/json', if (!isGuest) 'Authorization': 'Bearer $token'},
+      body: jsonEncode({'room': widget.roomId, if (isGuest) 'guest': true})).timeout(const Duration(seconds: 20));
     final data = jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
     if (response.statusCode != 200) throw Exception(data['error'] ?? 'تعذر الاتصال بالغرفة');
     if (data['appID'] != 828861219) throw Exception('إعداد مشروع الصوت لا يطابق التطبيق');
