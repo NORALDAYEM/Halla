@@ -91,7 +91,7 @@ class _HalaaLiveRoomScreenState extends State<HalaaLiveRoomScreen> {
   }
   Future<Map<String, dynamic>> _loadSession() async {
     final auth = widget.accessToken;
-    final token = auth == null ? '' : (await auth()).trim(); final isGuest = token.isEmpty;
+    var token = ''; if (auth != null) { try { token = (await auth()).trim(); } catch (_) { /* guest fallback */ } } final isGuest = token.isEmpty;
     final base = Uri.parse(widget.serverEndpoint);
     if (base.scheme != 'https' || base.host != 'halla.onrender.com') {
       throw Exception('عنوان خادم الغرف غير معتمد');
