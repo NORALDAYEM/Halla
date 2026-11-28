@@ -67,6 +67,12 @@ async function identity(req) {
   if (!user.id || !user.email_confirmed_at) fail(403,'أكّد بريدك أولاً');
   return user;
 }
+async function guestIdentity(req) {
+  if ((req.headers.authorization || '').startsWith('Bearer ')) return identity(req);
+  const raw = String(req.headers['x-guest-id'] || '').trim().replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 64);
+  const id = raw ? (raw.startsWith('guest_') ? raw : 'guest_' + raw) : 'guest_' + crypto.randomBytes(6).toString('hex');
+  return { id, isGuest: true, user_metadata: { nickname: 'Guest' } };
+}
 async function body(req) {
   const chunks=[]; let bytes=0;
   for await (const c of req) { bytes+=c.length; if(bytes>16384) fail(413,'الطلب كبير'); chunks.push(c); }
@@ -114,7 +120,7 @@ createServer(async(req,res)=>{
       res.setHeader('Access-Control-Allow-Origin',req.headers.origin);
       res.setHeader('Vary','Origin');
       if(req.method==='OPTIONS'){
-        res.writeHead(204,{'Access-Control-Allow-Methods':'GET, POST, OPTIONS','Access-Control-Allow-Headers':'Content-Type, Authorization'});
+        res.writeHead(204,{'Access-Control-Allow-Methods':'GET, POST, OPTIONS','Access-Control-Allow-Headers':'Content-Type, Authorization, x-guest-id'});
         return res.end();
       }
     }
@@ -128,26 +134,27 @@ createServer(async(req,res)=>{
     if(req.method==='GET' && path==='/api/zego/token') return json(res,405,{error:'Use authenticated POST'});
     if(req.method==='POST' && ['/api/zego-token','/api/zego/token'].includes(path)){
       if(!zegoReady) fail(503,'يرجى ضبط متغير ZEGO_SERVER_SECRET في إعدادات الخادم');
-      const hasAuth=(req.headers.authorization||'').startsWith('Bearer ');const user=hasAuth?await identity(req):{id:'guest_'+crypto.randomBytes(6).toString('hex'),user_metadata:{nickname:'ضيف هلا'},isGuest:true};
+          const user=await guestIdentity(req);
       if(centralAdmin.controlSync.getCurrentConfig().value.features.voiceRooms===false) fail(503,'الغرف متوقفة مؤقتاً للصيانة');
       const data=await body(req);
       const room=data.room ?? (typeof data.roomID==='string' ? data.roomID.replace(/^halaa_/,'') : '');
       if(typeof room!=='string'||!room||(!roomIds.has(room)&&!read('room:'+room))) fail(404,'الغرفة غير موجودة');
-      const roomID='halaa_'+room, userID=user.id, role=roomRole(user,room);
+      const roomID='halaa_'+room, userID=user.id, role=user.isGuest&&read('role:'+room+':'+userID)!=='listener'?'speaker':roomRole(user,room);
       if(read('zego-ban:'+room+':'+userID)) fail(403,'تم منع الدخول لهذه الغرفة');
-     if(!user.isGuest){ const seats=read('seats:'+room)||{};
+     const seats=read('seats:'+room)||{};
       for(const seat of Object.values(seats)) if(seat.userID===userID&&seat.expires>Date.now()) seat.expires=Date.now()+60000;
       write('seats:'+room,seats);
-      write('member:'+userID,{id:userID})};
+      write('member:'+userID,{id:userID})}
       const payload=JSON.stringify({room_id:roomID,privilege:{1:1,2:grant(role).canPublish?1:0},stream_id_list:null});
       const token=generateZegoToken04(zegoAppId,userID,zegoServerSecret,900,payload);
       return json(res,200,{appID:zegoAppId,roomID,userID,role,token,expiresIn:900,userName:String(user.user_metadata?.nickname || user.user_metadata?.display_name || user.email?.split('@')[0] || 'عضو').slice(0,60)});
     }
     if(req.method==='POST' && path==='/api/seat') {
-      const user=await identity(req),data=await body(req);
+      const user=await guestIdentity(req),data=await body(req);
       if(!validRoom(data.room)) fail(404,'الغرفة غير موجودة');
       if(read('zego-ban:'+data.room+':'+user.id)) fail(403,'الدخول ممنوع');
       if(!['take','release'].includes(data.action)) fail(400,'عملية غير مدعومة');
+    if(user.isGuest) write('member:'+user.id,{id:user.id});
       const seats=read('seats:'+data.room)||{};
       for(const [index,seat] of Object.entries(seats)) if(seat.expires<=Date.now()||seat.userID===user.id) delete seats[index];
       if(data.action==='take') {
@@ -165,16 +172,25 @@ createServer(async(req,res)=>{
       return json(res,200,{coins:centralAdmin.ledgerService.getBalance(user.id,'COINS'),diamonds:centralAdmin.ledgerService.getBalance(user.id,'DIAMONDS')});
     }
     if(path==='/api/gifts' && (req.method==='POST'||req.method==='GET')) {
-      const user=await identity(req);
+      const user=await guestIdentity(req);
       const data=req.method==='POST'?await body(req):Object.fromEntries(new URL(req.url,'http://localhost').searchParams);
       if(!validRoom(data.room)) fail(404,'الغرفة غير موجودة');
       if(read('zego-ban:'+data.room+':'+user.id)) fail(403,'الدخول ممنوع');
+    if(user.isGuest) write('member:'+user.id,{id:user.id});
       if(req.method==='GET') {
         const gifts=[...centralAdmin.ledgerService.idempotencyCache.values()].filter(g=>g.roomId===data.room&&g.giftId).slice(-50);
-        return json(res,200,{gifts});
+              return json(res,200,{gifts:[...gifts,...(read('guest-gifts:'+data.room)||[])].slice(-50)});
       }
       if(centralAdmin.controlSync.getCurrentConfig().value.features.gifts===false) fail(503,'الهدايا متوقفة مؤقتاً');
       if(typeof data.recipientId!=='string'||!read('member:'+data.recipientId)) fail(404,'المستلم غير موجود');
+    if(user.isGuest||String(data.recipientId).startsWith('guest_')){
+      const key='guest-gifts:'+data.room,list=read(key)||[],idem=typeof data.idempotencyKey==='string'&&data.idempotencyKey?data.idempotencyKey:null;
+      const existing=idem?list.find(g=>g.idempotencyKey===idem):null;
+      if(existing) return json(res,200,{ok:true,gift:existing,idempotent:true});
+      const gift={id:crypto.randomUUID(),senderId:user.id,recipientId:data.recipientId,giftId:data.giftId,roomId:data.room,idempotencyKey:idem,isGuest:true,createdAt:Date.now()};
+      list.push(gift);write(key,list.slice(-100));
+      return json(res,200,{ok:true,gift});
+    }
       return json(res,200,centralAdmin.ledgerService.sendGift({senderId:user.id,recipientId:data.recipientId,giftId:data.giftId,roomId:data.room,idempotencyKey:data.idempotencyKey}));
     }
     if(req.method!=='POST' || !['/api/ad','/api/voice','/api/moderate','/api/rooms'].includes(path)) return json(res,404,{});
