@@ -33,7 +33,7 @@ class _HalaaLiveRoomScreenState extends State<HalaaLiveRoomScreen> {
     final isGuest = token.isEmpty;
     final base = Uri.parse(widget.serverEndpoint);
     if (base.scheme != 'https' || base.host != 'halla.onrender.com') throw Exception('عنوان خادم غير معتمد');
-    final headers = {'Content-Type': 'application/json', if (!isGuest) 'Authorization': 'Bearer $token' else 'X-Guest-Id': _guestId};
+    final headers = {'Content-Type': 'application/json', if (!isGuest) 'Authorization': 'Bearer $token', if (isGuest) 'X-Guest-Id': _guestId};
     if (body != null && isGuest) body = <String, dynamic>{...body, 'guest': true};
     final response = body == null
       ? await http.get(base.resolve(path), headers: headers).timeout(const Duration(seconds: 20))
@@ -100,7 +100,7 @@ class _HalaaLiveRoomScreenState extends State<HalaaLiveRoomScreen> {
       throw Exception('عنوان خادم الغرف غير معتمد');
     }
     final response = await http.post(base.resolve('/api/zego-token'),
-      headers: {'Content-Type': 'application/json', if (!isGuest) 'Authorization': 'Bearer $token else 'X-Guest-Id': _guestId'},
+      headers: {'Content-Type': 'application/json', if (!isGuest) 'Authorization': 'Bearer $token' , if (isGuest) 'X-Guest-Id': _guestId'},
       body: jsonEncode({'room': widget.roomId, if (isGuest) 'guest': true})).timeout(const Duration(seconds: 20));
     final data = jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
     if (response.statusCode != 200) throw Exception(data['error'] ?? 'تعذر الاتصال بالغرفة');
