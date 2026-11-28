@@ -1,19 +1,33 @@
 {
   "user_app": {
-    "latest_version": "3.1.5",
-    "latest_build": 6,
-    "min_required_build": 6,
+    "latest_version": "3.1.7",
+    "latest_build": 8,
+    "min_required_build": 0,
     "force_update": false,
     "update_type": "minor",
-    "remote_config_version": 1,
+    "remote_config_version": 2,
     "live_config": {
       "server_endpoint": "https://halla.onrender.com",
       "announcement": "",
-      "rooms_notice": "يتم العمل قريباً بعد تركيب نظام الغرف"
+      "rooms_notice": "سجّل الدخول إلى هلا، ثم اختر الغرفة التي تريد الانضمام إليها."
     },
-    "title": "تحديث جديد متوفر لتطبيق هلا",
-    "message": "يتوفر إصدار جديد يتضمن تحسينات وتعديلات مهمة. يرجى التحديث الآن للاستمرار بأفضل أداء.",
-    "download_url": "https://github.com/NORALDAYEM/Halla/releases/download/latest/Halaa-App-Android.apk"
+    "title": "تحديث هلا للغرف الصوتية",
+    "message": "يفتح هذا الإصدار الغرف من صفحة الألعاب ومن قائمة الغرف. افتح صفحة التثبيت واختر الحزمة الموجودة على هاتفك.",
+    "download_url": "https://noraldayem.github.io/Halla/mobile-update.html?app=user_app",
+    "platforms": {
+      "android": {
+        "latest_build": 8,
+        "latest_version": "3.1.7",
+        "min_required_build": 0,
+        "force_update": false,
+        "update_type": "minor",
+        "title": "تحديث هلا للغرف الصوتية",
+        "message": "حدّث تطبيقك لفتح الغرفة مباشرة من بطاقة النشاط أو من قائمة الغرف.",
+        "download_url": "https://github.com/NORALDAYEM/Halla/releases/download/android-3.1.7-8/Halaa-Rooms-Android.apk",
+        "fresh_install_url": "https://github.com/NORALDAYEM/Halla/releases/download/android-3.1.7-8/Halaa-App-Android.apk",
+        "rooms_download_url": "https://github.com/NORALDAYEM/Halla/releases/download/android-3.1.7-8/Halaa-Rooms-Android.apk"
+      }
+    }
   },
   "admin_app": {
     "latest_version": "3.1.2",

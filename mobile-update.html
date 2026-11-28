@@ -10,17 +10,34 @@
     const response = await fetch('app_version.json', {cache:'no-store'});
     if (!response.ok) throw Error();
     const releases = (await response.json())[app].platforms || {};
-    for (const [key,label] of [['android','تحميل تحديث Android'],['ios','فتح تحديث iPhone']]) {
-      if (!releases[key]) continue;
-      const url = new URL(releases[key].download_url);
-      const hosts = key === 'ios' ? ['apps.apple.com','testflight.apple.com'] : ['github.com','play.google.com'];
-      if (url.protocol !== 'https:' || !hosts.includes(url.hostname)) continue;
+    const addLink = (rawUrl, text, hosts) => {
+      if (!rawUrl) return;
+      let url;
+      try { url = new URL(rawUrl); } catch { return; }
+      if (url.protocol !== 'https:' || url.username || url.password || !hosts.includes(url.hostname)) return;
       const link = document.createElement('a');
       link.href = url.href;
-      link.textContent = label + ' · ' + releases[key].latest_version;
+      link.textContent = text;
       document.querySelector('main').append(link);
+    };
+    for (const [key,label] of [['android','تحميل تحديث Android'],['ios','فتح تحديث iPhone']]) {
+      if (!releases[key]) continue;
+      const release = releases[key];
+      const hosts = key === 'ios' ? ['apps.apple.com','testflight.apple.com'] : ['github.com','play.google.com'];
+      if (key === 'android' && release.fresh_install_url) {
+        addLink(release.download_url, 'عندي هلا القديم أو «هلا الغرف» · تنزيل «هلا الغرف»', hosts);
+        addLink(release.fresh_install_url, 'تثبيت هلا لأول مرة أو تحديث «هلا» 3.1.6 · أندرويد ' + release.latest_version, hosts);
+      } else {
+        addLink(release.download_url, label + ' · ' + release.latest_version, hosts);
+      }
     }
-    status.textContent = document.querySelector('main a') ? 'اختر نظام جهازك' : 'لا يتوفر تحديث منشور حالياً';
+    if (!document.querySelector('main a')) {
+      status.textContent = 'لا يتوفر تحديث منشور حالياً';
+    } else if (releases.android && !releases.ios) {
+      status.textContent = 'متاح لأندرويد. سيظهر رابط الآيفون هنا عند نشره.';
+    } else {
+      status.textContent = 'اختر نظام جهازك';
+    }
   } catch { status.textContent = 'تعذّر تحميل روابط التحديث. أعد فتح الصفحة.'; }
 })();
 </script></html>

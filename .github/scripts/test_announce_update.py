@@ -36,6 +36,10 @@ class AnnouncementTest(unittest.TestCase):
         first = self.announce("android")
         self.assertEqual(first["user_app"]["latest_build"], 6)
         self.assertEqual(first["user_app"]["platforms"]["android"]["min_required_build"], 3)
+        android = first["user_app"]["platforms"]["android"]
+        self.assertEqual(android["fresh_install_url"], ARGS["android_url"])
+        self.assertTrue(android["rooms_download_url"].endswith("/Halaa-Rooms-Android.apk"))
+        self.assertEqual(android["download_url"], android["rooms_download_url"])
         both = self.announce("ios")
         self.assertEqual(both["user_app"]["latest_build"], 7)
         self.assertIn("mobile-update.html", both["user_app"]["download_url"])

@@ -19,6 +19,7 @@ android {
         applicationId = "com.halla.halaa_user_app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
+        manifestPlaceholders["halaaLauncherLabel"] = "هلا"
         minSdk = 23
         targetSdk = flutter.targetSdkVersion
         // Uses the version code from pubspec.yaml. When using split APKs, 1000 * ABI_VERSION
@@ -30,7 +31,13 @@ android {
     }
 
     buildTypes {
+
         release {
+            proguardFiles("proguard-rules.pro")
+            if (providers.gradleProperty("halaaRoomsSideBySide").orNull == "true") {
+                applicationIdSuffix = ".rooms"
+                manifestPlaceholders["halaaLauncherLabel"] = "هلا الغرف"
+            }
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")

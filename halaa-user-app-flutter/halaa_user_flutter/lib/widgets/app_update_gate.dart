@@ -129,8 +129,17 @@ class _AppUpdateGateState extends State<AppUpdateGate>
       final title = (release['title'] as String?)?.trim() ?? 'تحديث جديد متوفر';
       final message = (release['message'] as String?)?.trim() ??
           'يرجى تحديث التطبيق للحصول على آخر التعديلات والتحسينات.';
-      final downloadUrl = (release['download_url'] as String?)?.trim() ??
-          'https://github.com/NORALDAYEM/Halla/releases/latest';
+      final isRoomInstaller = installed.packageName == 'com.halla.halaa_user_app.rooms';
+      final isUserAndroid = platform == 'android' && widget.appKey == 'user_app';
+      final String? packageUrl;
+      if (isUserAndroid && isRoomInstaller) {
+        packageUrl = release['rooms_download_url'] as String?;
+      } else if (isUserAndroid) {
+        packageUrl = (release['fresh_install_url'] ?? release['download_url']) as String?;
+      } else {
+        packageUrl = release['download_url'] as String?;
+      }
+      final downloadUrl = packageUrl?.trim() ?? '';
 
       if (!_validDownload(downloadUrl, platform)) return;
       final needsUpdate = latestBuild > installedBuild ||

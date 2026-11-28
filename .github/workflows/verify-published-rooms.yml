@@ -1,0 +1,53 @@
+name: Verify published Android APKs on device
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  installed-room:
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Download signed release files
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release download android-3.1.7-8 --pattern '*.apk'
+          mkdir legacy
+          gh release download latest --pattern 'Halaa-App-Android.apk' --dir legacy
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+          python3 -m pip install uiautomator2==3.7.1
+      - name: Check guest entry on the downloaded APKs
+        uses: ReactiveCircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          ram-size: 3072M
+          script: |
+            adb install legacy/Halaa-App-Android.apk
+            adb install Halaa-Rooms-Android.apk
+            adb shell pm path com.halla.halaa_user_app
+            adb install -r Halaa-Rooms-Android.apk
+            adb shell am start -W -n com.halla.halaa_user_app.rooms/com.halla.halaa_user_app.MainActivity
+            sleep 8
+            adb shell pidof com.halla.halaa_user_app.rooms
+            python3 .github/scripts/check_room_entry.py || (adb logcat -b crash -d -t 100 && adb logcat -d -s flutter:E AndroidRuntime:E | tail -70 && false)
+  adopt:
+    needs: installed-room
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Promote the tested public APKs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release edit android-3.1.7-8 --repo "$GITHUB_REPOSITORY" --prerelease=false --latest

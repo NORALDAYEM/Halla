@@ -8,8 +8,9 @@ import 'live_room_web.dart' if (dart.library.io) 'live_room_native.dart';
 
 class HalaaLiveRoomScreen extends StatefulWidget {
   const HalaaLiveRoomScreen({super.key, required this.roomId, required this.title,
-    required this.serverEndpoint, this.accessToken});
+    required this.serverEndpoint, this.accessToken, this.onSignIn});
   final String roomId, title, serverEndpoint;
+  final VoidCallback? onSignIn;
   final Future<String> Function()? accessToken;
   @override
   State<HalaaLiveRoomScreen> createState() => _HalaaLiveRoomScreenState();
@@ -113,6 +114,16 @@ class _HalaaLiveRoomScreenState extends State<HalaaLiveRoomScreen> {
     body: FutureBuilder<Map<String, dynamic>>(
       future: _session,
       builder: (context, snapshot) {
+        if (snapshot.hasError && widget.onSignIn != null) {
+          return Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
+            const Text('سجّل الدخول للانضمام إلى الغرفة'),
+            const SizedBox(height: 12),
+            FilledButton(onPressed: () {
+              Navigator.of(context).pop();
+              widget.onSignIn?.call();
+            }, child: const Text('تسجيل الدخول')),
+          ]));
+        }
         if (snapshot.hasError) return Center(child: Padding(padding: const EdgeInsets.all(24),
           child: Text(snapshot.error.toString(), textAlign: TextAlign.center)));
         if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());

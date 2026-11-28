@@ -1,4 +1,5 @@
 import 'dart:ui';
+import '../rooms/halaa_live_room_screen.dart';
 import '../../services/supabase_auth_service.dart';
 import 'package:flutter/material.dart';
 import '../../models/halaa_models.dart';
@@ -135,7 +136,7 @@ class _MemberHomeScreenState extends State<MemberHomeScreen> {
                   index: _navIndex,
                   children: [
                     _roomsTab(),
-                    _gamesTab(theme),
+                    _gamesTab(),
                     _momentsTab(),
                     _chatTab(),
                     _profileTab(theme),
@@ -177,13 +178,28 @@ class _MemberHomeScreenState extends State<MemberHomeScreen> {
     );
   }
 
-  Widget _gamesTab(HalaaThemePreset theme) {
-      return const HalaaGamesShowcaseTab();
+  void _openRoom(String id, String title) {
+    if (!widget.voiceRoomsEnabled) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('الغرف متوقفة مؤقتاً للصيانة')),
+      );
+      return;
+    }
+    Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => HalaaLiveRoomScreen(
+      roomId: id, title: title, serverEndpoint: widget.config.serverEndpoint,
+      accessToken: widget.authService.accessToken,
+      onSignIn: widget.authService.auth.currentSession == null ? widget.onLogout : null,
+    )));
   }
-  
+
+  Widget _gamesTab() => HalaaGamesShowcaseTab(
+    openRoom: _openRoom,
+    showRooms: () => setState(() => _navIndex = 0),
+  );
+
   Widget _roomsTab() {
-      if (!widget.voiceRoomsEnabled) return const Center(child: Text('الغرف متوقفة مؤقتاً للصيانة'));
-      return HalaaRoomsShowcaseTab(serverEndpoint: widget.config.serverEndpoint, accessToken: widget.authService.accessToken);
+    if (!widget.voiceRoomsEnabled) return const Center(child: Text('الغرف متوقفة مؤقتاً للصيانة'));
+    return HalaaRoomsShowcaseTab(serverEndpoint: widget.config.serverEndpoint, openRoom: _openRoom);
   }
 
   Widget _momentsTab() {

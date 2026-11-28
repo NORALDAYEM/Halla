@@ -38,13 +38,20 @@ for platform in targets:
         raise ValueError(f"Invalid {platform} release link")
     with urlopen(Request(url, method="HEAD", headers={"User-Agent": "Halla-release-check"}), timeout=30):
         pass
+    rooms_url = None
+    if app == "user_app" and platform == "android" and uri.hostname == "github.com":
+        rooms_url = url.rsplit("/", 1)[0] + "/Halaa-Rooms-Android.apk"
+        with urlopen(Request(rooms_url, method="HEAD", headers={"User-Agent": "Halla-release-check"}), timeout=30):
+            pass
     previous = platforms.get(platform, section)
     if build < previous["latest_build"]:
         raise ValueError("Refusing to announce an older build")
     platforms[platform] = dict(latest_version=version, latest_build=build,
         min_required_build=build if mandatory else previous.get("min_required_build", 0),
         force_update=mandatory, update_type="major" if mandatory else "minor",
-        title=section["title"], message=message, download_url=url)
+        title=section["title"], message=message, download_url=rooms_url or url)
+    if rooms_url:
+        platforms[platform].update(rooms_download_url=rooms_url, fresh_install_url=url)
 
 # Older clients read only the shared section. Notify them when both platforms
 # have the same published build and a compatible download for each device.
