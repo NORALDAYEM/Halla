@@ -21,17 +21,20 @@ class _HalaaLiveRoomScreenState extends State<HalaaLiveRoomScreen> {
   final Set<String> _seenGifts = {};
   bool _giftBaseline = false, _polling = false;
   String? _effect;
+  late final String _guestId = 'guest_${DateTime.now().microsecondsSinceEpoch.toRadixString(36)}_${identityHashCode(this).toRadixString(36)}';
+  Future<String> _resolveToken() async { final auth = widget.accessToken; if (auth == null) return ''; try { return (await auth()).trim(); } catch (_) { return ''; } }
   @override
   void initState() {
     super.initState();
     _giftPoll = Timer.periodic(const Duration(seconds: 3), (_) => _pollGifts());
   }
   Future<Map<String, dynamic>> _request(String path, {Map<String, dynamic>? body}) async {
-    final auth = widget.accessToken;
-    if (auth == null) throw Exception('سجّل الدخول للانضمام إلى الغرفة');
+    final token = await _resolveToken();
+    final isGuest = token.isEmpty;
     final base = Uri.parse(widget.serverEndpoint);
     if (base.scheme != 'https' || base.host != 'halla.onrender.com') throw Exception('عنوان خادم غير معتمد');
-    final headers = {'Authorization': 'Bearer ${await auth()}', 'Content-Type': 'application/json'};
+    final headers = {'Content-Type': 'application/json', if (!isGuest) 'Authorization': 'Bearer $token' else 'X-Guest-Id': _guestId};
+    if (body != null && isGuest) body = <String, dynamic>{...body, 'guest': true};
     final response = body == null
       ? await http.get(base.resolve(path), headers: headers).timeout(const Duration(seconds: 20))
       : await http.post(base.resolve(path), headers: headers, body: jsonEncode(body)).timeout(const Duration(seconds: 20));
@@ -97,7 +100,7 @@ class _HalaaLiveRoomScreenState extends State<HalaaLiveRoomScreen> {
       throw Exception('عنوان خادم الغرف غير معتمد');
     }
     final response = await http.post(base.resolve('/api/zego-token'),
-      headers: {'Content-Type': 'application/json', if (!isGuest) 'Authorization': 'Bearer $token'},
+      headers: {'Content-Type': 'application/json', if (!isGuest) 'Authorization': 'Bearer $token else 'X-Guest-Id': _guestId'},
       body: jsonEncode({'room': widget.roomId, if (isGuest) 'guest': true})).timeout(const Duration(seconds: 20));
     final data = jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
     if (response.statusCode != 200) throw Exception(data['error'] ?? 'تعذر الاتصال بالغرفة');
