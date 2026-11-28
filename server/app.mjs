@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { DatabaseSync } from 'node:sqlite';
 import { AccessToken, RoomServiceClient, TrackSource } from 'livekit-server-sdk';
 import { createCentralAdminSystem } from './src/central-admin-router.mjs';
+import { initUsersDb, upsertUser, getUserFullProfile, listUsers, updateUser, setUserPermission, recordUserIp, registerUserRoom, getLevelsAndPermissions } from './src/users-db.mjs';
 const env = process.env;
 const zegoAppId = Number(env.ZEGO_APP_ID || 828861219);
 const zegoServerSecret = (env.ZEGO_SERVER_SECRET || '').trim();
@@ -40,6 +41,8 @@ export function generateZegoToken04(appId, userId, secret, effectiveTimeInSecond
 
 const db = new DatabaseSync(env.HALAA_DB || 'halaa.sqlite');
 db.exec('CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)');
+initUsersDb(db);
+function clientIp(req) { const xff = req.headers['x-forwarded-for']; if (xff) return String(Array.isArray(xff) ? xff[0] : xff).split(',')[0].trim(); const real = req.headers['x-real-ip'] || req.headers['cf-connecting-ip']; if (real) return String(real).trim(); return req.socket?.remoteAddress || ''; }
 const read = key => JSON.parse(db.prepare('SELECT value FROM settings WHERE key=?').get(key)?.value ?? 'null');
 const write = (key, value) => db.prepare('INSERT OR REPLACE INTO settings VALUES (?,?)').run(key, JSON.stringify(value));
 const authReady = Boolean(env.SUPABASE_URL && env.SUPABASE_PUBLISHABLE_KEY);
@@ -150,6 +153,7 @@ createServer(async(req,res)=>{
       write('seats:'+room,seats);
       write('member:'+userID,{id:userID})
       const cfg=getRoomConfig(room);const roomConfig={micCount:cfg.micCount,roomLevel:cfg.roomLevel,levels:cfg.levels,allowGifts:cfg.allowGifts,allowChat:cfg.allowChat,allowGuestMic:cfg.allowGuestMic,welcomeMessage:cfg.welcomeMessage};
+    try { const ip = clientIp(req); const meta = user.user_metadata || {}; upsertUser(db, { id: user.id, username: meta.username || meta.full_name || meta.nickname || user.email || user.id, display_name: meta.full_name || meta.name || meta.nickname || user.email || user.id, email: user.email || null, phone: user.phone || null, last_ip: ip, last_login_at: new Date().toISOString() }); if (ip) recordUserIp(db, user.id, ip, 'zego-token', req.headers['user-agent'] || null); } catch {}
       const payload=JSON.stringify({room_id:roomID,privilege:{1:1,2:grant(role).canPublish?1:0},stream_id_list:null});
       const token=generateZegoToken04(zegoAppId,userID,zegoServerSecret,900,payload);
       return json(res,200,{roomConfig,appID:zegoAppId,roomID,userID,role,token,expiresIn:900,userName:String(user.user_metadata?.nickname || user.user_metadata?.display_name || user.email?.split('@')[0] || 'عضو').slice(0,60)});
@@ -198,6 +202,14 @@ createServer(async(req,res)=>{
     }
       return json(res,200,centralAdmin.ledgerService.sendGift({senderId:user.id,recipientId:data.recipientId,giftId:data.giftId,roomId:data.room,idempotencyKey:data.idempotencyKey}));
     }
+  if(req.method==='GET' && path==='/api/users/levels') return json(res, 200, getLevelsAndPermissions(db));
+  if(req.method==='GET' && path==='/api/users') { const q = new URL(req.url, 'http://localhost').searchParams; return json(res, 200, listUsers(db, { search: q.get('search') || q.get('q') || q.get('username') || q.get('email') || q.get('phone') || undefined, ip: q.get('ip') || undefined, country_code: q.get('country_code') || q.get('country') || undefined, gender: q.get('gender') || undefined, level: q.get('level') ? Number(q.get('level')) : undefined, role: q.get('role') || undefined, status: q.get('status') || undefined, limit: q.get('limit') ? Number(q.get('limit')) : undefined, offset: q.get('offset') ? Number(q.get('offset')) : undefined })); }
+  if(req.method==='POST' && path==='/api/users') { const data = await body(req); const ip = data.last_ip || data.ip || clientIp(req); const saved = upsertUser(db, { ...data, last_ip: ip }); if (saved?.id && ip) recordUserIp(db, saved.id, ip, data.action || 'register', req.headers['user-agent'] || null, data.country_code || null); return json(res, 200, getUserFullProfile(db, saved.id) || saved); }
+  const permMatch = path.match(/^\/api\/users\/([^/]+)\/permissions$/);
+  if(req.method==='POST' && permMatch) { const id = decodeURIComponent(permMatch[1]); const data = await body(req); const code = data.code || data.permission; if(!code) fail(400, 'Permission code required'); const granted = data.granted !== undefined ? Boolean(data.granted) : true; setUserPermission(db, id, code, granted, data.by || data.granted_by || null); return json(res, 200, { ok: true, profile: getUserFullProfile(db, id) }); }
+  const userMatch = path.match(/^\/api\/users\/([^/]+)$/);
+  if(req.method==='GET' && userMatch) { const profile = getUserFullProfile(db, decodeURIComponent(userMatch[1])); if(!profile) fail(404, 'User not found'); return json(res, 200, profile); }
+  if(req.method==='PATCH' && userMatch) { const id = decodeURIComponent(userMatch[1]); const updated = updateUser(db, id, await body(req)); if(!updated) fail(404, 'User not found'); return json(res, 200, getUserFullProfile(db, id) || updated); }
     if(req.method!=='POST' || !['/api/ad','/api/voice','/api/moderate','/api/rooms'].includes(path)) return json(res,404,{});
     const user=await identity(req), data=await body(req);
     if(path==='/api/rooms'){
@@ -206,6 +218,7 @@ createServer(async(req,res)=>{
       if(count>=10) fail(409,'وصلت إلى الحد المسموح من الغرف');
       const id='room-'+crypto.randomUUID();
       write('room:'+id,{id,title:data.title.trim(),category:data.category,owner:user.id});
+    try { const ip = clientIp(req); const meta = user.user_metadata || {}; upsertUser(db, { id: user.id, username: meta.username || meta.full_name || user.email || user.id, display_name: meta.full_name || meta.name || user.email || user.id, email: user.email || null, phone: user.phone || null, last_ip: ip }); if (ip) recordUserIp(db, user.id, ip, 'create-room', req.headers['user-agent'] || null); registerUserRoom(db, { room_id: id, owner_user_id: user.id, title_ar: data.title.trim(), category: data.category }); } catch {}
       return json(res,201,{id});
     }
     if(path==='/api/ad'){
