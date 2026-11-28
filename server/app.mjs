@@ -163,7 +163,7 @@ createServer(async(req,res)=>{
       const seats=read('seats:'+data.room)||{};
       for(const [index,seat] of Object.entries(seats)) if(seat.expires<=Date.now()||seat.userID===user.id) delete seats[index];
       if(data.action==='take') {
-        if(!Number.isInteger(data.index)||data.index<0||data.index>=getRoomConfig(data.room).micCount/*8 */fail(400,'المقعد غير صالح');
+        if(!Number.isInteger(data.index)||data.index<0||data.index>=getRoomConfig(data.room).micCount/*8 */)fail(400,'المقعد غير صالح');
         if(data.index===0&&roomRole(user,data.room)!=='owner') fail(403,'مقعد المضيف محجوز');
         if(seats[data.index]) fail(409,'المقعد مشغول');
         if(read('role:'+data.room+':'+user.id)==='listener') fail(403,'الميكروفون مقفل من الإدارة');
