@@ -249,7 +249,7 @@ class _HalaaRoomKitState extends State<HalaaRoomKit> {
   bool _renewing = false;
   int? _seatIndex;
   late final ZegoUIKitPrebuiltLiveAudioRoomConfig _config;
-  final _controller = ZegoUIKitPrebuiltLiveAudioRoomController();
+  //
 
   @override
   void initState() {
@@ -268,7 +268,7 @@ class _HalaaRoomKitState extends State<HalaaRoomKit> {
     _config.background = Stack(fit: StackFit.expand, children: [
       Builder(builder: (context) {
         final colors = Theme.of(context).colorScheme;
-        final base = _roomTheme?.surface ?? colors.surface;
+        final base = _roomTheme?.bgDark ?? colors.surface;
         final top = _roomTheme?.primary ?? colors.primary;
         return Container(decoration: BoxDecoration(gradient: LinearGradient(
           begin: Alignment.topCenter,
@@ -289,7 +289,7 @@ class _HalaaRoomKitState extends State<HalaaRoomKit> {
     try {
       final res = await widget.renew();
       final token = (res['token'] ?? '').toString();
-      if (token.isNotEmpty) ZegoUIKit().renewToken(token);
+      if (token.isNotEmpty) await ZegoUIKit().renewRoomToken(token);
     } finally {
       _renewing = false;
     }
@@ -322,7 +322,7 @@ class _HalaaRoomKitState extends State<HalaaRoomKit> {
   Widget build(BuildContext context) {
     final s = widget.session;
     final colors = Theme.of(context).colorScheme;
-    final base = _roomTheme?.surface ?? colors.surface;
+    final base = _roomTheme?.bgDark ?? colors.surface;
     final primary = _roomTheme?.primary ?? colors.primary;
     return Stack(children: [
       ZegoUIKitPrebuiltLiveAudioRoom(
@@ -352,7 +352,7 @@ class _HalaaRoomKitState extends State<HalaaRoomKit> {
             },
           ),
         ),
-        controller: _controller,
+        //
       ),
       Positioned(
         top: 52,
