@@ -850,43 +850,7 @@ label: const Text('حفظ وتطبيق إعدادات الغرف'),
     );
   }
 
-  Widget _tabAppUsers() {
-    return ListView(
-      padding: const EdgeInsets.all(14),
-      children: [
-        _card(
-          title: 'مستخدمو التطبيق المسجلون (${_cfg.appUsers.length})',
-          child: _cfg.appUsers.isEmpty
-              ? const Text('لا يوجد مستخدمون مسجلون بالبريد بعد.')
-              : Column(
-                  children: _cfg.appUsers.asMap().entries.map((e) {
-                    final u = e.value;
-                    return ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(u.nickname),
-                      subtitle: Text('${u.email} • ${u.country}'),
-                      trailing: TextButton(
-                        onPressed: () {
-                          final list = [..._cfg.appUsers];
-                          list[e.key] = u.copyWith(banned: !u.banned);
-                          setState(() => _cfg = _cfg.copyWith(appUsers: list));
-                        },
-                        child: Text(
-                          u.banned ? 'فك الحظر' : 'حظر',
-                          style: TextStyle(
-                            color: u.banned
-                                ? const Color(0xFF6EE7B7)
-                                : const Color(0xFFFCA5A5),
-                          ),
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-        ),
-      ],
-    );
-  }
+  Widget _tabAppUsers() => _AppUsersTab(api: _centralApi);
 
   Widget _tabAdminUsers() {
     return ListView(
@@ -1133,3 +1097,712 @@ label: const Text('حفظ وتطبيق إعدادات الغرف'),
     );
   }
 }
+
+class _AppUsersTab extends StatefulWidget {
+final HalaaCentralAdminApi api;
+const _AppUsersTab({required this.api});
+@override
+State<_AppUsersTab> createState() => _AppUsersTabState();
+}
+
+class _AppUsersTabState extends State<_AppUsersTab> {
+final TextEditingController _searchCtrl = TextEditingController();
+String? _role;
+String? _status;
+String? _gender;
+int? _level;
+bool _loading = false;
+String? _error;
+List<Map<String, dynamic>> _users = [];
+int _total = 0;
+
+@override
+void initState() {
+super.initState();
+_loadUsers();
+}
+
+@override
+void dispose() {
+_searchCtrl.dispose();
+super.dispose();
+}
+
+Future<void> _loadUsers() async {
+setState(() {
+_loading = true;
+_error = null;
+});
+try {
+final q = _searchCtrl.text.trim();
+final res = await widget.api.listUsers(
+search: q.isEmpty ? null : q,
+role: _role,
+status: _status,
+gender: _gender,
+level: _level,
+);
+final raw = (res['users'] as List?) ?? const [];
+if (!mounted) return;
+setState(() {
+_users = raw.whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
+_total = (res['total'] as num?)?.toInt() ?? _users.length;
+});
+} catch (e) {
+if (!mounted) return;
+setState(() => _error = 'تعذر تحميل المستخدمين: $e');
+} finally {
+if (mounted) setState(() => _loading = false);
+}
+}
+
+String _roleAr(String? r) {
+switch (r) {
+case 'super_admin': return 'مدير عام';
+case 'admin': return 'مشرف عام';
+case 'moderator': return 'مراقب';
+case 'vip': return 'VIP';
+default: return 'مستخدم';
+}
+}
+
+String _statusAr(String? s) {
+switch (s) {
+case 'suspended': return 'موقوف مؤقتاً';
+case 'banned': return 'محظور';
+default: return 'نشط';
+}
+}
+
+String _genderAr(String? g) {
+switch (g) {
+case 'male': return 'ذكر';
+case 'female': return 'أنثى';
+case 'other': return 'آخر';
+default: return g ?? 'غير محدد';
+}
+}
+
+Future<void> _openAddUserDialog() async {
+final created = await showDialog<bool>(
+context: context,
+builder: (_) => _AddUserDialog(api: widget.api),
+);
+if (created == true) _loadUsers();
+}
+
+Future<void> _openUserDetails(Map<String, dynamic> user) async {
+final id = (user['id'] ?? '').toString();
+if (id.isEmpty) return;
+final changed = await showDialog<bool>(
+context: context,
+builder: (_) => _UserDetailsDialog(api: widget.api, userId: id, initialUser: user),
+);
+if (changed == true) _loadUsers();
+}
+
+@override
+Widget build(BuildContext context) {
+return Directionality(
+textDirection: TextDirection.rtl,
+child: ListView(
+padding: const EdgeInsets.all(14),
+children: [
+Card(
+child: Padding(
+padding: const EdgeInsets.all(12),
+child: Column(
+crossAxisAlignment: CrossAxisAlignment.stretch,
+children: [
+Row(
+children: [
+Expanded(
+child: Text('مستخدمو التطبيق ($_total)', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+),
+IconButton(
+tooltip: 'تحديث',
+onPressed: _loading ? null : _loadUsers,
+icon: const Icon(Icons.refresh),
+),
+const SizedBox(width: 6),
+ElevatedButton.icon(
+onPressed: _openAddUserDialog,
+icon: const Icon(Icons.person_add, size: 18),
+label: const Text('إضافة مستخدم جديد'),
+),
+],
+),
+const SizedBox(height: 10),
+TextField(
+controller: _searchCtrl,
+onSubmitted: (_) => _loadUsers(),
+decoration: InputDecoration(
+hintText: 'بحث بالاسم أو الإيميل أو الهاتف أو IP...',
+prefixIcon: const Icon(Icons.search),
+suffixIcon: IconButton(
+icon: const Icon(Icons.send),
+onPressed: _loadUsers,
+),
+border: const OutlineInputBorder(),
+isDense: true,
+),
+),
+const SizedBox(height: 10),
+Wrap(
+spacing: 8,
+runSpacing: 8,
+children: [
+SizedBox(
+width: 145,
+child: DropdownButtonFormField<String?>(
+value: _role,
+isDense: true,
+decoration: const InputDecoration(labelText: 'الدور', border: OutlineInputBorder()),
+items: const [
+DropdownMenuItem(value: null, child: Text('الكل')),
+DropdownMenuItem(value: 'user', child: Text('مستخدم')),
+DropdownMenuItem(value: 'vip', child: Text('VIP')),
+DropdownMenuItem(value: 'moderator', child: Text('مراقب')),
+DropdownMenuItem(value: 'admin', child: Text('مشرف عام')),
+DropdownMenuItem(value: 'super_admin', child: Text('مدير عام')),
+],
+onChanged: (v) { setState(() => _role = v); _loadUsers(); },
+),
+),
+SizedBox(
+width: 145,
+child: DropdownButtonFormField<String?>(
+value: _status,
+isDense: true,
+decoration: const InputDecoration(labelText: 'الحالة', border: OutlineInputBorder()),
+items: const [
+DropdownMenuItem(value: null, child: Text('الكل')),
+DropdownMenuItem(value: 'active', child: Text('نشط')),
+DropdownMenuItem(value: 'suspended', child: Text('موقوف مؤقتاً')),
+DropdownMenuItem(value: 'banned', child: Text('محظور')),
+],
+onChanged: (v) { setState(() => _status = v); _loadUsers(); },
+),
+),
+SizedBox(
+width: 130,
+child: DropdownButtonFormField<String?>(
+value: _gender,
+isDense: true,
+decoration: const InputDecoration(labelText: 'الجنس', border: OutlineInputBorder()),
+items: const [
+DropdownMenuItem(value: null, child: Text('الكل')),
+DropdownMenuItem(value: 'male', child: Text('ذكر')),
+DropdownMenuItem(value: 'female', child: Text('أنثى')),
+DropdownMenuItem(value: 'other', child: Text('آخر')),
+],
+onChanged: (v) { setState(() => _gender = v); _loadUsers(); },
+),
+),
+SizedBox(
+width: 130,
+child: DropdownButtonFormField<int?>(
+value: _level,
+isDense: true,
+decoration: const InputDecoration(labelText: 'المستوى', border: OutlineInputBorder()),
+items: [
+const DropdownMenuItem<int?>(value: null, child: Text('الكل')),
+for (int i = 1; i <= 10; i++) DropdownMenuItem<int?>(value: i, child: Text('المستوى $i')),
+],
+onChanged: (v) { setState(() => _level = v); _loadUsers(); },
+),
+),
+],
+),
+],
+),
+),
+),
+const SizedBox(height: 10),
+if (_loading) const Center(child: Padding(padding: EdgeInsets.all(20), child: CircularProgressIndicator())),
+if (_error != null)
+Card(
+color: Colors.red.shade50,
+child: Padding(padding: const EdgeInsets.all(12), child: Text(_error!, style: const TextStyle(color: Colors.red))),
+),
+if (!_loading && _error == null && _users.isEmpty)
+const Card(child: Padding(padding: EdgeInsets.all(20), child: Center(child: Text('لا يوجد مستخدمون مطابقون لخيارات البحث الحالية.')))),
+..._users.map((u) {
+final name = (u['display_name'] ?? u['username'] ?? u['id'] ?? '-').toString();
+final username = (u['username'] ?? '-').toString();
+final email = (u['email'] ?? '-').toString();
+final phone = (u['phone'] ?? '-').toString();
+final ip = (u['last_ip'] ?? '-').toString();
+final country = (u['country_name'] ?? u['country_code'] ?? '-').toString();
+final gender = _genderAr(u['gender']?.toString());
+final level = (u['level'] ?? 1).toString();
+final xp = (u['xp'] ?? 0).toString();
+final role = _roleAr(u['role']?.toString());
+final status = _statusAr(u['status']?.toString());
+final fb = (u['facebook_id'] ?? '').toString();
+final gmail = (u['gmail_email'] ?? u['google_id'] ?? '').toString();
+return Card(
+margin: const EdgeInsets.only(bottom: 10),
+child: InkWell(
+onTap: () => _openUserDetails(u),
+borderRadius: BorderRadius.circular(12),
+child: Padding(
+padding: const EdgeInsets.all(12),
+child: Column(
+crossAxisAlignment: CrossAxisAlignment.start,
+children: [
+Row(
+children: [
+const CircleAvatar(child: Icon(Icons.person)),
+const SizedBox(width: 10),
+Expanded(
+child: Column(
+crossAxisAlignment: CrossAxisAlignment.start,
+children: [
+Text('$name (@$username)', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+Text('المستوى $level • $xp XP • $role • $status', style: const TextStyle(fontSize: 12, color: Colors.black54)),
+],
+),
+),
+const Icon(Icons.chevron_left),
+],
+),
+const Divider(height: 16),
+Wrap(
+spacing: 14,
+runSpacing: 6,
+children: [
+Text('الإيميل: $email', style: const TextStyle(fontSize: 12)),
+Text('الهاتف: $phone', style: const TextStyle(fontSize: 12)),
+Text('آخر IP: $ip', style: const TextStyle(fontSize: 12)),
+Text('الدولة: $country', style: const TextStyle(fontSize: 12)),
+Text('الجنس: $gender', style: const TextStyle(fontSize: 12)),
+Text('Facebook: ${fb.isEmpty ? "غير مرتبط" : fb}', style: const TextStyle(fontSize: 12)),
+Text('Gmail: ${gmail.isEmpty ? "غير مرتبط" : gmail}', style: const TextStyle(fontSize: 12)),
+],
+),
+],
+),
+),
+),
+);
+}),
+],
+),
+);
+}
+}
+
+class _AddUserDialog extends StatefulWidget {
+final HalaaCentralAdminApi api;
+const _AddUserDialog({required this.api});
+@override
+State<_AddUserDialog> createState() => _AddUserDialogState();
+}
+
+class _AddUserDialogState extends State<_AddUserDialog> {
+final _usernameCtrl = TextEditingController();
+final _nameCtrl = TextEditingController();
+final _emailCtrl = TextEditingController();
+final _phoneCtrl = TextEditingController();
+final _countryCtrl = TextEditingController(text: 'السعودية');
+final _ipCtrl = TextEditingController();
+final _fbCtrl = TextEditingController();
+final _gmailCtrl = TextEditingController();
+final _xpCtrl = TextEditingController(text: '0');
+String _gender = 'male';
+String _role = 'user';
+String _status = 'active';
+int _level = 1;
+bool _saving = false;
+String? _error;
+
+@override
+void dispose() {
+_usernameCtrl.dispose();
+_nameCtrl.dispose();
+_emailCtrl.dispose();
+_phoneCtrl.dispose();
+_countryCtrl.dispose();
+_ipCtrl.dispose();
+_fbCtrl.dispose();
+_gmailCtrl.dispose();
+_xpCtrl.dispose();
+super.dispose();
+}
+
+Future<void> _save() async {
+if (_usernameCtrl.text.trim().isEmpty && _emailCtrl.text.trim().isEmpty) {
+setState(() => _error = 'يرجى إدخال اسم المستخدم أو الإيميل على الأقل');
+return;
+}
+setState(() { _saving = true; _error = null; });
+try {
+await widget.api.upsertUser({
+if (_usernameCtrl.text.trim().isNotEmpty) 'username': _usernameCtrl.text.trim(),
+if (_nameCtrl.text.trim().isNotEmpty) 'display_name': _nameCtrl.text.trim(),
+if (_emailCtrl.text.trim().isNotEmpty) 'email': _emailCtrl.text.trim(),
+if (_phoneCtrl.text.trim().isNotEmpty) 'phone': _phoneCtrl.text.trim(),
+if (_countryCtrl.text.trim().isNotEmpty) 'country_name': _countryCtrl.text.trim(),
+if (_ipCtrl.text.trim().isNotEmpty) 'last_ip': _ipCtrl.text.trim(),
+if (_fbCtrl.text.trim().isNotEmpty) 'facebook_id': _fbCtrl.text.trim(),
+if (_gmailCtrl.text.trim().isNotEmpty) 'gmail_email': _gmailCtrl.text.trim(),
+'gender': _gender,
+'role': _role,
+'status': _status,
+'level': _level,
+'xp': int.tryParse(_xpCtrl.text.trim()) ?? 0,
+});
+if (mounted) Navigator.pop(context, true);
+} catch (e) {
+if (mounted) setState(() => _error = 'فشل الحفظ: $e');
+} finally {
+if (mounted) setState(() => _saving = false);
+}
+}
+
+@override
+Widget build(BuildContext context) {
+return Directionality(
+textDirection: TextDirection.rtl,
+child: AlertDialog(
+title: const Text('إضافة مستخدم جديد'),
+content: SizedBox(
+width: 460,
+child: SingleChildScrollView(
+child: Column(
+mainAxisSize: MainAxisSize.min,
+children: [
+if (_error != null) Padding(padding: const EdgeInsets.only(bottom: 8), child: Text(_error!, style: const TextStyle(color: Colors.red))),
+TextField(controller: _usernameCtrl, decoration: const InputDecoration(labelText: 'اسم المستخدم', border: OutlineInputBorder(), isDense: true)),
+const SizedBox(height: 8),
+TextField(controller: _nameCtrl, decoration: const InputDecoration(labelText: 'الاسم الظاهر', border: OutlineInputBorder(), isDense: true)),
+const SizedBox(height: 8),
+TextField(controller: _emailCtrl, decoration: const InputDecoration(labelText: 'الإيميل', border: OutlineInputBorder(), isDense: true)),
+const SizedBox(height: 8),
+TextField(controller: _phoneCtrl, decoration: const InputDecoration(labelText: 'الهاتف', border: OutlineInputBorder(), isDense: true)),
+const SizedBox(height: 8),
+TextField(controller: _countryCtrl, decoration: const InputDecoration(labelText: 'الدولة', border: OutlineInputBorder(), isDense: true)),
+const SizedBox(height: 8),
+TextField(controller: _ipCtrl, decoration: const InputDecoration(labelText: 'عنوان IP', border: OutlineInputBorder(), isDense: true)),
+const SizedBox(height: 8),
+TextField(controller: _fbCtrl, decoration: const InputDecoration(labelText: 'حساب Facebook', border: OutlineInputBorder(), isDense: true)),
+const SizedBox(height: 8),
+TextField(controller: _gmailCtrl, decoration: const InputDecoration(labelText: 'حساب Gmail', border: OutlineInputBorder(), isDense: true)),
+const SizedBox(height: 8),
+Row(children: [
+Expanded(
+child: DropdownButtonFormField<String>(
+value: _gender,
+isDense: true,
+decoration: const InputDecoration(labelText: 'الجنس', border: OutlineInputBorder()),
+items: const [
+DropdownMenuItem(value: 'male', child: Text('ذكر')),
+DropdownMenuItem(value: 'female', child: Text('أنثى')),
+DropdownMenuItem(value: 'other', child: Text('آخر')),
+],
+onChanged: (v) => setState(() => _gender = v ?? 'male'),
+),
+),
+const SizedBox(width: 8),
+Expanded(
+child: DropdownButtonFormField<int>(
+value: _level,
+isDense: true,
+decoration: const InputDecoration(labelText: 'المستوى', border: OutlineInputBorder()),
+items: [for (int i = 1; i <= 10; i++) DropdownMenuItem(value: i, child: Text('المستوى $i'))],
+onChanged: (v) => setState(() => _level = v ?? 1),
+),
+),
+]),
+const SizedBox(height: 8),
+Row(children: [
+Expanded(
+child: DropdownButtonFormField<String>(
+value: _role,
+isDense: true,
+decoration: const InputDecoration(labelText: 'الدور', border: OutlineInputBorder()),
+items: const [
+DropdownMenuItem(value: 'user', child: Text('مستخدم')),
+DropdownMenuItem(value: 'vip', child: Text('VIP')),
+DropdownMenuItem(value: 'moderator', child: Text('مراقب')),
+DropdownMenuItem(value: 'admin', child: Text('مشرف عام')),
+DropdownMenuItem(value: 'super_admin', child: Text('مدير عام')),
+],
+onChanged: (v) => setState(() => _role = v ?? 'user'),
+),
+),
+const SizedBox(width: 8),
+Expanded(
+child: DropdownButtonFormField<String>(
+value: _status,
+isDense: true,
+decoration: const InputDecoration(labelText: 'الحالة', border: OutlineInputBorder()),
+items: const [
+DropdownMenuItem(value: 'active', child: Text('نشط')),
+DropdownMenuItem(value: 'suspended', child: Text('موقوف مؤقتاً')),
+DropdownMenuItem(value: 'banned', child: Text('محظور')),
+],
+onChanged: (v) => setState(() => _status = v ?? 'active'),
+),
+),
+]),
+const SizedBox(height: 8),
+TextField(controller: _xpCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'نقاط الخبرة XP', border: OutlineInputBorder(), isDense: true)),
+],
+),
+),
+),
+actions: [
+TextButton(onPressed: _saving ? null : () => Navigator.pop(context, false), child: const Text('إلغاء')),
+ElevatedButton(onPressed: _saving ? null : _save, child: Text(_saving ? 'جاري الحفظ...' : 'حفظ')),
+],
+),
+);
+}
+}
+
+class _UserDetailsDialog extends StatefulWidget {
+final HalaaCentralAdminApi api;
+final String userId;
+final Map<String, dynamic> initialUser;
+const _UserDetailsDialog({required this.api, required this.userId, required this.initialUser});
+@override
+State<_UserDetailsDialog> createState() => _UserDetailsDialogState();
+}
+
+class _UserDetailsDialogState extends State<_UserDetailsDialog> {
+bool _loading = true;
+bool _saving = false;
+bool _dirty = false;
+String? _error;
+Map<String, dynamic> _profile = {};
+List<Map<String, dynamic>> _levels = [];
+List<Map<String, dynamic>> _permissions = [];
+List<Map<String, dynamic>> _ipLogs = [];
+List<Map<String, dynamic>> _rooms = [];
+int _level = 1;
+String _role = 'user';
+String _status = 'active';
+final TextEditingController _xpCtrl = TextEditingController();
+
+@override
+void initState() {
+super.initState();
+_profile = Map<String, dynamic>.from(widget.initialUser);
+_syncControllers();
+_loadAll();
+}
+
+void _syncControllers() {
+_level = ((_profile['level'] as num?)?.toInt() ?? 1).clamp(1, 10);
+_role = (_profile['role'] ?? 'user').toString();
+_status = (_profile['status'] ?? 'active').toString();
+_xpCtrl.text = (_profile['xp'] ?? 0).toString();
+}
+
+@override
+void dispose() {
+_xpCtrl.dispose();
+super.dispose();
+}
+
+Future<void> _loadAll() async {
+setState(() { _loading = true; _error = null; });
+try {
+final results = await Future.wait([
+widget.api.getUserFullProfile(widget.userId),
+widget.api.getUserLevelsAndPermissions(),
+]);
+final prof = results[0];
+final lvlRes = results[1];
+if (!mounted) return;
+setState(() {
+_profile = prof;
+_syncControllers();
+_levels = ((lvlRes['levels'] as List?) ?? const []).whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
+final rawPerms = (prof['permissions'] as List?) ?? (lvlRes['permissions'] as List?) ?? const [];
+_permissions = rawPerms.whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
+_ipLogs = ((prof['ip_logs'] as List?) ?? const []).whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
+_rooms = ((prof['rooms'] as List?) ?? const []).whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
+});
+} catch (e) {
+if (mounted) setState(() => _error = 'تعذر تحميل تفاصيل المستخدم: $e');
+} finally {
+if (mounted) setState(() => _loading = false);
+}
+}
+
+Future<void> _saveChanges() async {
+setState(() { _saving = true; _error = null; });
+try {
+await widget.api.updateUser(widget.userId, {
+'level': _level,
+'xp': int.tryParse(_xpCtrl.text.trim()) ?? 0,
+'role': _role,
+'status': _status,
+});
+_dirty = true;
+await _loadAll();
+if (mounted) {
+ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم تحديث بيانات المستخدم بنجاح')));
+}
+} catch (e) {
+if (mounted) setState(() => _error = 'فشل تحديث البيانات: $e');
+} finally {
+if (mounted) setState(() => _saving = false);
+}
+}
+
+Future<void> _togglePermission(String code, bool granted) async {
+try {
+await widget.api.setUserPermission(widget.userId, permissionCode: code, granted: granted, grantedBy: 'admin');
+_dirty = true;
+await _loadAll();
+} catch (e) {
+if (mounted) setState(() => _error = 'فشل تحديث الصلاحية: $e');
+}
+}
+
+@override
+Widget build(BuildContext context) {
+final name = (_profile['display_name'] ?? _profile['username'] ?? widget.userId).toString();
+final email = (_profile['email'] ?? '-').toString();
+final phone = (_profile['phone'] ?? '-').toString();
+final fb = (_profile['facebook_id'] ?? '').toString();
+final gmail = (_profile['gmail_email'] ?? _profile['google_id'] ?? '').toString();
+return Directionality(
+textDirection: TextDirection.rtl,
+child: AlertDialog(
+title: Row(
+children: [
+Expanded(child: Text('ملف المستخدم: $name')),
+IconButton(icon: const Icon(Icons.refresh), onPressed: _loading ? null : _loadAll),
+],
+),
+content: SizedBox(
+width: 560,
+height: 560,
+child: _loading
+? const Center(child: CircularProgressIndicator())
+: SingleChildScrollView(
+child: Column(
+crossAxisAlignment: CrossAxisAlignment.stretch,
+children: [
+if (_error != null) Padding(padding: const EdgeInsets.only(bottom: 8), child: Text(_error!, style: const TextStyle(color: Colors.red))),
+Text('المعرف: ${widget.userId} • الإيميل: $email • الهاتف: $phone', style: const TextStyle(fontSize: 12)),
+Text('Facebook: ${fb.isEmpty ? "غير مرتبط" : fb} • Gmail: ${gmail.isEmpty ? "غير مرتبط" : gmail}', style: const TextStyle(fontSize: 12)),
+const Divider(height: 18),
+const Text('تعديل المستوى والدور والحالة', style: TextStyle(fontWeight: FontWeight.bold)),
+const SizedBox(height: 8),
+Row(children: [
+Expanded(
+child: DropdownButtonFormField<int>(
+value: _level,
+isDense: true,
+decoration: const InputDecoration(labelText: 'المستوى (1-10)', border: OutlineInputBorder()),
+items: [
+for (int i = 1; i <= 10; i++)
+DropdownMenuItem(
+value: i,
+child: Text(_levels.any((l) => (l['level'] as num?)?.toInt() == i)
+? 'المستوى $i - ${_levels.firstWhere((l) => (l['level'] as num?)?.toInt() == i)['title_ar'] ?? ''}'
+: 'المستوى $i'),
+),
+],
+onChanged: (v) => setState(() => _level = v ?? 1),
+),
+),
+const SizedBox(width: 8),
+Expanded(
+child: TextField(
+controller: _xpCtrl,
+keyboardType: TextInputType.number,
+decoration: const InputDecoration(labelText: 'XP', border: OutlineInputBorder(), isDense: true),
+),
+),
+]),
+const SizedBox(height: 8),
+Row(children: [
+Expanded(
+child: DropdownButtonFormField<String>(
+value: ['user', 'vip', 'moderator', 'admin', 'super_admin'].contains(_role) ? _role : 'user',
+isDense: true,
+decoration: const InputDecoration(labelText: 'الدور', border: OutlineInputBorder()),
+items: const [
+DropdownMenuItem(value: 'user', child: Text('مستخدم')),
+DropdownMenuItem(value: 'vip', child: Text('VIP')),
+DropdownMenuItem(value: 'moderator', child: Text('مراقب')),
+DropdownMenuItem(value: 'admin', child: Text('مشرف عام')),
+DropdownMenuItem(value: 'super_admin', child: Text('مدير عام')),
+],
+onChanged: (v) => setState(() => _role = v ?? 'user'),
+),
+),
+const SizedBox(width: 8),
+Expanded(
+child: DropdownButtonFormField<String>(
+value: ['active', 'suspended', 'banned'].contains(_status) ? _status : 'active',
+isDense: true,
+decoration: const InputDecoration(labelText: 'الحالة', border: OutlineInputBorder()),
+items: const [
+DropdownMenuItem(value: 'active', child: Text('نشط')),
+DropdownMenuItem(value: 'suspended', child: Text('موقوف مؤقتاً')),
+DropdownMenuItem(value: 'banned', child: Text('محظور')),
+],
+onChanged: (v) => setState(() => _status = v ?? 'active'),
+),
+),
+]),
+const SizedBox(height: 8),
+ElevatedButton.icon(
+onPressed: _saving ? null : _saveChanges,
+icon: const Icon(Icons.save, size: 18),
+label: Text(_saving ? 'جاري الحفظ...' : 'حفظ التعديلات'),
+),
+const Divider(height: 20),
+Text('الصلاحيات الفردية (${_permissions.length})', style: const TextStyle(fontWeight: FontWeight.bold)),
+if (_permissions.isEmpty) const Text('لا توجد صلاحيات مسجلة', style: TextStyle(fontSize: 12, color: Colors.black54)),
+..._permissions.map((p) {
+final code = (p['code'] ?? '').toString();
+final label = (p['label_ar'] ?? code).toString();
+final granted = p['granted'] == true || p['granted'] == 1;
+final source = (p['source'] ?? 'role').toString();
+return SwitchListTile(
+dense: true,
+title: Text(label, style: const TextStyle(fontSize: 13)),
+subtitle: Text('$code • المصدر: ${source == 'user' ? 'تخصيص فردي' : 'الدور'}', style: const TextStyle(fontSize: 11)),
+value: granted,
+onChanged: code.isEmpty ? null : (v) => _togglePermission(code, v),
+);
+}),
+const Divider(height: 20),
+Text('سجل عناوين IP (${_ipLogs.length})', style: const TextStyle(fontWeight: FontWeight.bold)),
+if (_ipLogs.isEmpty) const Text('لا يوجد سجل IP بعد', style: TextStyle(fontSize: 12, color: Colors.black54)),
+..._ipLogs.map((ip) => ListTile(
+dense: true,
+leading: const Icon(Icons.public, size: 18),
+title: Text('${ip['ip_address'] ?? '-'} (${ip['country'] ?? '-'})', style: const TextStyle(fontSize: 12)),
+subtitle: Text('${ip['action'] ?? ''} • ${ip['created_at'] ?? ''}', style: const TextStyle(fontSize: 11)),
+)),
+const Divider(height: 20),
+Text('الغرف التي أنشأها المستخدم (${_rooms.length})', style: const TextStyle(fontWeight: FontWeight.bold)),
+if (_rooms.isEmpty) const Text('لم ينشئ المستخدم غرفاً بعد', style: TextStyle(fontSize: 12, color: Colors.black54)),
+..._rooms.map((r) => ListTile(
+dense: true,
+leading: const Icon(Icons.meeting_room, size: 18),
+title: Text('${r['title_ar'] ?? r['room_id'] ?? '-'}', style: const TextStyle(fontSize: 12)),
+subtitle: Text('المعرف: ${r['room_id'] ?? '-'} • المستوى: ${r['room_level'] ?? 1} • المايكات: ${r['mic_count'] ?? 0} • ${r['status'] ?? ''}', style: const TextStyle(fontSize: 11)),
+)),
+],
+),
+),
+),
+actions: [
+TextButton(onPressed: () => Navigator.pop(context, _dirty), child: const Text('إغلاق')),
+],
+),
+);
+}
+}
+
