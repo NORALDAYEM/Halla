@@ -8,6 +8,7 @@ import '../../widgets/welcome_gallery_bg.dart';
 import '../../widgets/halaa_rooms_showcase_tab.dart';
 import '../../widgets/halaa_games_showcase_tab.dart';
 import '../../widgets/halaa_profile_page.dart';
+import '../../widgets/social_link_popup.dart';
 
 /// Post-login member screen (`halla-web/member.html`) unified with the exact
 /// same `.welcome-gallery` rotating background and 4 real-photo game cards.
@@ -117,6 +118,7 @@ class _MemberHomeScreenState extends State<MemberHomeScreen> {
                             },
                             icon: const Text('🎁', style: TextStyle(fontSize: 18)),
                           ),
+                          IconButton(tooltip: 'ربط Gmail / Facebook', onPressed: () => showSocialLinkPopup(context), icon: const Icon(Icons.link_rounded, color: Colors.white)),
                           IconButton(
                             tooltip: 'خروج',
                             onPressed: widget.onLogout,
