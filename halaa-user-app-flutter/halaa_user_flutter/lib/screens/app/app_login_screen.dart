@@ -6,6 +6,7 @@ import '../../widgets/halaa_brand_icons.dart';
 import '../../widgets/halaa_popups.dart';
 import '../../widgets/welcome_gallery_bg.dart';
 import '../../widgets/halaa_animated_logo.dart';
+import '../../widgets/social_link_popup.dart';
 
 /// Standalone Halaa User App Login Screen — Exact previous design, colors,
 /// raised 3D glass transparency, Gmail & Facebook brand icons, and Phone/OAuth
@@ -374,6 +375,7 @@ class AppLoginScreen extends StatelessWidget {
                                         'Facebook',
                                       ),
                                     ),
+                                    _pillButton(label: 'ربط حساب Gmail / Facebook', height: btnHeight, gradientColors: const [Color(0xBAFFF3E0), Color(0xA6F7B267)], textColor: const Color(0xFF111111), icon: const Icon(Icons.link_rounded, size: 28, color: Color(0xFF111111)), onTap: () => showSocialLinkPopup(context)),
                                     TextButton(
                                       onPressed: () =>
                                           showResetPasswordPopup(context, authService: authService),
