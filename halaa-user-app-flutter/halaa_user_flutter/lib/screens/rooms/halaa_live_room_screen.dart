@@ -100,7 +100,7 @@ class _HalaaLiveRoomScreenState extends State<HalaaLiveRoomScreen> {
       throw Exception('عنوان خادم الغرف غير معتمد');
     }
     final response = await http.post(base.resolve('/api/zego-token'),
-      headers: {'Content-Type': 'application/json', if (!isGuest) 'Authorization': 'Bearer $token' , if (isGuest) 'X-Guest-Id': _guestId'},
+      headers: {'Content-Type': 'application/json', if (!isGuest) 'Authorization': 'Bearer $token' , if (isGuest) 'X-Guest-Id': _guestId'}, 
       body: jsonEncode({'room': widget.roomId, if (isGuest) 'guest': true})).timeout(const Duration(seconds: 20));
     final data = jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
     if (response.statusCode != 200) throw Exception(data['error'] ?? 'تعذر الاتصال بالغرفة');
