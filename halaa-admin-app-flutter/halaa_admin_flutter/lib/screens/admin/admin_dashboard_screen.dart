@@ -53,6 +53,19 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
   String _ruleAction = 'تغيير اللون';
   List<String> _logs = const [];
   bool _saving = false;
+final TextEditingController _roomIdCtrl = TextEditingController();
+final TextEditingController _roomWelcomeCtrl = TextEditingController();
+bool _roomsLoading = false;
+bool _roomsSaving = false;
+String? _roomsStatusMsg;
+bool _roomsStatusError = false;
+int _roomMaxMics = 8;
+int _roomLevel = 1;
+bool _allowGuestMic = true;
+bool _allowGuestGifts = true;
+bool _allowGifts = true;
+bool _allowChat = true;
+List<dynamic> _roomLevels = const [];
 
   @override
   void initState() {
@@ -78,6 +91,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
     _imgTitleCtrl.dispose();
     _imgUrlCtrl.dispose();
     _newAdminCtrl.dispose();
+_roomIdCtrl.dispose();
+_roomWelcomeCtrl.dispose();
     super.dispose();
   }
 
@@ -506,9 +521,259 @@ icon: const Icon(Icons.security_rounded, color: Colors.white),
             ],
           ),
         ),
+const SizedBox(height: 12),
+_buildRoomsConfigCard(theme),
       ],
     );
   }
+
+Future<void> _fetchRoomsConfig() async {
+setState(() {
+_roomsLoading = true;
+_roomsStatusMsg = null;
+_roomsStatusError = false;
+});
+try {
+final room = _roomIdCtrl.text.trim();
+final res = await _centralApi.getRoomsConfig(room: room.isEmpty ? null : room);
+final cfg = res['config'] is Map<String, dynamic>
+? res['config'] as Map<String, dynamic>
+: res;
+if (!mounted) return;
+setState(() {
+_roomMaxMics = ((cfg['maxMics'] as num?)?.toInt() ?? _roomMaxMics).clamp(2, 16);
+_roomLevel = ((cfg['level'] ?? cfg['roomLevel']) as num?)?.toInt().clamp(1, 10) ?? _roomLevel;
+_allowGuestMic = cfg['allowGuestMic'] as bool? ?? _allowGuestMic;
+_allowGuestGifts = cfg['allowGuestGifts'] as bool? ?? _allowGuestGifts;
+_allowGifts = cfg['allowGifts'] as bool? ?? _allowGifts;
+_allowChat = cfg['allowChat'] as bool? ?? _allowChat;
+_roomWelcomeCtrl.text = (cfg['welcomeMessage'] ?? _roomWelcomeCtrl.text).toString();
+if (res['levels'] is List) {
+_roomLevels = res['levels'] as List<dynamic>;
+} else if (cfg['levels'] is List) {
+_roomLevels = cfg['levels'] as List<dynamic>;
+}
+_roomsLoading = false;
+_roomsStatusMsg = 'تم جلب إعدادات الغرف من الخادم بنجاح';
+_roomsStatusError = false;
+});
+} catch (e) {
+if (!mounted) return;
+setState(() {
+_roomsLoading = false;
+_roomsStatusMsg = 'تعذر جلب إعدادات الغرف: $e';
+_roomsStatusError = true;
+});
+}
+}
+
+Future<void> _saveRoomsConfig() async {
+setState(() {
+_roomsSaving = true;
+_roomsStatusMsg = null;
+_roomsStatusError = false;
+});
+try {
+final room = _roomIdCtrl.text.trim();
+final payload = <String, dynamic>{
+if (room.isNotEmpty) 'room': room,
+'maxMics': _roomMaxMics,
+'level': _roomLevel,
+'allowGuestMic': _allowGuestMic,
+'allowGuestGifts': _allowGuestGifts,
+'allowGifts': _allowGifts,
+'allowChat': _allowChat,
+'welcomeMessage': _roomWelcomeCtrl.text.trim(),
+};
+await _centralApi.saveRoomsConfig(payload);
+if (!mounted) return;
+setState(() {
+_roomsSaving = false;
+_roomsStatusMsg = 'تم حفظ وتطبيق إعدادات الغرف بنجاح';
+_roomsStatusError = false;
+});
+ScaffoldMessenger.of(context).showSnackBar(
+const SnackBar(
+content: Text('تم حفظ وتطبيق إعدادات الغرف بنجاح'),
+behavior: SnackBarBehavior.floating,
+),
+);
+} catch (e) {
+if (!mounted) return;
+setState(() {
+_roomsSaving = false;
+_roomsStatusMsg = 'فشل حفظ إعدادات الغرف: $e';
+_roomsStatusError = true;
+});
+ScaffoldMessenger.of(context).showSnackBar(
+SnackBar(
+content: Text('فشل حفظ إعدادات الغرف: $e'),
+behavior: SnackBarBehavior.floating,
+),
+);
+}
+}
+
+Widget _buildRoomsConfigCard(HalaaThemePreset theme) {
+final levelsList = _roomLevels.isNotEmpty
+? _roomLevels
+: List.generate(10, (i) {
+final lvl = i + 1;
+final mics = (4 + lvl).clamp(2, 16);
+return {'level': lvl, 'maxMics': mics, 'limit': lvl * 50};
+});
+return _card(
+title: 'إدارة الغرف الصوتية والمستويات',
+child: Column(
+crossAxisAlignment: CrossAxisAlignment.stretch,
+children: [
+TextField(
+controller: _roomIdCtrl,
+decoration: const InputDecoration(
+labelText: 'معرّف الغرفة (اختياري - اتركه فارغاً للإعدادات العامة)',
+border: OutlineInputBorder(),
+isDense: true,
+),
+),
+const SizedBox(height: 10),
+ElevatedButton.icon(
+onPressed: _roomsLoading ? null : _fetchRoomsConfig,
+icon: _roomsLoading
+? const SizedBox(
+width: 16,
+height: 16,
+child: CircularProgressIndicator(strokeWidth: 2),
+)
+: const Icon(Icons.cloud_download_outlined),
+label: const Text('جلب الإعدادات الحالية من الخادم'),
+),
+const SizedBox(height: 14),
+Text(
+'عدد المايكات: $_roomMaxMics',
+style: const TextStyle(fontWeight: FontWeight.w700),
+),
+Slider(
+value: _roomMaxMics.toDouble(),
+min: 2,
+max: 16,
+divisions: 14,
+label: '$_roomMaxMics',
+onChanged: (v) => setState(() => _roomMaxMics = v.round()),
+),
+Wrap(
+spacing: 8,
+runSpacing: 8,
+children: [5, 8, 9, 10, 12, 16]
+.map(
+(m) => ChoiceChip(
+label: Text('$m مايك'),
+selected: _roomMaxMics == m,
+onSelected: (_) => setState(() => _roomMaxMics = m),
+),
+)
+.toList(),
+),
+const SizedBox(height: 14),
+Text(
+'مستوى الغرفة: $_roomLevel',
+style: const TextStyle(fontWeight: FontWeight.w700),
+),
+Slider(
+value: _roomLevel.toDouble(),
+min: 1,
+max: 10,
+divisions: 9,
+label: '$_roomLevel',
+onChanged: (v) => setState(() => _roomLevel = v.round()),
+),
+Wrap(
+spacing: 6,
+runSpacing: 6,
+children: List.generate(10, (i) => i + 1)
+.map(
+(lvl) => ChoiceChip(
+label: Text('مستوى $lvl'),
+selected: _roomLevel == lvl,
+onSelected: (_) => setState(() => _roomLevel = lvl),
+),
+)
+.toList(),
+),
+const SizedBox(height: 12),
+const Text(
+'مستويات الغرف وعدد مايكاتها وحدودها:',
+style: TextStyle(fontWeight: FontWeight.w700),
+),
+const SizedBox(height: 6),
+Wrap(
+spacing: 8,
+runSpacing: 8,
+children: levelsList.map((item) {
+final map = item is Map ? item : <String, dynamic>{};
+final lvl = map['level'] ?? '-';
+final mics = map['maxMics'] ?? map['mics'] ?? '-';
+final limit = map['limit'] ?? map['maxMembers'] ?? map['minCoins'] ?? '-';
+return Chip(
+label: Text('المستوى $lvl: $mics مايك | الحد $limit'),
+);
+}).toList(),
+),
+const SizedBox(height: 8),
+SwitchListTile(
+title: const Text('السماح للضيف بالمايك (allowGuestMic)'),
+value: _allowGuestMic,
+onChanged: (v) => setState(() => _allowGuestMic = v),
+),
+SwitchListTile(
+title: const Text('السماح للضيف بالهدايا (allowGuestGifts)'),
+value: _allowGuestGifts,
+onChanged: (v) => setState(() => _allowGuestGifts = v),
+),
+SwitchListTile(
+title: const Text('تفعيل الهدايا (allowGifts)'),
+value: _allowGifts,
+onChanged: (v) => setState(() => _allowGifts = v),
+),
+SwitchListTile(
+title: const Text('تفعيل الدردشة (allowChat)'),
+value: _allowChat,
+onChanged: (v) => setState(() => _allowChat = v),
+),
+const SizedBox(height: 8),
+TextField(
+controller: _roomWelcomeCtrl,
+maxLines: 2,
+decoration: const InputDecoration(
+labelText: 'الرسالة الترحيبية للغرفة (welcomeMessage)',
+border: OutlineInputBorder(),
+),
+),
+if (_roomsStatusMsg != null) ...[
+const SizedBox(height: 10),
+Text(
+_roomsStatusMsg!,
+style: TextStyle(
+color: _roomsStatusError ? Colors.redAccent : Colors.green,
+fontWeight: FontWeight.w700,
+),
+),
+],
+const SizedBox(height: 12),
+ElevatedButton.icon(
+onPressed: _roomsSaving ? null : _saveRoomsConfig,
+icon: _roomsSaving
+? const SizedBox(
+width: 16,
+height: 16,
+child: CircularProgressIndicator(strokeWidth: 2),
+)
+: const Icon(Icons.save_outlined),
+label: const Text('حفظ وتطبيق إعدادات الغرف'),
+),
+],
+),
+);
+}
 
   Widget _tabServers() {
     return ListView(
