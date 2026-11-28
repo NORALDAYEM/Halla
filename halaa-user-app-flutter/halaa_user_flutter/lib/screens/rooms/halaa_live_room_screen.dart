@@ -18,6 +18,9 @@ class HalaaLiveRoomScreen extends StatefulWidget {
 
 class _HalaaLiveRoomScreenState extends State<HalaaLiveRoomScreen> {
   late final Future<Map<String, dynamic>> _session = _loadSession();
+  Map<String, dynamic>? _lastSession;
+  Map<String, dynamic> get _roomConfig => (_lastSession?['roomConfig'] is Map) ? Map<String, dynamic>.from(_lastSession!['roomConfig'] as Map) : const <String, dynamic>{};
+  bool _boolConfig(String key, {bool fallback = true}) => _roomConfig[key] is bool ? _roomConfig[key] as bool : fallback;
   Timer? _giftPoll, _effectTimer;
   final Set<String> _seenGifts = {};
   bool _giftBaseline = false, _polling = false;
@@ -33,17 +36,21 @@ class _HalaaLiveRoomScreenState extends State<HalaaLiveRoomScreen> {
     final token = await _resolveToken();
     final isGuest = token.isEmpty;
     final base = Uri.parse(widget.serverEndpoint);
-    if (base.scheme != 'https' || base.host != 'halla.onrender.com') throw Exception('عنوان خادم غير معتمد');
+    if (base.scheme != 'https' || base.host != 'halla.onrender.com') throw Exception('عنوان الخادم غير صالح');
     final headers = {'Content-Type': 'application/json', if (!isGuest) 'Authorization': 'Bearer $token', if (isGuest) 'X-Guest-Id': _guestId};
     if (body != null && isGuest) body = <String, dynamic>{...body, 'guest': true};
     final response = body == null
       ? await http.get(base.resolve(path), headers: headers).timeout(const Duration(seconds: 20))
       : await http.post(base.resolve(path), headers: headers, body: jsonEncode(body)).timeout(const Duration(seconds: 20));
     final data = jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
-    if (response.statusCode != 200) throw Exception(data['error'] ?? 'تعذر إتمام العملية');
+      if (response.statusCode != 200) throw Exception(data['error'] ?? 'فشل تنفيذ الطلب');
     return data;
   }
   Future<Map<String, dynamic>> _updateSeat(int? index) async {
+    if (index != null && (await _resolveToken()).isEmpty && !_boolConfig('allowGuestMic')) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('المشاركة بالمايك غير متاحة للضيوف في هذه الغرفة')));
+      return _lastSession ?? await _loadSession();
+    }
     await _request('/api/seat', body: {'room': widget.roomId, 'action': index == null ? 'release' : 'take', 'index': index});
     return _loadSession();
   }
@@ -70,8 +77,17 @@ class _HalaaLiveRoomScreenState extends State<HalaaLiveRoomScreen> {
     _effectTimer = Timer(const Duration(seconds: 3), () { if (mounted) setState(() => _effect = null); });
   }
   Future<void> _sendGift(String recipientId) async {
+    if (!_boolConfig('allowGifts')) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('الهدايا معطلة في هذه الغرفة')));
+      return;
+    }
+    if ((await _resolveToken()).isEmpty && !_boolConfig('allowGuestGifts')) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('إرسال الهدايا غير متاح للضيوف في هذه الغرفة')));
+      return;
+    }
     final giftId = await showModalBottomSheet<String>(context: context, builder: (context) => SafeArea(
       child: Column(mainAxisSize: MainAxisSize.min, children: [
+          const Padding(padding: EdgeInsets.all(12), child: Text('اختر هدية', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold))),
         ListTile(title: const Text('🌹 وردة — 10 عملات'), onTap: () => Navigator.pop(context, 'rose')),
         ListTile(title: const Text('👑 تاج — 100 عملة'), onTap: () => Navigator.pop(context, 'crown')),
       ]),
@@ -98,14 +114,15 @@ class _HalaaLiveRoomScreenState extends State<HalaaLiveRoomScreen> {
     var token = ''; if (auth != null) { try { token = (await auth()).trim(); } catch (_) { /* guest fallback */ } } final isGuest = token.isEmpty;
     final base = Uri.parse(widget.serverEndpoint);
     if (base.scheme != 'https' || base.host != 'halla.onrender.com') {
-      throw Exception('عنوان خادم الغرف غير معتمد');
+        throw Exception('عنوان الخادم غير صالح');
     }
     final response = await http.post(base.resolve('/api/zego-token'),
       headers: {'Content-Type': 'application/json', if (!isGuest) 'Authorization': 'Bearer $token' , if (isGuest) 'X-Guest-Id': _guestId }, 
       body: jsonEncode({'room': widget.roomId, if (isGuest) 'guest': true})).timeout(const Duration(seconds: 20));
     final data = jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
-    if (response.statusCode != 200) throw Exception(data['error'] ?? 'تعذر الاتصال بالغرفة');
-    if (data['appID'] != 828861219) throw Exception('إعداد مشروع الصوت لا يطابق التطبيق');
+      if (response.statusCode != 200) throw Exception(data['error'] ?? 'فشل تحميل بيانات الغرفة');
+      if (data['appID'] != 828861219) throw Exception('بيانات الغرفة غير صالحة');
+    _lastSession = data;
     return data;
   }
   @override
@@ -116,12 +133,12 @@ class _HalaaLiveRoomScreenState extends State<HalaaLiveRoomScreen> {
       builder: (context, snapshot) {
         if (snapshot.hasError && widget.onSignIn != null) {
           return Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
-            const Text('سجّل الدخول للانضمام إلى الغرفة'),
+          const Text('انتهت الجلسة أو يلزم تسجيل الدخول'),
             const SizedBox(height: 12),
             FilledButton(onPressed: () {
               Navigator.of(context).pop();
               widget.onSignIn?.call();
-            }, child: const Text('تسجيل الدخول')),
+          }, child: const Text('تسجيل الدخول')),
           ]));
         }
         if (snapshot.hasError) return Center(child: Padding(padding: const EdgeInsets.all(24),
