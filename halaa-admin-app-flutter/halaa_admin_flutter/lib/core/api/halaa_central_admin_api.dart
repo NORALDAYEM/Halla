@@ -147,6 +147,24 @@ Future<Map<String, dynamic>> saveRoomsConfig(Map<String, dynamic> config) =>
 _send('POST', '/api/rooms/config', config);
   }
 
+  // Users DB API
+  Future<Map<String, dynamic>> getUserLevelsAndPermissions() => _get('/api/users/levels');
+  Future<Map<String, dynamic>> getUserFullProfile(String userId) => _get('/api/users/${Uri.encodeComponent(userId)}');
+Future<Map<String, dynamic>> upsertUser(Map<String, dynamic> user) => _send('POST', '/api/users', user);
+Future<Map<String, dynamic>> updateUser(String userId, Map<String, dynamic> patch) => _send('PATCH', '/api/users/${Uri.encodeComponent(userId)}', patch);
+Future<Map<String, dynamic>> setUserPermission(String userId, {required String permissionCode, required bool granted, String? grantedBy}) => _send('POST', '/api/users/${Uri.encodeComponent(userId)}/permissions', {'permissionCode': permissionCode, 'granted': granted, if (grantedBy != null && grantedBy.trim().isNotEmpty) 'grantedBy': grantedBy.trim()});
+  Future<Map<String, dynamic>> listUsers({String? search, String? country, String? gender, int? level, String? role, String? status, String? ip}) {
+final p = <String>[];
+if (search != null && search.trim().isNotEmpty) p.add('search=${Uri.encodeQueryComponent(search.trim())}');
+if (country != null && country.trim().isNotEmpty) p.add('country=${Uri.encodeQueryComponent(country.trim())}');
+if (gender != null && gender.trim().isNotEmpty) p.add('gender=${Uri.encodeQueryComponent(gender.trim())}');
+if (level != null) p.add('level=$level');
+if (role != null && role.trim().isNotEmpty) p.add('role=${Uri.encodeQueryComponent(role.trim())}');
+if (status != null && status.trim().isNotEmpty) p.add('status=${Uri.encodeQueryComponent(status.trim())}');
+if (ip != null && ip.trim().isNotEmpty) p.add('ip=${Uri.encodeQueryComponent(ip.trim())}');
+return _get(p.isEmpty ? '/api/users' : '/api/users?${p.join('&')}');
+  }
+  
   Future<Map<String, dynamic>> _get(String path) async {
     final res = await http.get(_secureUri(path), headers: _headers());
     final body = jsonDecode(res.body) as Map<String, dynamic>;
