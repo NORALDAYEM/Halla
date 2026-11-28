@@ -134,6 +134,17 @@ class HalaaCentralAdminApi {
       'approvalId': approvalId,
       'idempotencyKey': key,
     });
+
+Future<Map<String, dynamic>> getRoomsConfig({String? room}) {
+final trimmed = room?.trim();
+final path = (trimmed != null && trimmed.isNotEmpty)
+? '/api/rooms/config?room=${Uri.encodeQueryComponent(trimmed)}'
+: '/api/rooms/config';
+return _get(path);
+}
+
+Future<Map<String, dynamic>> saveRoomsConfig(Map<String, dynamic> config) =>
+_send('POST', '/api/rooms/config', config);
   }
 
   Future<Map<String, dynamic>> _get(String path) async {
