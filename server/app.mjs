@@ -110,7 +110,10 @@ const centralAdmin = createCentralAdminSystem({
     else write('role:'+data.room+':'+target,data.action);
     return {room:data.room,target,action:data.action};
   },
-});
+}); const DEFAULT_ROOM_LEVELS = [{level:1,name:'غرفة مبتدئة',micCount:9,maxVisitors:50,upgradePoints:0},{level:2,name:'غرفة نشطة',micCount:10,maxVisitors:100,upgradePoints:500},{level:3,name:'غرفة مميزة',micCount:12,maxVisitors:200,upgradePoints:2000},{level:4,name:'غرفة ذهبية',micCount:14,maxVisitors:500,upgradePoints:5000},{level:5,name:'غرفة ماسية',micCount:16,maxVisitors:1000,upgradePoints:10000}];
+const DEFAULT_ROOM_CONFIG = {micCount:9,roomLevel:1,levels:DEFAULT_ROOM_LEVELS,allowGuestMic:true,allowGuestGifts:true,allowGifts:true,allowChat:true,welcomeMessage:'أهلاً بكم في غرفة هلاا الصوتية',roomTitleArabic:''};
+const normalizeRoomConfig = (raw={}) => { const c = {...DEFAULT_ROOM_CONFIG,...(raw&&typeof raw==='object'?raw:{})}; const m = Number(c.micCount), l = Number(c.roomLevel); c.micCount = Number.isInteger(m)?Math.min(16,Math.max(2,m)):9; c.roomLevel = Number.isInteger(l)?Math.min(10,Math.max(1,l)):1; c.levels = Array.isArray(c.levels)&&c.levels.length?c.levels:DEFAULT_ROOM_LEVELS; c.allowGuestMic = Boolean(c.allowGuestMic); c.allowGuestGifts = Boolean(c.allowGuestGifts); c.allowGifts = Boolean(c.allowGifts); c.allowChat = Boolean(c.allowChat); c.welcomeMessage = typeof c.welcomeMessage==='string'&&c.welcomeMessage.trim()?c.welcomeMessage:DEFAULT_ROOM_CONFIG.welcomeMessage; c.roomTitleArabic = typeof c.roomTitleArabic==='string'?c.roomTitleArabic:''; return c; };
+if (!read('rooms-config:global')) write('rooms-config:global', DEFAULT_ROOM_CONFIG); const getRoomConfig = (room='') => { const g = read('rooms-config:global') || DEFAULT_ROOM_CONFIG; const r = room ? (read('rooms-config:'+room) || {}) : {}; return normalizeRoomConfig({...g,...r}); };
 createServer(async(req,res)=>{
   try {
     if (await centralAdmin.handleRequest(req, res)) return;
@@ -128,7 +131,8 @@ createServer(async(req,res)=>{
       const file=path.includes('showcase')?'halaa_mobile_screens_showcase.html':'halaa_voice_app.html';
       const content=await readFile(new URL('../'+file,import.meta.url));
       res.writeHead(200,{'content-type':'text/html; charset=utf-8','referrer-policy':'no-referrer'});return res.end(content);
-    }
+    } if(req.method==='GET' && path==='/api/rooms/config'){const room=new URL(req.url,'http://localhost').searchParams.get('room')||'';if(room&&!validRoom(room))fail(404,'Room not found');const cfg=getRoomConfig(room);return json(res,200,{ok:true,room:room||'global',...cfg,config:cfg});}
+    if(req.method==='POST' && path==='/api/rooms/config'){const data=await body(req);const room=typeof data.room==='string'?data.room:(typeof data.roomId==='string'?data.roomId:'');if(room&&!validRoom(room))fail(404,'Room not found');const patch=(data.config&&typeof data.config==='object')?data.config:data;if(patch.micCount!==undefined){const m=Number(patch.micCount);if(!Number.isInteger(m)||m<2||m>16)fail(400,'micCount must be between 2 and 16');}if(patch.roomLevel!==undefined){const l=Number(patch.roomLevel);if(!Number.isInteger(l)||l<1||l>10)fail(400,'roomLevel must be between 1 and 10');}const key=room?'rooms-config:'+room:'rooms-config:global';const prev=read(key)||(room?{}:DEFAULT_ROOM_CONFIG);const allowed=['micCount','roomLevel','levels','allowGuestMic','allowGuestGifts','allowGifts','allowChat','welcomeMessage','roomTitleArabic'];const next={...prev};for(const k of allowed)if(patch[k]!==undefined)next[k]=patch[k];write(key,room?next:normalizeRoomConfig(next));const cfg=getRoomConfig(room);return json(res,200,{ok:true,room:room||'global',...cfg,config:cfg});}
     if(req.method==='GET' && path==='/api/presence')return json(res,200,await presence());
     if(req.method==='GET' && path==='/api/config') return json(res,200,{authUrl:env.SUPABASE_URL||'',publicKey:env.SUPABASE_PUBLISHABLE_KEY||'',voiceReady:voiceReady||zegoReady,zegoAppId,zegoReady,ad:read('homeAd'),rooms:db.prepare("SELECT value FROM settings WHERE key LIKE 'room:%' ORDER BY rowid DESC LIMIT 200").all().map(row=>{const {id,title,category}=JSON.parse(row.value);return {id,title,category};})});
     if(req.method==='GET' && path==='/api/zego/token') return json(res,405,{error:'Use authenticated POST'});
@@ -145,9 +149,10 @@ createServer(async(req,res)=>{
       for(const seat of Object.values(seats)) if(seat.userID===userID&&seat.expires>Date.now()) seat.expires=Date.now()+60000;
       write('seats:'+room,seats);
       write('member:'+userID,{id:userID})
+      const cfg=getRoomConfig(room);const roomConfig={micCount:cfg.micCount,roomLevel:cfg.roomLevel,levels:cfg.levels,allowGifts:cfg.allowGifts,allowChat:cfg.allowChat,allowGuestMic:cfg.allowGuestMic,welcomeMessage:cfg.welcomeMessage};
       const payload=JSON.stringify({room_id:roomID,privilege:{1:1,2:grant(role).canPublish?1:0},stream_id_list:null});
       const token=generateZegoToken04(zegoAppId,userID,zegoServerSecret,900,payload);
-      return json(res,200,{appID:zegoAppId,roomID,userID,role,token,expiresIn:900,userName:String(user.user_metadata?.nickname || user.user_metadata?.display_name || user.email?.split('@')[0] || 'عضو').slice(0,60)});
+      return json(res,200,{roomConfig,appID:zegoAppId,roomID,userID,role,token,expiresIn:900,userName:String(user.user_metadata?.nickname || user.user_metadata?.display_name || user.email?.split('@')[0] || 'عضو').slice(0,60)});
     }
     if(req.method==='POST' && path==='/api/seat') {
       const user=await guestIdentity(req),data=await body(req);
@@ -158,7 +163,7 @@ createServer(async(req,res)=>{
       const seats=read('seats:'+data.room)||{};
       for(const [index,seat] of Object.entries(seats)) if(seat.expires<=Date.now()||seat.userID===user.id) delete seats[index];
       if(data.action==='take') {
-        if(!Number.isInteger(data.index)||data.index<0||data.index>8) fail(400,'المقعد غير صالح');
+        if(!Number.isInteger(data.index)||data.index<0||data.index>=getRoomConfig(data.room).micCount/*8 */fail(400,'المقعد غير صالح');
         if(data.index===0&&roomRole(user,data.room)!=='owner') fail(403,'مقعد المضيف محجوز');
         if(seats[data.index]) fail(409,'المقعد مشغول');
         if(read('role:'+data.room+':'+user.id)==='listener') fail(403,'الميكروفون مقفل من الإدارة');
